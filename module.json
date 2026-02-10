@@ -2,13 +2,16 @@
   "id": "pf2e-npc-auto-builder",
   "name": "pf2e-npc-auto-builder",
   "title": "PF2E NPC Auto-Builder",
-  "description": "Generate Pathfinder 2e NPCs from feats, spells, actions, and equipment. Optionally export them or upload via the Foundry REST API.",
+  "description": "AI-powered Pathfinder 2e NPC generator. Describe an NPC and get a fully statted actor with abilities, spells, and equipment — ready to use in your game.",
   "version": "1.2.0",
   "authors": [
     {
-      "name": "OpenAI Assistant"
+      "name": "JamesCfer"
     }
   ],
+  "url": "https://github.com/JamesCfer/Pf2eNpcMaker",
+  "bugs": "https://github.com/JamesCfer/Pf2eNpcMaker/issues",
+  "license": "LICENSE",
   "compatibility": {
     "minimum": "13",
     "verified": "13"
