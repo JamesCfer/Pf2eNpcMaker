@@ -335,14 +335,6 @@ class NPCBuilderApp extends FormApplication {
       let data;
       try {
         data = JSON.parse(responseText);
-
-        // n8n's "Respond to Webhook" node wraps output in an array by default.
-        // Unwrap it so downstream code can access named keys like foundryNpc.
-        if (Array.isArray(data)) {
-          console.warn('[NPC Builder] Response was an array — unwrapping first element (n8n default wrapping)');
-          data = data[0] ?? {};
-        }
-
         console.log('[NPC Builder] Response from n8n:', { status: response.status, data });
       } catch (err) {
         console.error('[NPC Builder] Failed to parse JSON response:', err);
@@ -459,24 +451,7 @@ class NPCBuilderApp extends FormApplication {
           throw new Error(`Invalid actor data: missing ${!actorData.name ? 'name' : 'type'}`);
         }
 
-        // Guard against a blank NPC: system must exist and have at least one key.
-        // n8n returning {name, type, system: {}} would otherwise silently create an empty sheet.
-        const systemKeys = actorData.system ? Object.keys(actorData.system) : [];
-        if (systemKeys.length === 0) {
-          console.error('[NPC Builder] foundryNpc.system is missing or empty — n8n returned a blank NPC skeleton:', actorData);
-          throw new Error(
-            'The server returned an NPC with no stat data (blank system object). ' +
-            'This usually means the AI generation step failed or timed out inside the n8n workflow. ' +
-            'Please try again; if the problem persists, check the n8n workflow logs.'
-          );
-        }
-
-        console.log('[NPC Builder] Creating actor in Foundry...', {
-          name: actorData.name,
-          type: actorData.type,
-          systemKeys,
-          itemCount: actorData.items?.length ?? 0
-        });
+        console.log('[NPC Builder] Creating actor in Foundry...', actorData);
 
         // Sanitize the actor data before creating
         this._sanitizeActorData(actorData);
