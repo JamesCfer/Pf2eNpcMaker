@@ -82,19 +82,27 @@ jobs:
         env:
           FOUNDRYVTT_RELEASE_TOKEN: ${{ secrets.FOUNDRYVTT_RELEASE_TOKEN }}
         run: |
-          curl -s -f -X POST https://foundryvtt.com/api/packages/release_version/ \
+          RESPONSE=$(curl -s -w "\n%{http_code}" -X POST https://foundryvtt.com/api/packages/release_version/ \
             -H "Content-Type: application/json" \
             -H "Authorization: Token ${FOUNDRYVTT_RELEASE_TOKEN}" \
-            -d "{
-              \"id\": \"Pf2eNpcMaker\",
-              \"dry-run\": false,
-              \"release\": {
-                \"version\": \"${{ steps.version.outputs.version }}\",
-                \"manifest\": \"https://github.com/JamesCfer/Pf2eNpcMaker/releases/latest/download/module.json\",
-                \"notes\": \"https://github.com/JamesCfer/Pf2eNpcMaker/releases/tag/v${{ steps.version.outputs.version }}\",
-                \"compatibility\": {
-                  \"minimum\": \"13\",
-                  \"verified\": \"13\"
+            -d '{
+              "id": "pf2enpcmaker",
+              "dry-run": false,
+              "release": {
+                "version": "${{ steps.version.outputs.version }}",
+                "manifest": "https://github.com/JamesCfer/Pf2eNpcMaker/releases/latest/download/module.json",
+                "notes": "https://github.com/JamesCfer/Pf2eNpcMaker/releases/tag/v${{ steps.version.outputs.version }}",
+                "compatibility": {
+                  "minimum": "13",
+                  "verified": "13"
                 }
               }
-            }"
+            }')
+          HTTP_CODE=$(echo "$RESPONSE" | tail -1)
+          BODY=$(echo "$RESPONSE" | head -n -1)
+          echo "HTTP status: $HTTP_CODE"
+          echo "Response body: $BODY"
+          if [ "$HTTP_CODE" -lt 200 ] || [ "$HTTP_CODE" -ge 300 ]; then
+            echo "ERROR: Foundry VTT API returned HTTP $HTTP_CODE"
+            exit 1
+          fi
