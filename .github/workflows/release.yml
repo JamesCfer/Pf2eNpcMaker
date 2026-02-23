@@ -82,7 +82,7 @@ jobs:
         env:
           FOUNDRYVTT_RELEASE_TOKEN: ${{ secrets.FOUNDRYVTT_RELEASE_TOKEN }}
         run: |
-          RESPONSE=$(curl -s -w "\n%{http_code}" -X POST https://api.foundryvtt.com/packages/release_version/ \
+          RESPONSE=$(curl -s -w "\n%{http_code}" -X POST https://foundryvtt.com/_api/packages/release_version/ \
             -H "Content-Type: application/json" \
             -H "Authorization: ${FOUNDRYVTT_RELEASE_TOKEN}" \
             -d '{
