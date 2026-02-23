@@ -1,40 +1,76 @@
-<div class="npc-builder">
-  <form>
-    <div class="form-group">
-      <label>Name
-        <input type="text" name="name" placeholder="Goblin Warchief" />
+<div class="npc-builder-inner">
+
+  <!-- ── Auth banner ─────────────────────────────────────────── -->
+  <div class="auth-banner">
+
+    <!-- Shown when NOT authenticated -->
+    <div class="auth-unsigned">
+      <div class="auth-unsigned-text">
+        <i class="fa-brands fa-patreon auth-patreon-icon"></i>
+        <span>Sign in with Patreon to generate NPCs</span>
+      </div>
+      <div class="auth-unsigned-actions">
+        <button type="button" data-action="signin" class="btn-patreon">
+          <i class="fa-brands fa-patreon"></i> Sign in with Patreon
+        </button>
+        <button type="button" data-action="patreon" class="btn-join">
+          Join Patreon
+        </button>
+      </div>
+    </div>
+
+    <!-- Shown when authenticated -->
+    <div class="auth-signed">
+      <div class="auth-signed-status">
+        <i class="fa-solid fa-circle-check"></i>
+        <span>Signed in via Patreon</span>
+      </div>
+      <button type="button" data-action="signout" class="btn-signout">
+        <i class="fa-solid fa-right-from-bracket"></i> Sign Out
+      </button>
+    </div>
+
+  </div>
+
+  <!-- ── NPC form ─────────────────────────────────────────────── -->
+  <form class="npc-form" autocomplete="off">
+
+    <div class="field-row">
+      <div class="field field--name">
+        <label for="npc-name">NPC Name</label>
+        <input type="text" id="npc-name" name="name" placeholder="e.g. Goblin Warchief" />
+      </div>
+      <div class="field field--level">
+        <label for="npc-level">Level</label>
+        <input type="number" id="npc-level" name="level" value="1" min="0" max="25" />
+      </div>
+    </div>
+
+    <div class="field">
+      <label for="npc-desc">Description</label>
+      <textarea id="npc-desc" name="description" rows="5"
+        placeholder="Describe this NPC: their role, fighting style, special abilities, equipment, personality traits…"></textarea>
+      <span class="field-hint">The more detail you provide, the better the AI can match your vision.</span>
+    </div>
+
+    <div class="field field--check">
+      <label class="checkbox-label">
+        <input type="checkbox" name="includeSpells" />
+        <span>Include spell compendium mapping</span>
       </label>
+      <span class="field-hint">Indexes your spell compendiums before generating (~10 s extra, enables correct spell links).</span>
     </div>
-    <div class="form-group">
-      <label>Level
-        <input type="number" name="level" value="1" min="0" max="25" />
-      </label>
+
+    <div class="form-actions">
+      <button type="button" data-action="generate" class="btn-primary" disabled>
+        <i class="fa-solid fa-wand-magic-sparkles"></i>
+        <span class="btn-label">Generate NPC</span>
+      </button>
+      <button type="button" data-action="export" class="btn-secondary" disabled>
+        <i class="fa-solid fa-file-arrow-down"></i>
+        <span>Export JSON</span>
+      </button>
     </div>
-    <div class="form-group">
-      <label>Description
-        <textarea name="description" rows="4" placeholder="Describe the NPC's appearance, role, fighting style, and any special abilities or equipment they should have..."></textarea>
-      </label>
-      <small>Be specific about what makes this NPC unique. The AI will use this to generate appropriate stats, feats, and equipment.</small>
-    </div>
-    
-    <!-- Authentication section -->
-    <div class="form-group auth">
-      {{#if authenticated}}
-        <button type="button" class="signin" disabled>Signed in (Patreon)</button>
-        <button type="button" class="signout">Sign Out</button>
-      {{else}}
-        <button type="button" class="signin">Sign in with Patreon</button>
-      {{/if}}
-    </div>
-    
-    <div class="buttons">
-      {{#if generating}}
-        <button type="button" class="generate" disabled>Generating...</button>
-      {{else}}
-        <button type="button" class="generate" {{#unless authenticated}}disabled{{/unless}}>Generate NPC</button>
-      {{/if}}
-      <button type="button" class="export" {{#unless authenticated}}disabled{{/unless}}>Export JSON</button>
-    </div>
+
   </form>
-  <pre class="log"></pre>
 </div>
