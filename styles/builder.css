@@ -278,13 +278,16 @@
   display: inline-flex;
   align-items: center;
   gap: 0.3em;
-  border: 1px solid #888;
+  border: 1px solid #8b6914;
   border-radius: 3px;
-  padding: 0.2em 0.55em;
-  background: #eee;
-  color: #333;
+  padding: 0.2em 0.65em;
+  background: #c9a227;
+  color: #fff;
   cursor: pointer;
   margin-left: 0.5em;
   font-size: 0.85em;
+  font-weight: 600;
+  text-shadow: 0 1px 1px rgba(0,0,0,0.3);
+  box-shadow: 0 1px 3px rgba(0,0,0,0.2);
 }
-.directory .npc-builder-button:hover { background: #ddd; color: #111; }
+.directory .npc-builder-button:hover { background: #d4ac2e; color: #fff; }
