@@ -49,6 +49,13 @@ class NPCBuilderApp extends HandlebarsApplicationMixin(ApplicationV2) {
     position: {
       width: 540,
     },
+    actions: {
+      signin:   function(event) { this._signIn(event); },
+      signout:  function(event) { this._signOut(event); },
+      generate: function(event) { this._generateNPC(event); },
+      export:   function(event) { this._exportJSON(event); },
+      patreon:  function()      { window.open(this.constructor.PATREON_URL, '_blank'); },
+    },
   };
 
   static get PARTS() {
@@ -100,25 +107,6 @@ class NPCBuilderApp extends HandlebarsApplicationMixin(ApplicationV2) {
    * CSS classes drive show/hide so re-renders do not duplicate listeners.
    */
   _onRender(context, options) {
-    const root = this.element;
-    if (!root) return;
-
-    if (!root._npcListenerAttached) {
-      root._npcListenerAttached = true;
-      root.addEventListener('click', (e) => {
-        const btn = e.target.closest('button[data-action]');
-        if (!btn || btn.disabled) return;
-        e.preventDefault();
-        switch (btn.dataset.action) {
-          case 'signin':   this._signIn(e);      break;
-          case 'signout':  this._signOut(e);     break;
-          case 'generate': this._generateNPC(e); break;
-          case 'export':   this._exportJSON(e);  break;
-          case 'patreon':  window.open(NPCBuilderApp.PATREON_URL, '_blank'); break;
-        }
-      });
-    }
-
     this._applyAuthStateUI();
   }
 
@@ -690,6 +678,6 @@ Hooks.on('renderCompendiumDirectoryPF2e',    injectSidebarButton);
 
 Hooks.once('ready', () => {
   const modId = game.modules?.get('Pf2eNpcMaker') ? 'Pf2eNpcMaker' : 'pf2e-npc-auto-builder';
-  loadTemplates([`modules/${modId}/templates/builder.html`]);
+  (foundry.applications.handlebars?.loadTemplates ?? loadTemplates)([`modules/${modId}/templates/builder.html`]);
   console.log(`PF2E NPC Auto-Builder ready (module folder: ${modId}).`);
 });
