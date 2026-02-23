@@ -612,21 +612,39 @@ class NPCBuilderApp extends HandlebarsApplicationMixin(ApplicationV2) {
 }
 
 /* -----------------------------------------------------------------------------
+   Singleton helper — reuses an existing window instead of spawning duplicates
+----------------------------------------------------------------------------- */
+
+let _npcBuilderApp = null;
+
+function openNPCBuilder() {
+  if (_npcBuilderApp?.rendered) {
+    _npcBuilderApp.bringToTop?.();
+    return;
+  }
+  _npcBuilderApp = new NPCBuilderApp();
+  _npcBuilderApp.render().catch(err => {
+    console.error('[NPC Builder] Failed to open:', err);
+    ui.notifications?.error('NPC Builder failed to open. Check the console (F12) for details.');
+    _npcBuilderApp = null;
+  });
+}
+
+/* -----------------------------------------------------------------------------
    Header controls + sidebar injection
 ----------------------------------------------------------------------------- */
 
 function registerNPCBuilderControl(app, controls) {
   if (!game.user?.isGM) return;
-  const exists = controls.some(c => c.name === 'pf2e-npc-builder');
+  // Guard against the same control being registered twice (check by action, not name)
+  const exists = controls.some(c => c.action === 'pf2e-npc-builder');
   if (exists) return;
   controls.push({
     action:  'pf2e-npc-builder',
     icon:    'fa-solid fa-robot',
     label:   'NPC Builder',
-    onClick: () => new NPCBuilderApp().render().catch(err => {
-      console.error('[NPC Builder] Failed to open:', err);
-      ui.notifications?.error('NPC Builder failed to open. Check the console (F12) for details.');
-    }),
+    // Foundry v13 ApplicationV2 dispatches header-control clicks via "onclick" (lowercase)
+    onclick: () => openNPCBuilder(),
     visible: true,
   });
 }
@@ -642,10 +660,7 @@ function injectSidebarButton(app, html) {
   button.classList.add('npc-builder-button');
   button.style.marginLeft = '4px';
   button.innerHTML = '<i class="fa-solid fa-robot"></i> NPC Builder';
-  button.addEventListener('click', () => new NPCBuilderApp().render().catch(err => {
-    console.error('[NPC Builder] Failed to open:', err);
-    ui.notifications?.error('NPC Builder failed to open. Check the console (F12) for details.');
-  }));
+  button.addEventListener('click', () => openNPCBuilder());
 
   const header = root.querySelector('header') || root.querySelector('.directory-header');
   if (header) header.appendChild(button); else root.prepend(button);
