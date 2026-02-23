@@ -51,11 +51,12 @@ class NPCBuilderApp extends HandlebarsApplicationMixin(ApplicationV2) {
     },
   };
 
-  static PARTS = {
-    form: {
-      template: 'modules/Pf2eNpcMaker/templates/builder.html',
-    },
-  };
+  static get PARTS() {
+    const modId = game.modules?.get('Pf2eNpcMaker') ? 'Pf2eNpcMaker' : 'pf2e-npc-auto-builder';
+    return {
+      form: { template: `modules/${modId}/templates/builder.html` },
+    };
+  }
 
   static getStoredKey() {
     for (const k of NPCBuilderApp.STORAGE_KEYS) {
@@ -622,7 +623,10 @@ function registerNPCBuilderControl(app, controls) {
     action:  'pf2e-npc-builder',
     icon:    'fa-solid fa-robot',
     label:   'NPC Builder',
-    onClick: () => new NPCBuilderApp().render(),
+    onClick: () => new NPCBuilderApp().render().catch(err => {
+      console.error('[NPC Builder] Failed to open:', err);
+      ui.notifications?.error('NPC Builder failed to open. Check the console (F12) for details.');
+    }),
     visible: true,
   });
 }
@@ -638,7 +642,10 @@ function injectSidebarButton(app, html) {
   button.classList.add('npc-builder-button');
   button.style.marginLeft = '4px';
   button.innerHTML = '<i class="fa-solid fa-robot"></i> NPC Builder';
-  button.addEventListener('click', () => new NPCBuilderApp().render());
+  button.addEventListener('click', () => new NPCBuilderApp().render().catch(err => {
+    console.error('[NPC Builder] Failed to open:', err);
+    ui.notifications?.error('NPC Builder failed to open. Check the console (F12) for details.');
+  }));
 
   const header = root.querySelector('header') || root.querySelector('.directory-header');
   if (header) header.appendChild(button); else root.prepend(button);
@@ -667,5 +674,7 @@ Hooks.on('renderActorDirectoryPF2e',         injectSidebarButton);
 Hooks.on('renderCompendiumDirectoryPF2e',    injectSidebarButton);
 
 Hooks.once('ready', () => {
-  console.log('PF2E NPC Auto-Builder (ApplicationV2 edition) initialised.');
+  const modId = game.modules?.get('Pf2eNpcMaker') ? 'Pf2eNpcMaker' : 'pf2e-npc-auto-builder';
+  loadTemplates([`modules/${modId}/templates/builder.html`]);
+  console.log(`PF2E NPC Auto-Builder ready (module folder: ${modId}).`);
 });
