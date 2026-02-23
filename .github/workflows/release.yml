@@ -83,7 +83,7 @@ jobs:
           VERSION="${{ steps.version.outputs.version }}"
           RESPONSE=$(curl -s -w "\n%{http_code}" -X POST https://foundryvtt.com/_api/packages/release_version/ \
             -H "Content-Type: application/json" \
-            -H "Authorization: ${FOUNDRYVTT_RELEASE_TOKEN@Q}" \
+            -H "Authorization: ${FOUNDRYVTT_RELEASE_TOKEN}" \
             -d "{
               \"id\": \"pf2enpcmaker\",
               \"dry-run\": false,
