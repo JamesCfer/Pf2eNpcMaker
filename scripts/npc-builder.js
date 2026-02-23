@@ -32,7 +32,7 @@ class NPCBuilderApp extends FormApplication {
   /** n8n endpoints */
   static N8N_AUTH_URL = 'https://foundryrelay.dedicated2.com/webhook/oauth/patreon/login';
   static N8N_NPC_URL  = 'https://foundryrelay.dedicated2.com/webhook/npc-builder';
-  static PATREON_URL  = 'https://www.patreon.com/c/CelestiaTools/membership';
+  static PATREON_URL  = 'https://www.patreon.com/cw/CelestiaTools';
 
   /** localStorage slots */
   static STORAGE_KEYS = ['pf2e-npc-builder.key', 'pf2e-npc-builder:key'];
@@ -182,7 +182,11 @@ class NPCBuilderApp extends FormApplication {
           this._applyAuthStateUI();
           ui.notifications?.info?.('Patreon sign-in complete.');
         } else {
-          ui.notifications?.error?.(data?.error || 'Patreon sign-in failed.');
+          ui.notifications?.error?.(data?.error || 'Unauthorized. Please sign in with Patreon to create NPCs.', { permanent: true });
+          ui.notifications?.info?.(
+            `<a href="${NPCBuilderApp.PATREON_URL}" target="_blank" style="color: #ff424d; text-decoration: underline;">Join our Patreon</a> to access the NPC Builder.`,
+            { permanent: true }
+          );
         }
       };
 
