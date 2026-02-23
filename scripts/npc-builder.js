@@ -606,14 +606,16 @@ class NPCBuilderApp extends HandlebarsApplicationMixin(ApplicationV2) {
 let _npcBuilderApp = null;
 
 function openNPCBuilder() {
-  if (_npcBuilderApp?.rendered) {
+  // Guard against stale reference: app may be "rendered" but its element detached from the DOM
+  if (_npcBuilderApp?.rendered && _npcBuilderApp?.element?.isConnected) {
     _npcBuilderApp.bringToTop?.();
     return;
   }
+  _npcBuilderApp = null;
   _npcBuilderApp = new NPCBuilderApp();
-  _npcBuilderApp.render().catch(err => {
+  _npcBuilderApp.render({ force: true }).catch(err => {
     console.error('[NPC Builder] Failed to open:', err);
-    ui.notifications?.error('NPC Builder failed to open. Check the console (F12) for details.');
+    ui.notifications?.error?.('NPC Builder failed to open. Check the console (F12) for details.');
     _npcBuilderApp = null;
   });
 }
@@ -629,9 +631,10 @@ function registerNPCBuilderControl(app, controls) {
   if (exists) return;
   controls.push({
     action:  'pf2e-npc-builder',
-    icon:    'fa-solid fa-robot',
+    icon:    'fa-solid fa-star',
     label:   'NPC Builder',
-    // Foundry v13 ApplicationV2 dispatches header-control clicks via "onclick" (lowercase)
+    // Foundry v13 ApplicationV2 uses camelCase onClick; keep lowercase for older versions
+    onClick: () => openNPCBuilder(),
     onclick: () => openNPCBuilder(),
     visible: true,
   });
@@ -647,7 +650,7 @@ function injectSidebarButton(app, html) {
   button.type  = 'button';
   button.classList.add('npc-builder-button');
   button.style.marginLeft = '4px';
-  button.innerHTML = '<i class="fa-solid fa-robot"></i> NPC Builder';
+  button.innerHTML = '★ NPC Builder ★';
   button.addEventListener('click', () => openNPCBuilder());
 
   const header = root.querySelector('header') || root.querySelector('.directory-header');
