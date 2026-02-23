@@ -3,6 +3,11 @@ name: Release
 on:
   release:
     types: [published]
+  workflow_dispatch:
+    inputs:
+      release_id:
+        description: 'GitHub Release ID to upload assets to'
+        required: true
 
 jobs:
   build:
@@ -27,7 +32,9 @@ jobs:
           script: |
             const fs = require('fs');
             const { repo, owner } = context.repo;
-            const release_id = context.payload.release.id;
+            const release_id = context.payload.release
+              ? context.payload.release.id
+              : parseInt('${{ inputs.release_id }}');
 
             // Upload module.json
             await github.rest.repos.uploadReleaseAsset({
