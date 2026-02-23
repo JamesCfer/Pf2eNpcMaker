@@ -85,7 +85,7 @@ jobs:
             -H "Content-Type: application/json" \
             -H "Authorization: ${FOUNDRYVTT_RELEASE_TOKEN}" \
             -d "{
-              \"id\": \"pf2enpcmaker\",
+              \"id\": \"Pf2eNpcMaker\",
               \"dry-run\": false,
               \"release\": {
                 \"version\": \"${VERSION}\",
