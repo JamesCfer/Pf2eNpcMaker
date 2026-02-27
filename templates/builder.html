@@ -1,76 +1,97 @@
 <div class="npc-builder-inner">
 
-  <!-- ── Auth banner ─────────────────────────────────────────── -->
-  <div class="auth-banner">
+  <!-- ── Left: form panel ──────────────────────────────────────── -->
+  <div class="npc-panel-form">
 
-    <!-- Shown when NOT authenticated -->
-    <div class="auth-unsigned">
-      <div class="auth-unsigned-text">
-        <i class="fa-brands fa-patreon auth-patreon-icon"></i>
-        <span>Sign in with Patreon to generate NPCs</span>
+    <!-- ── Auth banner ─────────────────────────────────────────── -->
+    <div class="auth-banner">
+
+      <!-- Shown when NOT authenticated -->
+      <div class="auth-unsigned">
+        <div class="auth-unsigned-text">
+          <i class="fa-brands fa-patreon auth-patreon-icon"></i>
+          <span>Sign in with Patreon to generate NPCs</span>
+        </div>
+        <div class="auth-unsigned-actions">
+          <button type="button" data-action="signin" class="btn-patreon">
+            <i class="fa-brands fa-patreon"></i> Sign in with Patreon
+          </button>
+          <button type="button" data-action="patreon" class="btn-join">
+            Join Patreon
+          </button>
+        </div>
       </div>
-      <div class="auth-unsigned-actions">
-        <button type="button" data-action="signin" class="btn-patreon">
-          <i class="fa-brands fa-patreon"></i> Sign in with Patreon
-        </button>
-        <button type="button" data-action="patreon" class="btn-join">
-          Join Patreon
+
+      <!-- Shown when authenticated -->
+      <div class="auth-signed">
+        <div class="auth-signed-status">
+          <i class="fa-solid fa-circle-check"></i>
+          <span>Signed in via Patreon</span>
+        </div>
+        <button type="button" data-action="signout" class="btn-signout">
+          <i class="fa-solid fa-right-from-bracket"></i> Sign Out
         </button>
       </div>
+
     </div>
 
-    <!-- Shown when authenticated -->
-    <div class="auth-signed">
-      <div class="auth-signed-status">
-        <i class="fa-solid fa-circle-check"></i>
-        <span>Signed in via Patreon</span>
-      </div>
-      <button type="button" data-action="signout" class="btn-signout">
-        <i class="fa-solid fa-right-from-bracket"></i> Sign Out
-      </button>
-    </div>
+    <!-- ── NPC form ──────────────────────────────────────────────── -->
+    <form class="npc-form" autocomplete="off">
 
+      <div class="history-selected-banner" style="display:none;">
+        <i class="fa-solid fa-arrow-turn-up fa-rotate-90"></i>
+        <span class="history-selected-label">Editing prompt from <strong></strong> — update fields and Generate to recreate</span>
+      </div>
+
+      <div class="field-row">
+        <div class="field field--name">
+          <label for="npc-name">NPC Name</label>
+          <input type="text" id="npc-name" name="name" placeholder="e.g. Goblin Warchief" />
+        </div>
+        <div class="field field--level">
+          <label for="npc-level">Level</label>
+          <input type="number" id="npc-level" name="level" value="1" min="0" max="25" />
+        </div>
+      </div>
+
+      <div class="field">
+        <label for="npc-desc">Description</label>
+        <textarea id="npc-desc" name="description" rows="5"
+          placeholder="Describe this NPC: their role, fighting style, special abilities, equipment, personality traits…"></textarea>
+        <span class="field-hint">The more detail you provide, the better the AI can match your vision.</span>
+      </div>
+
+      <div class="field field--check">
+        <label class="checkbox-label">
+          <input type="checkbox" name="includeSpells" />
+          <span>Include spell compendium mapping</span>
+        </label>
+        <span class="field-hint">Indexes your spell compendiums before generating (~10 s extra, enables correct spell links).</span>
+      </div>
+
+      <div class="form-actions">
+        <button type="button" data-action="generate" class="btn-primary" disabled>
+          <i class="fa-solid fa-wand-magic-sparkles"></i>
+          <span class="btn-label">Generate NPC</span>
+        </button>
+        <button type="button" data-action="export" class="btn-secondary" disabled>
+          <i class="fa-solid fa-file-arrow-down"></i>
+          <span>Export JSON</span>
+        </button>
+      </div>
+
+    </form>
   </div>
 
-  <!-- ── NPC form ─────────────────────────────────────────────── -->
-  <form class="npc-form" autocomplete="off">
-
-    <div class="field-row">
-      <div class="field field--name">
-        <label for="npc-name">NPC Name</label>
-        <input type="text" id="npc-name" name="name" placeholder="e.g. Goblin Warchief" />
-      </div>
-      <div class="field field--level">
-        <label for="npc-level">Level</label>
-        <input type="number" id="npc-level" name="level" value="1" min="0" max="25" />
-      </div>
+  <!-- ── Right: history panel ──────────────────────────────────── -->
+  <div class="npc-panel-history">
+    <div class="history-header">
+      <i class="fa-solid fa-clock-rotate-left"></i>
+      <span>Created NPCs</span>
     </div>
-
-    <div class="field">
-      <label for="npc-desc">Description</label>
-      <textarea id="npc-desc" name="description" rows="5"
-        placeholder="Describe this NPC: their role, fighting style, special abilities, equipment, personality traits…"></textarea>
-      <span class="field-hint">The more detail you provide, the better the AI can match your vision.</span>
+    <div class="history-list">
+      <!-- Populated by JavaScript -->
     </div>
+  </div>
 
-    <div class="field field--check">
-      <label class="checkbox-label">
-        <input type="checkbox" name="includeSpells" />
-        <span>Include spell compendium mapping</span>
-      </label>
-      <span class="field-hint">Indexes your spell compendiums before generating (~10 s extra, enables correct spell links).</span>
-    </div>
-
-    <div class="form-actions">
-      <button type="button" data-action="generate" class="btn-primary" disabled>
-        <i class="fa-solid fa-wand-magic-sparkles"></i>
-        <span class="btn-label">Generate NPC</span>
-      </button>
-      <button type="button" data-action="export" class="btn-secondary" disabled>
-        <i class="fa-solid fa-file-arrow-down"></i>
-        <span>Export JSON</span>
-      </button>
-    </div>
-
-  </form>
 </div>

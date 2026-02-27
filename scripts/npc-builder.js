@@ -8,6 +8,8 @@
  * - Full error handling and validation
  * - Automatic retry on validation errors
  * - Sidebar buttons and header controls
+ * - Bulk / concurrent NPC generation
+ * - Local history panel (stored in localStorage)
  *
  * Authentication Flow:
  * - Click "Sign in with Patreon" → opens popup to n8n login endpoint
@@ -20,6 +22,7 @@
  *     headers: { 'X-Builder-Key': <key>, 'X-Foundry-Origin': window.location.origin }
  *     body: { name, level, description, spellMapping (optional) }
  * - The server re-validates key + origin and runs the full generation pipeline
+ * - Multiple NPCs can be generated concurrently; each gets its own history entry
  *
  * Rate Limiting:
  * - Free tier: 3 NPCs/month
@@ -39,6 +42,12 @@ class NPCBuilderApp extends HandlebarsApplicationMixin(ApplicationV2) {
   /** localStorage slots */
   static STORAGE_KEYS = ['pf2e-npc-builder.key', 'pf2e-npc-builder:key'];
 
+  /** localStorage slot for NPC history */
+  static HISTORY_KEY = 'pf2e-npc-builder.history';
+
+  /** Max history entries to retain */
+  static MAX_HISTORY = 50;
+
   static DEFAULT_OPTIONS = {
     id: 'pf2e-npc-builder',
     classes: ['pf2e', 'npc-builder'],
@@ -47,7 +56,7 @@ class NPCBuilderApp extends HandlebarsApplicationMixin(ApplicationV2) {
       resizable: true,
     },
     position: {
-      width: 540,
+      width: 800,
     },
     actions: {
       signin:   function(event) { this._signIn(event); },
@@ -64,6 +73,8 @@ class NPCBuilderApp extends HandlebarsApplicationMixin(ApplicationV2) {
       form: { template: `modules/${modId}/templates/builder.html` },
     };
   }
+
+  /* ── Key storage helpers ─────────────────────────────────── */
 
   static getStoredKey() {
     for (const k of NPCBuilderApp.STORAGE_KEYS) {
@@ -85,51 +96,204 @@ class NPCBuilderApp extends HandlebarsApplicationMixin(ApplicationV2) {
     } catch (_) {}
   }
 
-  constructor(options = {}) {
-    super(options);
-    this.accessKey    = NPCBuilderApp.getStoredKey() || '';
-    this.authenticated = !!this.accessKey;
-    this.generating   = false;
+  /* ── History storage helpers ─────────────────────────────── */
+
+  static loadHistory() {
+    try {
+      const raw = localStorage.getItem(NPCBuilderApp.HISTORY_KEY);
+      if (raw) return JSON.parse(raw);
+    } catch (_) {}
+    return [];
   }
 
-  /** Template data */
+  static saveHistory(history) {
+    try {
+      const trimmed = history.slice(-NPCBuilderApp.MAX_HISTORY);
+      localStorage.setItem(NPCBuilderApp.HISTORY_KEY, JSON.stringify(trimmed));
+    } catch (_) {}
+  }
+
+  /* ── Constructor ─────────────────────────────────────────── */
+
+  constructor(options = {}) {
+    super(options);
+    this.accessKey         = NPCBuilderApp.getStoredKey() || '';
+    this.authenticated     = !!this.accessKey;
+    this.lastGeneratedNPC  = null;
+    this.selectedHistoryId = null;
+
+    // Load history; clean up any entries stuck in "generating" from a prior session
+    this.npcHistory = NPCBuilderApp.loadHistory();
+    let hadStale = false;
+    for (const entry of this.npcHistory) {
+      if (entry.status === 'generating') {
+        entry.status = 'error';
+        entry.error  = 'Session was interrupted';
+        hadStale = true;
+      }
+    }
+    if (hadStale) NPCBuilderApp.saveHistory(this.npcHistory);
+  }
+
+  /* ── Template data ───────────────────────────────────────── */
+
   async _prepareContext(options) {
     return {
       authenticated: this.authenticated,
-      generating:    this.generating,
       patreonUrl:    NPCBuilderApp.PATREON_URL,
     };
   }
 
-  /**
-   * Wire up UI via event delegation — called after every render.
-   * The delegation listener is attached once to the persistent root element;
-   * CSS classes drive show/hide so re-renders do not duplicate listeners.
-   */
+  /* ── Render hook ─────────────────────────────────────────── */
+
   _onRender(context, options) {
     this._applyAuthStateUI();
+    this._renderHistory();
   }
 
-  /** Toggle CSS classes + button disabled states based on auth/generating state */
+  /* ── Auth state UI ───────────────────────────────────────── */
+
   _applyAuthStateUI() {
     const root = this.element;
     if (!root) return;
 
     root.classList.toggle('is-authenticated', !!this.authenticated);
-    root.classList.toggle('is-generating',    !!this.generating);
+
+    const anyGenerating = this.npcHistory.some(e => e.status === 'generating');
+    root.classList.toggle('is-generating', anyGenerating);
 
     const genBtn = root.querySelector('button[data-action="generate"]');
     if (genBtn) {
-      genBtn.disabled = !this.authenticated || this.generating;
+      genBtn.disabled = !this.authenticated;
       const label = genBtn.querySelector('.btn-label');
-      if (label) label.textContent = this.generating ? 'Generating…' : 'Generate NPC';
+      if (label) label.textContent = 'Generate NPC';
     }
 
     const expBtn = root.querySelector('button[data-action="export"]');
-    if (expBtn) expBtn.disabled = !this.authenticated || this.generating;
+    if (expBtn) expBtn.disabled = !this.authenticated;
   }
 
-  /** Open popup to start OAuth; wait for postMessage({ type:'patreon-auth', ok, key }) */
+  /* ── History rendering ───────────────────────────────────── */
+
+  _renderHistory() {
+    const list = this.element?.querySelector('.history-list');
+    if (!list) return;
+
+    list.innerHTML = '';
+
+    if (this.npcHistory.length === 0) {
+      const empty = document.createElement('div');
+      empty.className = 'history-empty';
+      empty.textContent = 'No NPCs created yet.\nGenerate one to see it here.';
+      list.appendChild(empty);
+      return;
+    }
+
+    // Newest first
+    for (const entry of [...this.npcHistory].reverse()) {
+      list.appendChild(this._createHistoryEntryElement(entry));
+    }
+  }
+
+  _createHistoryEntryElement(entry) {
+    const el = document.createElement('div');
+    el.className = `history-entry history-entry--${entry.status}`;
+    el.dataset.entryId = entry.id;
+    if (this.selectedHistoryId === entry.id) el.classList.add('is-selected');
+
+    const statusIcon = {
+      generating: '<i class="fa-solid fa-circle-notch fa-spin"></i>',
+      success:    '<i class="fa-solid fa-circle-check"></i>',
+      error:      '<i class="fa-solid fa-circle-xmark"></i>',
+    }[entry.status] ?? '<i class="fa-solid fa-circle"></i>';
+
+    const escapedName  = this._escapeHtml(entry.name);
+    const escapedError = entry.error ? this._escapeHtml(entry.error) : '';
+
+    el.innerHTML = `
+      <div class="history-entry-main">
+        <div class="history-entry-info">
+          <span class="history-entry-name">${escapedName}</span>
+          <span class="history-entry-meta">Lv.&nbsp;${entry.level}</span>
+        </div>
+        <div class="history-entry-icon">${statusIcon}</div>
+      </div>
+      ${entry.status === 'generating'
+        ? '<div class="history-progress"><div class="history-progress-bar"></div></div>'
+        : ''}
+      ${entry.status === 'error' && escapedError
+        ? `<div class="history-entry-error">${escapedError}</div>`
+        : ''}
+    `;
+
+    el.addEventListener('click', () => this._selectHistoryEntry(entry));
+    return el;
+  }
+
+  /* ── Select a history entry → populate form ──────────────── */
+
+  _selectHistoryEntry(entry) {
+    this.selectedHistoryId = entry.id;
+
+    // Populate the form with the saved prompt values
+    const form = this.element?.querySelector('.npc-form');
+    if (form) {
+      const nameInput      = form.querySelector('[name="name"]');
+      const levelInput     = form.querySelector('[name="level"]');
+      const descTextarea   = form.querySelector('[name="description"]');
+      const spellsCheckbox = form.querySelector('[name="includeSpells"]');
+
+      if (nameInput)      nameInput.value          = entry.name;
+      if (levelInput)     levelInput.value          = entry.level;
+      if (descTextarea)   descTextarea.value        = entry.description;
+      if (spellsCheckbox) spellsCheckbox.checked    = !!entry.includeSpells;
+    }
+
+    // Show the "editing from history" banner
+    const banner = this.element?.querySelector('.history-selected-banner');
+    if (banner) {
+      banner.style.display = 'flex';
+      const strong = banner.querySelector('strong');
+      if (strong) strong.textContent = entry.name;
+    }
+
+    // Update highlighted entry
+    this.element?.querySelectorAll('.history-entry').forEach(el => {
+      el.classList.toggle('is-selected', el.dataset.entryId === entry.id);
+    });
+  }
+
+  /* ── Update a single history entry (in memory + DOM) ─────── */
+
+  _updateHistoryEntry(id, changes) {
+    const entry = this.npcHistory.find(e => e.id === id);
+    if (!entry) return;
+
+    Object.assign(entry, changes);
+    NPCBuilderApp.saveHistory(this.npcHistory);
+
+    // Patch the DOM element in-place
+    const el = this.element?.querySelector(`.history-entry[data-entry-id="${id}"]`);
+    if (el) {
+      const newEl = this._createHistoryEntryElement(entry);
+      el.parentNode.replaceChild(newEl, el);
+    }
+
+    // Sync is-generating class on root
+    const anyGenerating = this.npcHistory.some(e => e.status === 'generating');
+    this.element?.classList.toggle('is-generating', anyGenerating);
+  }
+
+  /* ── HTML escape helper ──────────────────────────────────── */
+
+  _escapeHtml(str) {
+    const div = document.createElement('div');
+    div.textContent = String(str);
+    return div.innerHTML;
+  }
+
+  /* ── Sign-in (Patreon OAuth popup) ───────────────────────── */
+
   async _signIn(event) {
     event?.preventDefault?.();
 
@@ -139,7 +303,6 @@ class NPCBuilderApp extends HandlebarsApplicationMixin(ApplicationV2) {
     try {
       const authUrl = NPCBuilderApp.N8N_AUTH_URL + '?origin=' + encodeURIComponent(window.location.origin);
 
-      // open centered popup
       const w = 520, h = 720;
       const Y = (window.top?.outerHeight || window.outerHeight);
       const X = (window.top?.outerWidth  || window.outerWidth);
@@ -180,7 +343,6 @@ class NPCBuilderApp extends HandlebarsApplicationMixin(ApplicationV2) {
           this._applyAuthStateUI();
           ui.notifications?.info?.('Patreon sign-in complete.');
         } else {
-          // Show error notification, then open Patreon page so the user can join
           const errMsg = data?.error || 'Patreon membership required to use the NPC Builder.';
           ui.notifications?.error?.(errMsg, { permanent: true });
           setTimeout(() => window.open(NPCBuilderApp.PATREON_URL, '_blank'), 800);
@@ -196,7 +358,8 @@ class NPCBuilderApp extends HandlebarsApplicationMixin(ApplicationV2) {
     }
   }
 
-  /** Local sign-out only (server still validates every request) */
+  /* ── Sign-out ────────────────────────────────────────────── */
+
   async _signOut(event) {
     event?.preventDefault?.();
     NPCBuilderApp.setStoredKey('');
@@ -206,9 +369,8 @@ class NPCBuilderApp extends HandlebarsApplicationMixin(ApplicationV2) {
     ui.notifications?.info?.('Signed out.');
   }
 
-  /** ============================================
-   *  BUILD SPELL MAPPING FROM FOUNDRY COMPENDIUM
-   *  ============================================ */
+  /* ── Build spell mapping from Foundry compendium ─────────── */
+
   async _buildSpellMapping() {
     console.log('[NPC Builder] Building spell mapping...');
 
@@ -239,7 +401,8 @@ class NPCBuilderApp extends HandlebarsApplicationMixin(ApplicationV2) {
     return spellMapping;
   }
 
-  /** Collect builder values and ask n8n to create the NPC */
+  /* ── Generate NPC (concurrent — each request gets its own history entry) ── */
+
   async _generateNPC(event) {
     event?.preventDefault?.();
 
@@ -247,12 +410,8 @@ class NPCBuilderApp extends HandlebarsApplicationMixin(ApplicationV2) {
       ui.notifications.warn('Please sign in with Patreon before generating an NPC.');
       return;
     }
-    if (this.generating) {
-      ui.notifications.warn('NPC generation already in progress...');
-      return;
-    }
 
-    const form = this.element?.querySelector?.('form');
+    const form = this.element?.querySelector?.('.npc-form');
     if (!form) {
       ui.notifications.error('Builder form not found.');
       return;
@@ -269,31 +428,59 @@ class NPCBuilderApp extends HandlebarsApplicationMixin(ApplicationV2) {
       return;
     }
 
-    this.generating = true;
-    this._applyAuthStateUI();
-
-    const progressNotif = ui.notifications?.info?.(
-      'Generating NPC… This may take 30–60 seconds.',
-      { permanent: true }
-    );
-
     const key = this.accessKey || NPCBuilderApp.getStoredKey() || '';
     if (!key) {
-      this.generating    = false;
       this.authenticated = false;
       this._applyAuthStateUI();
       ui.notifications.error('Session missing. Please sign in again.');
       return;
     }
 
+    // ── Create history entry ──────────────────────────────────
+    const historyEntry = {
+      id:            foundry.utils.randomID(16),
+      name,
+      level,
+      description,
+      includeSpells,
+      status:        'generating',
+      createdAt:     Date.now(),
+      error:         null,
+    };
+
+    this.npcHistory.push(historyEntry);
+    NPCBuilderApp.saveHistory(this.npcHistory);
+
+    // Insert at the top of the history list (newest first)
+    const list = this.element?.querySelector('.history-list');
+    if (list) {
+      const emptyEl = list.querySelector('.history-empty');
+      if (emptyEl) emptyEl.remove();
+      list.insertBefore(this._createHistoryEntryElement(historyEntry), list.firstChild);
+    }
+
+    // Set is-generating on root
+    this.element?.classList.add('is-generating');
+
+    // ── Clear the selected-entry banner since we're starting fresh ──
+    const banner = this.element?.querySelector('.history-selected-banner');
+    if (banner) banner.style.display = 'none';
+    this.selectedHistoryId = null;
+    this.element?.querySelectorAll('.history-entry.is-selected').forEach(el => el.classList.remove('is-selected'));
+
+    // ── Run generation (no await on outer scope — truly concurrent) ──
+    this._runGeneration(historyEntry, key, name, level, description, includeSpells);
+  }
+
+  /** Internal async worker for a single NPC generation. */
+  async _runGeneration(historyEntry, key, name, level, description, includeSpells) {
     try {
       const payload = { name, level, description };
 
       if (includeSpells) {
         ui.notifications.info('Building spell mapping… (this may take 5–10 seconds)');
-        const spellMapping   = await this._buildSpellMapping();
-        payload.spellMapping = spellMapping;
-        console.log(`[NPC Builder] Added ${spellMapping.length} spells to payload`);
+        payload.spellMapping = await this._buildSpellMapping();
+        console.log(`[NPC Builder] Added ${payload.spellMapping.length} spells to payload`);
       }
 
       console.log('[NPC Builder] Sending generation request to n8n...', {
@@ -312,8 +499,6 @@ class NPCBuilderApp extends HandlebarsApplicationMixin(ApplicationV2) {
         },
         body: JSON.stringify(payload),
       });
-
-      if (progressNotif) progressNotif.remove();
 
       const responseText = await response.text();
       console.log('[NPC Builder] Raw response length:', responseText.length, 'bytes');
@@ -361,12 +546,14 @@ class NPCBuilderApp extends HandlebarsApplicationMixin(ApplicationV2) {
         this.accessKey     = '';
         this.authenticated = false;
         this._applyAuthStateUI();
+        this._updateHistoryEntry(historyEntry.id, { status: 'error', error: 'Authentication failed' });
 
         const message = data?.message || 'Unauthorized. Please sign in with Patreon.';
         ui.notifications.error(message, { permanent: true });
         setTimeout(() => window.open(NPCBuilderApp.PATREON_URL, '_blank'), 800);
 
       } else if (response.status === 429 || data?.error === 'RATE_LIMIT_EXCEEDED') {
+        this._updateHistoryEntry(historyEntry.id, { status: 'error', error: 'Rate limit exceeded' });
         const message      = data?.message || 'Monthly NPC limit reached.';
         const currentUsage = data?.currentUsage || 0;
         const limit        = data?.limit || 0;
@@ -407,6 +594,7 @@ class NPCBuilderApp extends HandlebarsApplicationMixin(ApplicationV2) {
 
         if (actor) {
           this.lastGeneratedNPC = actorData;
+          this._updateHistoryEntry(historyEntry.id, { status: 'success' });
           ui.notifications.success(`NPC "${actor.name}" created successfully!`);
           actor.sheet.render(true);
         } else {
@@ -419,14 +607,13 @@ class NPCBuilderApp extends HandlebarsApplicationMixin(ApplicationV2) {
 
     } catch (err) {
       console.error('[NPC Builder] NPC generation error', err);
-      ui.notifications.error(`Failed to generate NPC: ${err.message}`);
-    } finally {
-      this.generating = false;
-      this._applyAuthStateUI();
+      this._updateHistoryEntry(historyEntry.id, { status: 'error', error: err.message });
+      ui.notifications.error(`Failed to generate "${name}": ${err.message}`);
     }
   }
 
-  /** Sanitize actor data to fix common validation issues */
+  /* ── Sanitize actor data to fix common validation issues ──── */
+
   _sanitizeActorData(actorData) {
     const generateId = () => foundry.utils.randomID(16);
 
@@ -577,7 +764,8 @@ class NPCBuilderApp extends HandlebarsApplicationMixin(ApplicationV2) {
     return false;
   }
 
-  /** Export generated NPC as JSON file */
+  /* ── Export last generated NPC as JSON ───────────────────── */
+
   async _exportJSON(event) {
     event?.preventDefault?.();
 
@@ -606,7 +794,6 @@ class NPCBuilderApp extends HandlebarsApplicationMixin(ApplicationV2) {
 let _npcBuilderApp = null;
 
 function openNPCBuilder() {
-  // Guard against stale reference: app may be "rendered" but its element detached from the DOM
   if (_npcBuilderApp?.rendered && _npcBuilderApp?.element?.isConnected) {
     _npcBuilderApp.bringToTop?.();
     return;
@@ -626,14 +813,12 @@ function openNPCBuilder() {
 
 function registerNPCBuilderControl(app, controls) {
   if (!game.user?.isGM) return;
-  // Guard against the same control being registered twice (check by action, not name)
   const exists = controls.some(c => c.action === 'pf2e-npc-builder');
   if (exists) return;
   controls.push({
     action:  'pf2e-npc-builder',
     icon:    'fa-solid fa-star',
     label:   'NPC Builder',
-    // Foundry v13 ApplicationV2 uses camelCase onClick; keep lowercase for older versions
     onClick: () => openNPCBuilder(),
     onclick: () => openNPCBuilder(),
     visible: true,

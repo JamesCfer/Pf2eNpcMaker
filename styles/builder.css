@@ -4,18 +4,184 @@
    button defaults in ApplicationV2 windows.
    ============================================================ */
 
-/* ── Wrapper ─────────────────────────────────────────────── */
+/* ── Two-panel wrapper ───────────────────────────────────── */
 .application.npc-builder .npc-builder-inner {
   display: flex;
+  flex-direction: row;
+  height: 100%;
+  overflow: hidden;
+}
+
+/* ── Left: form panel ────────────────────────────────────── */
+.application.npc-builder .npc-panel-form {
+  flex: 1;
+  min-width: 0;
+  display: flex;
   flex-direction: column;
-  gap: 0;
-  padding: 0;
+  overflow-y: auto;
+  border-right: 1px solid rgba(0, 0, 0, 0.12);
+}
+
+/* ── Right: history panel ────────────────────────────────── */
+.application.npc-builder .npc-panel-history {
+  width: 240px;
+  flex-shrink: 0;
+  display: flex;
+  flex-direction: column;
+  background: #f7f7f9;
+  overflow: hidden;
+}
+
+.application.npc-builder .history-header {
+  display: flex;
+  align-items: center;
+  gap: 0.5em;
+  padding: 0.6em 0.8em;
+  font-size: 0.78em;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.07em;
+  color: #555;
+  background: #ebebed;
+  border-bottom: 1px solid rgba(0, 0, 0, 0.1);
+  flex-shrink: 0;
+}
+
+.application.npc-builder .history-list {
+  flex: 1;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+}
+
+.application.npc-builder .history-empty {
+  padding: 2em 1em;
+  text-align: center;
+  color: #aaa;
+  font-size: 0.82em;
+  font-style: italic;
+  line-height: 1.5;
+}
+
+/* ── History entry ───────────────────────────────────────── */
+.application.npc-builder .history-entry {
+  padding: 0.5em 0.75em;
+  border-bottom: 1px solid rgba(0, 0, 0, 0.07);
+  cursor: pointer;
+  transition: background 0.1s;
+  position: relative;
+  overflow: hidden;
+  border-left: 3px solid transparent;
+}
+
+.application.npc-builder .history-entry:hover {
+  background: rgba(124, 92, 191, 0.07);
+}
+
+.application.npc-builder .history-entry.is-selected {
+  background: rgba(124, 92, 191, 0.11);
+  border-left-color: #7c5cbf;
+}
+
+.application.npc-builder .history-entry-main {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.4em;
+}
+
+.application.npc-builder .history-entry-info {
+  display: flex;
+  flex-direction: column;
+  gap: 0.1em;
+  min-width: 0;
+  flex: 1;
+}
+
+.application.npc-builder .history-entry-name {
+  font-size: 0.86em;
+  font-weight: 600;
+  color: #333;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.application.npc-builder .history-entry-meta {
+  font-size: 0.73em;
+  color: #999;
+}
+
+.application.npc-builder .history-entry-icon {
+  font-size: 0.88em;
+  flex-shrink: 0;
+  width: 1.1em;
+  text-align: center;
+}
+
+/* Status icon colors */
+.application.npc-builder .history-entry--success .history-entry-icon { color: #38a85a; }
+.application.npc-builder .history-entry--error   .history-entry-icon { color: #cc3333; }
+.application.npc-builder .history-entry--generating .history-entry-icon { color: #7c5cbf; }
+
+/* Error text */
+.application.npc-builder .history-entry-error {
+  font-size: 0.73em;
+  color: #cc3333;
+  margin-top: 0.2em;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* ── Loading progress bar ────────────────────────────────── */
+.application.npc-builder .history-progress {
+  height: 2px;
+  background: rgba(124, 92, 191, 0.18);
+  border-radius: 2px;
+  margin-top: 0.35em;
+  overflow: hidden;
+  position: relative;
+}
+
+.application.npc-builder .history-progress-bar {
+  position: absolute;
+  top: 0;
+  left: -60%;
+  width: 50%;
+  height: 100%;
+  background: linear-gradient(90deg, transparent, #7c5cbf, transparent);
+  border-radius: 2px;
+  animation: npc-history-sweep 1.6s ease-in-out infinite;
+}
+
+@keyframes npc-history-sweep {
+  0%   { left: -60%; }
+  100% { left: 120%; }
+}
+
+/* ── Selected-entry banner (inside form) ─────────────────── */
+.application.npc-builder .history-selected-banner {
+  display: flex;
+  align-items: center;
+  gap: 0.5em;
+  padding: 0.45em 0.75em;
+  background: rgba(124, 92, 191, 0.08);
+  border: 1px solid rgba(124, 92, 191, 0.25);
+  border-radius: 4px;
+  font-size: 0.82em;
+  color: #5a3ea0;
+  margin-bottom: 0.1em;
+}
+
+.application.npc-builder .history-selected-banner i {
+  flex-shrink: 0;
+  opacity: 0.7;
 }
 
 /* ── Auth banner ─────────────────────────────────────────── */
 .application.npc-builder .auth-banner {
   border-bottom: 1px solid rgba(0, 0, 0, 0.15);
-  margin-bottom: 0;
 }
 
 /* --- unsigned state ---------------------------------------- */
@@ -236,13 +402,13 @@
   cursor: not-allowed;
 }
 
-/* Generating spinner pulse */
+/* Generating spinner pulse on primary button */
 .application.npc-builder.is-generating button.btn-primary {
   animation: npc-pulse 1.2s ease-in-out infinite;
 }
 @keyframes npc-pulse {
   0%, 100% { opacity: 1; }
-  50%       { opacity: 0.6; }
+  50%       { opacity: 0.7; }
 }
 
 /* Patreon button */
