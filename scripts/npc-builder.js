@@ -395,7 +395,11 @@ class NPCBuilderApp extends HandlebarsApplicationMixin(ApplicationV2) {
             return;
           }
           try {
-            const resp = await fetch(`${POLL_URL}?nonce=${encodeURIComponent(nonce)}`);
+            const resp = await fetch(POLL_URL, {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({ nonce }),
+            });
             console.log('[NPC Builder] poll status:', resp.status);
             if (resp.status === 500) {
               consecutiveErrors++;
