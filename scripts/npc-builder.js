@@ -382,8 +382,10 @@ class NPCBuilderApp extends HandlebarsApplicationMixin(ApplicationV2) {
 
       // Method B: polling (works in Electron / external browser where opener is null)
       let pollTimer = null;
-      let consecutiveServerErrors = 0;
-      const MAX_SERVER_ERRORS = 10; // ~25 s of consecutive 500s before giving up
+      // Both real 500s and CORS/network failures (which also manifest as "Failed to fetch"
+      // when n8n's error responses lack CORS headers) count toward the give-up limit.
+      let consecutiveErrors = 0;
+      const MAX_ERRORS = 10; // ~25 s of consecutive failures before giving up
       const deadline = Date.now() + TIMEOUT_MS;
       pollTimer = setInterval(async () => {
           if (resolved) { clearInterval(pollTimer); return; }
@@ -396,21 +398,21 @@ class NPCBuilderApp extends HandlebarsApplicationMixin(ApplicationV2) {
             const resp = await fetch(`${POLL_URL}?nonce=${encodeURIComponent(nonce)}`);
             console.log('[NPC Builder] poll status:', resp.status);
             if (resp.status === 500) {
-              consecutiveServerErrors++;
-              if (consecutiveServerErrors === 3) {
+              consecutiveErrors++;
+              if (consecutiveErrors === 3) {
                 console.error(
                   '[NPC Builder] Poll endpoint returning 500 errors.',
                   'The patreon_sessions table may be missing the "nonce" column.',
                   'Add it in n8n under Data → patreon_sessions → Add column → nonce (string).'
                 );
               }
-              if (consecutiveServerErrors >= MAX_SERVER_ERRORS) {
+              if (consecutiveErrors >= MAX_ERRORS) {
                 clearInterval(pollTimer);
                 onFailure('Sign-in server error — please contact support or check n8n logs.');
               }
               return;
             }
-            consecutiveServerErrors = 0;
+            consecutiveErrors = 0;
             if (!resp.ok) {
               console.log('[NPC Builder] poll not ready yet (status', resp.status, ')');
               return; // 404 / other = not ready yet, keep polling
@@ -426,7 +428,17 @@ class NPCBuilderApp extends HandlebarsApplicationMixin(ApplicationV2) {
             }
             // data.pending === true means still waiting — keep polling
           } catch (err) {
-            console.warn('[NPC Builder] poll network error (will retry):', err.message);
+            // fetch() throws (instead of resolving with status 500) when the server's
+            // error response is missing CORS headers — count these the same as server errors.
+            consecutiveErrors++;
+            console.warn(
+              `[NPC Builder] poll fetch error (${consecutiveErrors}/${MAX_ERRORS}):`, err.message,
+              '— likely CORS headers missing from n8n poll endpoint error responses'
+            );
+            if (consecutiveErrors >= MAX_ERRORS) {
+              clearInterval(pollTimer);
+              onFailure('Sign-in server error — CORS or network issue on the poll endpoint.');
+            }
           }
         }, POLL_MS);
 
