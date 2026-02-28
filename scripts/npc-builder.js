@@ -357,8 +357,13 @@ class NPCBuilderApp extends HandlebarsApplicationMixin(ApplicationV2) {
 
       // Method A: postMessage (works in browser popup flow)
       const msgHandler = (ev) => {
+        // Log every message so we can diagnose whether postMessage arrives at all
+        console.log('[NPC Builder] window message received — origin:', ev.origin, 'data:', ev.data);
         const okOrigins = new Set([N8N_ORIGIN, window.location.origin, 'null', '*']);
-        if (!okOrigins.has(ev.origin) && ev.origin !== '') return;
+        if (!okOrigins.has(ev.origin) && ev.origin !== '') {
+          console.log('[NPC Builder] postMessage ignored (origin not in allowlist):', ev.origin);
+          return;
+        }
         let data = ev.data;
         if (typeof data === 'string') {
           try { data = JSON.parse(data); } catch { return; }
@@ -366,8 +371,10 @@ class NPCBuilderApp extends HandlebarsApplicationMixin(ApplicationV2) {
         if (!data || data.type !== 'patreon-auth') return;
         console.log('[NPC Builder] postMessage auth received:', data);
         if (data.ok && data.key && String(data.key).length >= 32) {
+          console.log('[NPC Builder] postMessage success — key length:', data.key.length);
           onSuccess(data.key);
         } else {
+          console.warn('[NPC Builder] postMessage auth failed:', data);
           onFailure(data?.error);
         }
       };
@@ -387,6 +394,7 @@ class NPCBuilderApp extends HandlebarsApplicationMixin(ApplicationV2) {
           }
           try {
             const resp = await fetch(`${POLL_URL}?nonce=${encodeURIComponent(nonce)}`);
+            console.log('[NPC Builder] poll status:', resp.status);
             if (resp.status === 500) {
               consecutiveServerErrors++;
               if (consecutiveServerErrors === 3) {
@@ -403,15 +411,23 @@ class NPCBuilderApp extends HandlebarsApplicationMixin(ApplicationV2) {
               return;
             }
             consecutiveServerErrors = 0;
-            if (!resp.ok) return; // 404 / other = not ready yet, keep polling
+            if (!resp.ok) {
+              console.log('[NPC Builder] poll not ready yet (status', resp.status, ')');
+              return; // 404 / other = not ready yet, keep polling
+            }
             const data = await resp.json();
+            console.log('[NPC Builder] poll response data:', data);
             if (data.ok && data.key && String(data.key).length >= 32) {
+              console.log('[NPC Builder] poll success — key length:', data.key.length);
               onSuccess(data.key);
             } else if (data.error && data.error !== 'not_found') {
+              console.warn('[NPC Builder] poll auth failed:', data.error);
               onFailure(data.error);
             }
             // data.pending === true means still waiting — keep polling
-          } catch (_) { /* network hiccup — keep polling */ }
+          } catch (err) {
+            console.warn('[NPC Builder] poll network error (will retry):', err.message);
+          }
         }, POLL_MS);
 
       ui.notifications?.info?.('Opening Patreon sign-in…');
