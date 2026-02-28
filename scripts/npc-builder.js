@@ -292,16 +292,22 @@ class NPCBuilderApp extends HandlebarsApplicationMixin(ApplicationV2) {
     return div.innerHTML;
   }
 
-  /* ── Sign-in (Patreon OAuth popup) ───────────────────────── */
+  /* ── Sign-in (Patreon OAuth — popup + poll fallback) ─────── */
 
   async _signIn(event) {
     event?.preventDefault?.();
 
-    const N8N_ORIGIN = new URL(NPCBuilderApp.N8N_AUTH_URL).origin;
-    console.log('[NPC Builder] waiting for message from', N8N_ORIGIN);
+    const N8N_ORIGIN  = new URL(NPCBuilderApp.N8N_AUTH_URL).origin;
+    const POLL_URL    = N8N_ORIGIN + '/webhook/oauth/patreon/poll';
+    const POLL_MS     = 2500;   // poll every 2.5 s
+    const TIMEOUT_MS  = 5 * 60 * 1000; // give up after 5 min
+
+    console.log('[NPC Builder] starting Patreon sign-in, poll URL:', POLL_URL);
 
     try {
-      const authUrl = NPCBuilderApp.N8N_AUTH_URL + '?origin=' + encodeURIComponent(window.location.origin);
+      const authUrl = NPCBuilderApp.N8N_AUTH_URL
+        + '?origin=' + encodeURIComponent(window.location.origin)
+        + '&nonce='  + encodeURIComponent(nonce);
 
       const w = 520, h = 720;
       const Y = (window.top?.outerHeight || window.outerHeight);
@@ -309,50 +315,87 @@ class NPCBuilderApp extends HandlebarsApplicationMixin(ApplicationV2) {
       const y = (Y / 2) + (window.top?.screenY || window.screenY) - (h / 2);
       const x = (X / 2) + (window.top?.screenX || window.screenX) - (w / 2);
 
+      // Generate a nonce here in the module and pass it to n8n via the login URL.
+      // n8n will embed it in the OAuth state and store it with the session on callback.
+      // This lets us poll /oauth/patreon/poll?nonce=<nonce> from any environment
+      // (browser popup OR Electron external browser) without relying on postMessage.
+      const nonce = Array.from(crypto.getRandomValues(new Uint8Array(12)))
+        .map(b => b.toString(16).padStart(2,'0')).join('');
+
+      console.log('[NPC Builder] generated poll nonce:', nonce);
+
+      // Open the auth window for the user to log in
       const win = window.open(
         authUrl,
         'patreon-login',
         `toolbar=0,location=1,status=0,menubar=0,scrollbars=1,resizable=1,width=${w},height=${h},left=${x},top=${y}`
       );
 
-      const handler = (ev) => {
-        console.log('[NPC Builder] postMessage received:', {
-          origin:     ev.origin,
-          data:       ev.data,
-          sameSource: ev.source === win,
-        });
+      let resolved = false;
 
-        // After cross-origin redirects (Foundry → n8n → Patreon → n8n callback),
-        // ev.source === win is unreliable in modern browsers — the window reference
-        // breaks across cross-origin navigations. Accept any message from N8N_ORIGIN
-        // or '*' (which arrives as 'null' string when targetOrigin was '*').
-        const okOrigins = new Set([N8N_ORIGIN, window.location.origin, 'null', '*']);
-        if (!okOrigins.has(ev.origin) && ev.origin !== '') return;
-
-        let data = ev.data;
-        if (typeof data === 'string') {
-          try { data = JSON.parse(data); } catch { /* ignore parse error */ }
-        }
-        console.log('[NPC Builder] parsed patreon-auth message:', data);
-        if (!data || data.type !== 'patreon-auth') return;
-
-        window.removeEventListener('message', handler);
+      const onSuccess = (key) => {
+        if (resolved) return;
+        resolved = true;
+        clearInterval(pollTimer);
+        window.removeEventListener('message', msgHandler);
         try { win?.close?.(); } catch {}
-
-        if (data.ok && data.key && String(data.key).length >= 32) {
-          this.accessKey     = String(data.key);
-          NPCBuilderApp.setStoredKey(this.accessKey);
-          this.authenticated = true;
-          this._applyAuthStateUI();
-          ui.notifications?.info?.('Patreon sign-in complete.');
-        } else {
-          const errMsg = data?.error || 'Patreon membership required to use the NPC Builder.';
-          ui.notifications?.error?.(errMsg, { permanent: true });
-          setTimeout(() => window.open(NPCBuilderApp.PATREON_URL, '_blank'), 800);
-        }
+        this.accessKey     = String(key);
+        NPCBuilderApp.setStoredKey(this.accessKey);
+        this.authenticated = true;
+        this._applyAuthStateUI();
+        ui.notifications?.info?.('Patreon sign-in complete.');
       };
 
-      window.addEventListener('message', handler);
+      const onFailure = (errMsg) => {
+        if (resolved) return;
+        resolved = true;
+        clearInterval(pollTimer);
+        window.removeEventListener('message', msgHandler);
+        ui.notifications?.error?.(errMsg || 'Patreon membership required to use the NPC Builder.', { permanent: true });
+        setTimeout(() => window.open(NPCBuilderApp.PATREON_URL, '_blank'), 800);
+      };
+
+      // Method A: postMessage (works in browser popup flow)
+      const msgHandler = (ev) => {
+        const okOrigins = new Set([N8N_ORIGIN, window.location.origin, 'null', '*']);
+        if (!okOrigins.has(ev.origin) && ev.origin !== '') return;
+        let data = ev.data;
+        if (typeof data === 'string') {
+          try { data = JSON.parse(data); } catch { return; }
+        }
+        if (!data || data.type !== 'patreon-auth') return;
+        console.log('[NPC Builder] postMessage auth received:', data);
+        if (data.ok && data.key && String(data.key).length >= 32) {
+          onSuccess(data.key);
+        } else {
+          onFailure(data?.error);
+        }
+      };
+      window.addEventListener('message', msgHandler);
+
+      // Method B: polling (works in Electron / external browser where opener is null)
+      let pollTimer = null;
+      const deadline = Date.now() + TIMEOUT_MS;
+      pollTimer = setInterval(async () => {
+          if (resolved) { clearInterval(pollTimer); return; }
+          if (Date.now() > deadline) {
+            clearInterval(pollTimer);
+            if (!resolved) onFailure('Sign-in timed out. Please try again.');
+            return;
+          }
+          try {
+            const resp = await fetch(`${POLL_URL}?nonce=${encodeURIComponent(nonce)}`);
+            if (!resp.ok) return; // not ready yet
+            const data = await resp.json();
+            if (data.ok && data.key && String(data.key).length >= 32) {
+              onSuccess(data.key);
+            } else if (data.error && data.error !== 'not_found') {
+              onFailure(data.error);
+            }
+            // data.pending === true means still waiting — keep polling
+          } catch (_) { /* network hiccup — keep polling */ }
+        }, POLL_MS);
+
       ui.notifications?.info?.('Opening Patreon sign-in…');
 
     } catch (err) {
