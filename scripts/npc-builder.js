@@ -1020,15 +1020,95 @@ let _npcBuilderApp = null;
 function openNPCBuilder() {
   if (_npcBuilderApp?.rendered && _npcBuilderApp?.element?.isConnected) {
     _npcBuilderApp.bringToTop?.();
-    return;
-  }
-  _npcBuilderApp = null;
-  _npcBuilderApp = new NPCBuilderApp();
-  _npcBuilderApp.render({ force: true }).catch(err => {
-    console.error('[NPC Builder] Failed to open:', err);
-    ui.notifications?.error?.('NPC Builder failed to open. Check the console (F12) for details.');
+  } else {
     _npcBuilderApp = null;
-  });
+    _npcBuilderApp = new NPCBuilderApp();
+    _npcBuilderApp.render({ force: true }).catch(err => {
+      console.error('[NPC Builder] Failed to open:', err);
+      ui.notifications?.error?.('NPC Builder failed to open. Check the console (F12) for details.');
+      _npcBuilderApp = null;
+    });
+  }
+
+  // Non-blocking update check — runs every time the builder is opened
+  _checkForModuleUpdate().catch(() => {});
+}
+
+/* -----------------------------------------------------------------------------
+   Update checker — fetches the manifest and shows a popup when outdated
+----------------------------------------------------------------------------- */
+
+/** Returns true if `a` is strictly newer than `b` (simple semver). */
+function _isNewerVersion(a, b) {
+  const parse = v => (v || '0.0.0').split('.').map(n => parseInt(n, 10) || 0);
+  const [a1, a2, a3] = parse(a);
+  const [b1, b2, b3] = parse(b);
+  if (a1 !== b1) return a1 > b1;
+  if (a2 !== b2) return a2 > b2;
+  return a3 > b3;
+}
+
+async function _checkForModuleUpdate() {
+  try {
+    const modId          = game.modules?.get('Pf2eNpcMaker') ? 'Pf2eNpcMaker' : 'pf2e-npc-auto-builder';
+    const mod            = game.modules?.get(modId);
+    const manifestUrl    = mod?.manifest;
+    const currentVersion = mod?.version || '';
+
+    if (!manifestUrl || !currentVersion) return;
+
+    const response = await fetch(manifestUrl, { cache: 'no-cache' });
+    if (!response.ok) return;
+
+    const data          = await response.json();
+    const latestVersion = data?.version || '';
+
+    if (!latestVersion || !_isNewerVersion(latestVersion, currentVersion)) return;
+
+    // Build the popup content
+    const content = `
+      <div style="display:flex;flex-direction:column;gap:0.6em;padding:0.25em 0;">
+        <p style="margin:0;">
+          <strong>NPC Builder v${latestVersion}</strong> is available.
+          You are running <strong>v${currentVersion}</strong>.
+        </p>
+        <p style="margin:0;color:#555;font-size:0.92em;">
+          Update via the Foundry <em>Add-on Modules</em> manager or from GitHub to get the
+          latest features and bug fixes.
+        </p>
+      </div>`;
+
+    // Prefer DialogV2 (Foundry v13+), fall back to classic Dialog
+    const DialogV2 = foundry.applications?.api?.DialogV2;
+    if (DialogV2) {
+      DialogV2.prompt({
+        window:  { title: 'NPC Builder — Update Available' },
+        content,
+        ok: {
+          label:    'View on GitHub',
+          icon:     'fa-brands fa-github',
+          callback: () => window.open('https://github.com/JamesCfer/Pf2eNpcMaker/releases/latest', '_blank'),
+        },
+        rejectClose: false,
+      }).catch(() => {});
+    } else {
+      new Dialog({
+        title:   'NPC Builder — Update Available',
+        content,
+        buttons: {
+          github: {
+            label:    '<i class="fa-brands fa-github"></i> View on GitHub',
+            callback: () => window.open('https://github.com/JamesCfer/Pf2eNpcMaker/releases/latest', '_blank'),
+          },
+          dismiss: { label: 'Dismiss' },
+        },
+        default: 'dismiss',
+      }).render(true);
+    }
+  } catch (err) {
+    // Network errors are expected offline — log quietly and move on
+    console.debug('[NPC Builder] Update check failed (offline?):', err);
+  }
 }
 
 /* -----------------------------------------------------------------------------
