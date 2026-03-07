@@ -874,6 +874,18 @@ class NPCBuilderApp extends HandlebarsApplicationMixin(ApplicationV2) {
           this._sanitizeActorData(actorData);
         }
 
+        // For dnd5e, remove prototypeToken before Actor.create().
+        // Foundry's Actor5e._preCreate constructs a proper PrototypeToken DataModel
+        // instance internally. Passing any plain object — even a fully-formed one —
+        // causes _preCreate to crash at actor.mjs:661 because it expects to operate
+        // on an already-initialized document, not raw JSON. Omitting it lets Foundry
+        // build it correctly from defaults, then we patch the name/img after creation.
+        const dnd5eTokenName = actorData.name;
+        const dnd5eTokenImg = actorData.img;
+        if (system === 'dnd5e') {
+          delete actorData.prototypeToken;
+        }
+
         let actor, attempts = 0;
         const maxAttempts = 10;
 
@@ -892,6 +904,13 @@ class NPCBuilderApp extends HandlebarsApplicationMixin(ApplicationV2) {
         }
 
         if (actor) {
+          // Restore prototypeToken name and img now that the document exists properly
+          if (system === 'dnd5e') {
+            await actor.update({
+              'prototypeToken.name': dnd5eTokenName,
+              'prototypeToken.texture.src': dnd5eTokenImg || 'icons/svg/mystery-man.svg'
+            });
+          }
           this.lastGeneratedNPC = actorData;
           this._updateHistoryEntry(historyEntry.id, { status: 'success' });
           ui.notifications.success(`NPC "${actor.name}" created successfully!`);
@@ -1034,71 +1053,21 @@ class NPCBuilderApp extends HandlebarsApplicationMixin(ApplicationV2) {
     if (!actorData.flags) actorData.flags = {};
     if (!actorData.img) actorData.img = 'icons/svg/mystery-man.svg';
 
-    // Always fully overwrite prototypeToken with a complete, safe plain object.
-    // Foundry's Actor5e._preCreate expects all sub-fields to exist; a partial or
-    // GPT-generated token missing 'light', 'sight', 'flags', etc. will crash at
-    // actor.mjs:661 with "Cannot read properties of undefined (reading 'token')".
-    actorData.prototypeToken = {
-      name: actorData.name,
-      displayName: 20,
-      actorLink: false,
-      appendNumber: false,
-      prependAdjective: false,
-      texture: {
-        src: actorData.img || 'icons/svg/mystery-man.svg',
-        scaleX: 1,
-        scaleY: 1,
-        offsetX: 0,
-        offsetY: 0,
-        rotation: 0,
-        fit: 'contain',
-        anchorX: 0.5,
-        anchorY: 0.5
-      },
-      width: 1,
-      height: 1,
-      x: 0,
-      y: 0,
-      elevation: 0,
-      sort: 0,
-      locked: false,
-      rotation: 0,
-      alpha: 1,
-      hidden: false,
-      disposition: -1,
-      displayBars: 40,
-      bar1: { attribute: 'attributes.hp' },
-      bar2: { attribute: null },
-      light: {
-        alpha: 0.5,
-        angle: 360,
-        bright: 0,
-        coloration: 1,
-        dim: 0,
-        attenuation: 0.5,
-        luminosity: 0.5,
-        saturation: 0,
-        contrast: 0,
-        shadows: 0,
-        animation: { type: null, speed: 5, intensity: 5, reverse: false },
-        darkness: { min: 0, max: 1 }
-      },
-      sight: {
-        enabled: false,
-        range: 0,
-        angle: 360,
-        visionMode: 'basic',
-        color: null,
-        attenuation: 0.1,
-        brightness: 0,
-        saturation: 0,
-        contrast: 0
-      },
-      detectionModes: [],
-      flags: {},
-      delta: {},
-      randomImg: false
-    };
+    if (!actorData.prototypeToken) {
+      actorData.prototypeToken = {
+        name: actorData.name,
+        actorLink: false,
+        texture: { src: actorData.img || 'icons/svg/mystery-man.svg' },
+        width: 1,
+        height: 1,
+        disposition: -1,
+        displayBars: 40,
+        bar1: { attribute: 'attributes.hp' },
+        bar2: { attribute: null },
+        sight: { enabled: false },
+        detectionModes: []
+      };
+    }
 
     console.log('[NPC Builder] D&D 5e actor data sanitized:', actorData.name, '| items:', actorData.items?.length || 0);
   }
