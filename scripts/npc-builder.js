@@ -1034,6 +1034,22 @@ class NPCBuilderApp extends HandlebarsApplicationMixin(ApplicationV2) {
     if (!actorData.flags) actorData.flags = {};
     if (!actorData.img) actorData.img = 'icons/svg/mystery-man.svg';
 
+    if (!actorData.prototypeToken) {
+      actorData.prototypeToken = {
+        name: actorData.name,
+        actorLink: false,
+        texture: { src: actorData.img || 'icons/svg/mystery-man.svg' },
+        width: 1,
+        height: 1,
+        disposition: -1,
+        displayBars: 40,
+        bar1: { attribute: 'attributes.hp' },
+        bar2: { attribute: null },
+        sight: { enabled: false },
+        detectionModes: []
+      };
+    }
+
     console.log('[NPC Builder] D&D 5e actor data sanitized:', actorData.name, '| items:', actorData.items?.length || 0);
   }
 
