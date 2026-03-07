@@ -2,7 +2,7 @@
   "id": "Pf2eNpcMaker",
   "title": "PF2E NPC Auto-Builder",
   "description": "Generate Pathfinder 2e NPCs from feats, spells, actions, and equipment. Optionally export them or upload via the Foundry REST API.",
-  "version": "1.7.1",
+  "version": "1.7.2",
   "authors": [
     {
       "name": "JamesCfer"
