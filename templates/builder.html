@@ -14,10 +14,6 @@
   </div>
 
   <!-- ── System warning banners (shown for non-functional systems) ── -->
-  <div class="system-warning system-warning--dnd5e">
-    <i class="fa-solid fa-triangle-exclamation"></i>
-    <span>D&amp;D 5e support is currently not in a usable state. This feature is under active development.</span>
-  </div>
   <div class="system-warning system-warning--hero6e">
     <i class="fa-solid fa-triangle-exclamation"></i>
     <span>HERO 6e support is currently not in a usable state. This feature is under active development.</span>
@@ -96,13 +92,15 @@
           <span class="field-hint">Indexes your spell compendiums before generating (~10 s extra, enables correct spell links).</span>
         </div>
 
-        <!-- D&D 5e-only: equipment list -->
-        <div class="field field--check" data-system-only="dnd5e">
-          <label class="checkbox-label">
-            <input type="checkbox" name="includeEquipment" />
-            <span>Include equipment &amp; magic items</span>
-          </label>
-          <span class="field-hint">Adds weapons, armor, and notable items to this stat block.</span>
+        <!-- D&D 5e-only: caster type -->
+        <div class="field" data-system-only="dnd5e">
+          <label for="npc-caster-type">Caster Type</label>
+          <select id="npc-caster-type" name="casterType">
+            <option value="none">None (martial / non-caster)</option>
+            <option value="half">Half Caster (up to 5th-level spells)</option>
+            <option value="full">Full Caster (up to 9th-level spells)</option>
+          </select>
+          <span class="field-hint">Determines spell slot progression included in the stat block.</span>
         </div>
 
         <!-- HERO 6e-only: complications -->

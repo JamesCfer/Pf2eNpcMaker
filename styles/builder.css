@@ -347,7 +347,8 @@
 
 .application.npc-builder .field input[type="text"],
 .application.npc-builder .field input[type="number"],
-.application.npc-builder .field textarea {
+.application.npc-builder .field textarea,
+.application.npc-builder .field select {
   width: 100%;
   padding: 0.4em 0.55em;
   border: 1px solid rgba(0, 0, 0, 0.25);
@@ -361,10 +362,17 @@
 }
 
 .application.npc-builder .field input:focus,
-.application.npc-builder .field textarea:focus {
+.application.npc-builder .field textarea:focus,
+.application.npc-builder .field select:focus {
   outline: none;
   border-color: #7c5cbf;
   box-shadow: 0 0 0 2px rgba(124, 92, 191, 0.18);
+}
+
+/* D&D 5e accent colour for select focus */
+.application.npc-builder.system-dnd5e .field select:focus {
+  border-color: #c0392b;
+  box-shadow: 0 0 0 2px rgba(192, 57, 43, 0.18);
 }
 
 .application.npc-builder .field textarea {

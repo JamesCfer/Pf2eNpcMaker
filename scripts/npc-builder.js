@@ -35,9 +35,10 @@ const { HandlebarsApplicationMixin, ApplicationV2 } = foundry.applications.api;
 
 class NPCBuilderApp extends HandlebarsApplicationMixin(ApplicationV2) {
   /** n8n endpoints */
-  static N8N_AUTH_URL = 'https://foundryrelay.dedicated2.com/webhook/oauth/patreon/login';
-  static N8N_NPC_URL  = 'https://foundryrelay.dedicated2.com/webhook/npc-builder';
-  static PATREON_URL  = 'https://www.patreon.com/cw/CelestiaTools';
+  static N8N_AUTH_URL   = 'https://foundryrelay.dedicated2.com/webhook/oauth/patreon/login';
+  static N8N_NPC_URL    = 'https://foundryrelay.dedicated2.com/webhook/npc-builder';
+  static N8N_DND5E_URL  = 'https://foundryrelay.dedicated2.com/webhook/dnd5e-npc-builder';
+  static PATREON_URL    = 'https://www.patreon.com/cw/CelestiaTools';
 
   /** localStorage slots */
   static STORAGE_KEYS = ['pf2e-npc-builder.key', 'pf2e-npc-builder:key'];
@@ -197,7 +198,7 @@ class NPCBuilderApp extends HandlebarsApplicationMixin(ApplicationV2) {
     const anyGenerating = this.npcHistory.some(e => e.status === 'generating');
     root.classList.toggle('is-generating', anyGenerating);
 
-    const isUnusableSystem = this.selectedSystem !== 'pf2e';
+    const isUnusableSystem = this.selectedSystem === 'hero6e';
 
     const genBtn = root.querySelector('button[data-action="generate"]');
     if (genBtn) {
@@ -252,6 +253,8 @@ class NPCBuilderApp extends HandlebarsApplicationMixin(ApplicationV2) {
         levelLabel:      'Level',
         levelMin:        '0',
         levelMax:        '25',
+        levelStep:       '1',
+        levelDefault:    '1',
         namePlaceholder: 'e.g. Goblin Warchief',
         descPlaceholder: 'Describe this NPC: their role, fighting style, special abilities, equipment, personality traits…',
         historyLabel:    'Created NPCs',
@@ -260,6 +263,8 @@ class NPCBuilderApp extends HandlebarsApplicationMixin(ApplicationV2) {
         levelLabel:      'Challenge Rating',
         levelMin:        '0',
         levelMax:        '30',
+        levelStep:       '0.125',
+        levelDefault:    '1',
         namePlaceholder: 'e.g. Bandit Captain',
         descPlaceholder: 'Describe this creature: their role, attacks, special abilities, legendary actions, lore…',
         historyLabel:    'Created Creatures',
@@ -268,6 +273,8 @@ class NPCBuilderApp extends HandlebarsApplicationMixin(ApplicationV2) {
         levelLabel:      'Power Level',
         levelMin:        '1',
         levelMax:        '12',
+        levelStep:       '1',
+        levelDefault:    '1',
         namePlaceholder: 'e.g. Ironclad',
         descPlaceholder: 'Describe this character: their powers, combat style, skills, limitations, background…',
         historyLabel:    'Created Characters',
@@ -280,7 +287,11 @@ class NPCBuilderApp extends HandlebarsApplicationMixin(ApplicationV2) {
     if (levelLabel) levelLabel.textContent = cfg.levelLabel;
 
     const levelInput = root.querySelector('#npc-level');
-    if (levelInput) { levelInput.min = cfg.levelMin; levelInput.max = cfg.levelMax; }
+    if (levelInput) {
+      levelInput.min  = cfg.levelMin;
+      levelInput.max  = cfg.levelMax;
+      levelInput.step = cfg.levelStep;
+    }
 
     const nameInput = root.querySelector('#npc-name');
     if (nameInput) nameInput.placeholder = cfg.namePlaceholder;
@@ -331,12 +342,13 @@ class NPCBuilderApp extends HandlebarsApplicationMixin(ApplicationV2) {
 
     const escapedName  = this._escapeHtml(entry.name);
     const escapedError = entry.error ? this._escapeHtml(entry.error) : '';
+    const metaLabel    = entry.system === 'dnd5e' ? `CR&nbsp;${entry.level}` : `Lv.&nbsp;${entry.level}`;
 
     el.innerHTML = `
       <div class="history-entry-main">
         <div class="history-entry-info">
           <span class="history-entry-name">${escapedName}</span>
-          <span class="history-entry-meta">Lv.&nbsp;${entry.level}</span>
+          <span class="history-entry-meta">${metaLabel}</span>
         </div>
         <div class="history-entry-icon">${statusIcon}</div>
       </div>
@@ -357,18 +369,27 @@ class NPCBuilderApp extends HandlebarsApplicationMixin(ApplicationV2) {
   _selectHistoryEntry(entry) {
     this.selectedHistoryId = entry.id;
 
+    // Switch to the system the entry was generated with (if specified)
+    if (entry.system && entry.system !== this.selectedSystem && NPCBuilderApp.SYSTEMS.includes(entry.system)) {
+      this.selectedSystem = entry.system;
+      NPCBuilderApp.setStoredSystem(entry.system);
+      this._applySystemUI();
+    }
+
     // Populate the form with the saved prompt values
     const form = this.element?.querySelector('.npc-form');
     if (form) {
-      const nameInput      = form.querySelector('[name="name"]');
-      const levelInput     = form.querySelector('[name="level"]');
-      const descTextarea   = form.querySelector('[name="description"]');
-      const spellsCheckbox = form.querySelector('[name="includeSpells"]');
+      const nameInput        = form.querySelector('[name="name"]');
+      const levelInput       = form.querySelector('[name="level"]');
+      const descTextarea     = form.querySelector('[name="description"]');
+      const spellsCheckbox   = form.querySelector('[name="includeSpells"]');
+      const casterTypeSelect = form.querySelector('[name="casterType"]');
 
-      if (nameInput)      nameInput.value          = entry.name;
-      if (levelInput)     levelInput.value          = entry.level;
-      if (descTextarea)   descTextarea.value        = entry.description;
-      if (spellsCheckbox) spellsCheckbox.checked    = !!entry.includeSpells;
+      if (nameInput)        nameInput.value         = entry.name;
+      if (levelInput)       levelInput.value        = entry.level;
+      if (descTextarea)     descTextarea.value      = entry.description;
+      if (spellsCheckbox)   spellsCheckbox.checked  = !!entry.includeSpells;
+      if (casterTypeSelect) casterTypeSelect.value  = entry.casterType || 'none';
     }
 
     // Show the "editing from history" banner
@@ -629,9 +650,8 @@ class NPCBuilderApp extends HandlebarsApplicationMixin(ApplicationV2) {
       return;
     }
 
-    if (this.selectedSystem !== 'pf2e') {
-      const names = { dnd5e: 'D&D 5e', hero6e: 'HERO 6e' };
-      ui.notifications.warn(`${names[this.selectedSystem] || this.selectedSystem} support is not yet available.`);
+    if (this.selectedSystem === 'hero6e') {
+      ui.notifications.warn('HERO 6e support is not yet available.');
       return;
     }
 
@@ -646,6 +666,7 @@ class NPCBuilderApp extends HandlebarsApplicationMixin(ApplicationV2) {
     const level         = Number(fd.get('level')) || 1;
     const description   = (fd.get('description')?.toString()?.trim()) || '';
     const includeSpells = fd.get('includeSpells') === 'on';
+    const casterType    = fd.get('casterType') || 'none';
 
     if (!description) {
       ui.notifications.warn('Please provide a description for the NPC.');
@@ -667,6 +688,8 @@ class NPCBuilderApp extends HandlebarsApplicationMixin(ApplicationV2) {
       level,
       description,
       includeSpells,
+      casterType,
+      system:        this.selectedSystem,
       status:        'generating',
       createdAt:     Date.now(),
       error:         null,
@@ -693,28 +716,37 @@ class NPCBuilderApp extends HandlebarsApplicationMixin(ApplicationV2) {
     this.element?.querySelectorAll('.history-entry.is-selected').forEach(el => el.classList.remove('is-selected'));
 
     // ── Run generation (no await on outer scope — truly concurrent) ──
-    this._runGeneration(historyEntry, key, name, level, description, includeSpells);
+    this._runGeneration(historyEntry, key, name, level, description, includeSpells, casterType, this.selectedSystem);
   }
 
   /** Internal async worker for a single NPC generation. */
-  async _runGeneration(historyEntry, key, name, level, description, includeSpells) {
+  async _runGeneration(historyEntry, key, name, level, description, includeSpells, casterType = 'none', system = 'pf2e') {
     try {
-      const payload = { name, level, description };
+      let endpoint, payload;
 
-      if (includeSpells) {
-        ui.notifications.info('Building spell mapping… (this may take 5–10 seconds)');
-        payload.spellMapping = await this._buildSpellMapping();
-        console.log(`[NPC Builder] Added ${payload.spellMapping.length} spells to payload`);
+      if (system === 'dnd5e') {
+        endpoint = NPCBuilderApp.N8N_DND5E_URL;
+        payload  = { name, cr: level, description, casterType };
+        console.log('[NPC Builder] D&D 5e generation request:', { name, cr: level, casterType });
+      } else {
+        endpoint = NPCBuilderApp.N8N_NPC_URL;
+        payload  = { name, level, description };
+
+        if (includeSpells) {
+          ui.notifications.info('Building spell mapping… (this may take 5–10 seconds)');
+          payload.spellMapping = await this._buildSpellMapping();
+          console.log(`[NPC Builder] Added ${payload.spellMapping.length} spells to payload`);
+        }
+
+        console.log('[NPC Builder] PF2e generation request:', {
+          name,
+          level,
+          hasSpellMapping: !!payload.spellMapping,
+          spellCount:      payload.spellMapping?.length || 0,
+        });
       }
 
-      console.log('[NPC Builder] Sending generation request to n8n...', {
-        name,
-        level,
-        hasSpellMapping: !!payload.spellMapping,
-        spellCount:      payload.spellMapping?.length || 0,
-      });
-
-      const response = await fetch(NPCBuilderApp.N8N_NPC_URL, {
+      const response = await fetch(endpoint, {
         method:  'POST',
         headers: {
           'Content-Type':     'application/json',
@@ -797,7 +829,11 @@ class NPCBuilderApp extends HandlebarsApplicationMixin(ApplicationV2) {
         if (!actorData.name || !actorData.type) throw new Error(`Invalid actor data: missing ${!actorData.name ? 'name' : 'type'}`);
 
         console.log('[NPC Builder] Creating actor in Foundry...', actorData);
-        this._sanitizeActorData(actorData);
+        if (system === 'dnd5e') {
+          this._sanitizeActorDataDnd5e(actorData);
+        } else {
+          this._sanitizeActorData(actorData);
+        }
 
         let actor, attempts = 0;
         const maxAttempts = 10;
@@ -808,7 +844,7 @@ class NPCBuilderApp extends HandlebarsApplicationMixin(ApplicationV2) {
             actor = await Actor.create(actorData);
           } catch (error) {
             const errorText = error.toString ? error.toString() : String(error.message || error);
-            if (this._tryFixValidationError(actorData, errorText)) {
+            if (system !== 'dnd5e' && this._tryFixValidationError(actorData, errorText)) {
               console.warn(`[NPC Builder] Fixed validation error, retrying (attempt ${attempts})...`);
               continue;
             }
@@ -925,6 +961,41 @@ class NPCBuilderApp extends HandlebarsApplicationMixin(ApplicationV2) {
     }
 
     console.log('[NPC Builder] Actor data sanitized successfully');
+  }
+
+  /* ── Sanitize D&D 5e actor data ──────────────────────────── */
+
+  _sanitizeActorDataDnd5e(actorData) {
+    const generateId = () => foundry.utils.randomID(16);
+
+    if (!actorData._id || actorData._id.length !== 16 || !/^[a-zA-Z0-9]{16}$/.test(actorData._id)) {
+      console.warn('[NPC Builder] D&D 5e: Fixing invalid actor _id:', actorData._id);
+      actorData._id = generateId();
+    }
+
+    // Ensure type is 'npc' for D&D 5e monsters/NPCs
+    if (actorData.type !== 'npc') {
+      console.warn('[NPC Builder] D&D 5e: Correcting actor type to "npc" (was:', actorData.type, ')');
+      actorData.type = 'npc';
+    }
+
+    if (Array.isArray(actorData.items)) {
+      actorData.items.forEach(item => {
+        if (!item._id || item._id.length !== 16 || !/^[a-zA-Z0-9]{16}$/.test(item._id)) {
+          console.warn('[NPC Builder] D&D 5e: Fixing invalid item _id:', item._id, 'for', item.name);
+          item._id = generateId();
+        }
+
+        // Ensure description object exists
+        if (!item.system) item.system = {};
+        if (!item.system.description) item.system.description = { value: '', chat: '', unidentified: '' };
+      });
+    }
+
+    if (!actorData.flags) actorData.flags = {};
+    if (!actorData.img) actorData.img = 'icons/svg/mystery-man.svg';
+
+    console.log('[NPC Builder] D&D 5e actor data sanitized:', actorData.name, '| items:', actorData.items?.length || 0);
   }
 
   /**
