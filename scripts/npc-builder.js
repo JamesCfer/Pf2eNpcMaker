@@ -895,6 +895,12 @@ class NPCBuilderApp extends HandlebarsApplicationMixin(ApplicationV2) {
               { inplace: false, insertKeys: true, insertValues: true, overwrite: true }
             );
             console.log('[NPC Builder] D&D 5e: system merged against blank NPC schema');
+            // Actor5e._preCreate (dnd5e 5.x) reads this.system.token at actor.mjs:661.
+            // If the blank NPC schema doesn't include a token key, this.system comes out
+            // undefined after DataModel coercion and crashes. Ensure it exists here.
+            if (!actorData.system.token || typeof actorData.system.token !== 'object') {
+              actorData.system.token = {};
+            }
           } catch (mergeErr) {
             console.warn('[NPC Builder] D&D 5e: schema merge failed (non-fatal):', mergeErr);
           }
