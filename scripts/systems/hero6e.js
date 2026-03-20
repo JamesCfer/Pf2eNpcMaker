@@ -33,6 +33,12 @@
  *     Fix: always write { LEVELS, XMLID, xmlTag } onto every direct uppercase key
  *     so the `!char.XMLID` guard is false and _preCreate skips it entirely.
  *
+ * CASE NORMALIZATION — Foundry actor exports store characteristics under lowercase
+ *   keys (e.g. "str", "dex") with { max, value } but NO LEVELS field. The n8n
+ *   workflow may produce uppercase keys with a LEVELS field. This sanitizer handles
+ *   both, deriving LEVELS from (max - base) when reading a lowercase Foundry export
+ *   key, and always normalizing to uppercase before writing.
+ *
  * This function only handles structural concerns (IDs, type coercion, required
  * defaults). It trusts n8n's validated XMLIDs and injected fields completely.
  */
@@ -75,6 +81,12 @@ export function sanitizeActorDataHero6e(actorData) {
   //    { XMLID, xmlTag }, zeroing LEVELS. We must include XMLID so _preCreate skips
   //    the field. After Actor.create() the _onUpdate hook reads system[KEY].LEVELS
   //    and propagates it into system.characteristics[key].max / .value.
+  //
+  // Source priority for LEVELS:
+  //   a) chars[KEY] (uppercase) with explicit LEVELS field  → use directly
+  //   b) chars[key] (lowercase, Foundry export) with max    → derive: max - base
+  //   c) sys[KEY].LEVELS (direct uppercase field)           → use as fallback
+  //   d) Nothing found                                      → 0 (base value)
   const CHAR_BASES = {
     STR:10, DEX:10, CON:10, INT:10, EGO:10, PRE:10,
     OCV:3,  DCV:3,  OMCV:3, DMCV:3,
@@ -86,24 +98,48 @@ export function sanitizeActorDataHero6e(actorData) {
   const chars = sys.characteristics;
 
   for (const [key, base] of Object.entries(CHAR_BASES)) {
-    // 1. Validate / compute system.characteristics[key]
-    if (!chars[key]) {
-      chars[key] = { value: base, max: base, LEVELS: 0 };
+    const lkey   = key.toLowerCase();
+    const upper  = chars[key];   // uppercase key (n8n output)
+    const lower  = chars[lkey];  // lowercase key (Foundry export)
+
+    let levels;
+
+    if (upper && upper.LEVELS !== undefined) {
+      // Path A: uppercase key with explicit LEVELS (n8n workflow output)
+      levels = Math.max(0, parseInt(upper.LEVELS) || 0);
+    } else if (lower && lower.max !== undefined) {
+      // Path B: lowercase Foundry export key — derive LEVELS from max - base
+      levels = Math.max(0, (parseInt(lower.max) || base) - base);
+    } else if (upper && upper.max !== undefined) {
+      // Path C: uppercase key but no LEVELS, has max — derive same way
+      levels = Math.max(0, (parseInt(upper.max) || base) - base);
+    } else if (sys[key] && sys[key].LEVELS !== undefined) {
+      // Path D: fall back to the direct uppercase system field
+      levels = Math.max(0, parseInt(sys[key].LEVELS) || 0);
     } else {
-      const c      = chars[key];
-      const levels = Math.max(0, parseInt(c.LEVELS) || 0);
-      c.LEVELS     = levels;
-      c.max        = base + levels;
-      c.value      = Math.min(parseInt(c.value) || c.max, c.max);
+      // Path E: nothing useful found — use base (0 purchased levels)
+      levels = 0;
     }
 
-    // 2. Mirror onto the direct uppercase field with XMLID present.
-    //    This prevents _preCreate from replacing the object and zeroing LEVELS.
-    const levels = chars[key].LEVELS;
+    // Normalize to uppercase key with all required fields
+    chars[key] = {
+      LEVELS: levels,
+      max:    base + levels,
+      value:  base + levels,
+    };
+
+    // Delete the lowercase dupe so the system doesn't see unknown keys
+    if (lower !== undefined) {
+      delete chars[lkey];
+    }
+
+    // Mirror onto the direct uppercase field with XMLID present.
+    // This prevents _preCreate from replacing the object and zeroing LEVELS.
     sys[key] = { LEVELS: levels, XMLID: key, xmlTag: key };
   }
 
-  // Remove any non-standard characteristic keys (e.g. "Natural", lowercase dupes).
+  // Remove any non-standard characteristic keys (e.g. "Natural", stray lowercase
+  // dupes that weren't caught above, movement keys like "running" / "flight").
   // The Hero system iterates ALL keys in characteristics and calls getPowerInfo()
   // on each — any unknown key logs "Unable to find 6e power entry" and can
   // interfere with point calculations and sheet rendering.
