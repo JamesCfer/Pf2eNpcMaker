@@ -1,0 +1,716 @@
+/* ============================================================
+   PF2E NPC Auto-Builder — Application Styles
+   Uses .application.npc-builder as root to override PF2e/Foundry
+   button defaults in ApplicationV2 windows.
+   ============================================================ */
+
+/* ── Outer layout wrapper (flex column: tabs → warning → panels) ── */
+.application.npc-builder .npc-builder-layout {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  overflow: hidden;
+}
+
+/* ── System selector tabs ────────────────────────────────── */
+.application.npc-builder .system-selector {
+  display: flex;
+  flex-direction: row;
+  flex-shrink: 0;
+  background: #2c2c3a;
+}
+
+.application.npc-builder .system-tab {
+  flex: 1;
+  padding: 0.55em 0.75em;
+  font-size: 0.85em;
+  font-weight: 600;
+  border: none;
+  border-radius: 0;
+  background: transparent;
+  color: rgba(255, 255, 255, 0.55);
+  cursor: pointer;
+  border-bottom: 3px solid transparent;
+  transition: background 0.15s, color 0.15s, border-color 0.15s;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.4em;
+}
+
+.application.npc-builder .system-tab:hover {
+  background: rgba(255, 255, 255, 0.08);
+  color: rgba(255, 255, 255, 0.85);
+}
+
+/* System tab group (tab button + GitHub icon link) */
+.application.npc-builder .system-tab-group {
+  flex: 1;
+  display: flex;
+  align-items: stretch;
+}
+
+.application.npc-builder .system-tab-group .system-tab {
+  flex: 1;
+}
+
+.application.npc-builder .system-tab-github {
+  display: flex;
+  align-items: center;
+  padding: 0 0.55em;
+  color: rgba(255, 255, 255, 0.35);
+  background: transparent;
+  border: none;
+  border-left: 1px solid rgba(255, 255, 255, 0.07);
+  border-bottom: 3px solid transparent;
+  text-decoration: none;
+  font-size: 0.9em;
+  transition: color 0.15s, background 0.15s;
+  flex-shrink: 0;
+}
+
+.application.npc-builder .system-tab-github:hover {
+  color: rgba(255, 255, 255, 0.9);
+  background: rgba(255, 255, 255, 0.08);
+  text-decoration: none;
+}
+
+/* Home tab — visually distinct, narrower */
+.application.npc-builder .system-tab--home {
+  flex: 0 0 auto;
+  padding-left: 0.9em;
+  padding-right: 0.9em;
+  border-right: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+/* Active tab — each system gets its own accent colour */
+.application.npc-builder .system-tab[data-system="home"].is-active {
+  color: #fff;
+  background: rgba(255, 255, 255, 0.06);
+  border-bottom-color: #e8a020;
+}
+
+.application.npc-builder.system-pf2e .system-tab[data-system="pf2e"].is-active {
+  color: #fff;
+  background: rgba(255, 255, 255, 0.06);
+  border-bottom-color: #7c5cbf;
+}
+
+.application.npc-builder.system-dnd5e .system-tab[data-system="dnd5e"].is-active {
+  color: #fff;
+  background: rgba(255, 255, 255, 0.06);
+  border-bottom-color: #c0392b;
+}
+
+.application.npc-builder.system-hero6e .system-tab[data-system="hero6e"].is-active {
+  color: #fff;
+  background: rgba(255, 255, 255, 0.06);
+  border-bottom-color: #2980b9;
+}
+
+/* ── System warning banner ───────────────────────────────── */
+.application.npc-builder .system-warning {
+  display: none;
+  align-items: center;
+  gap: 0.65em;
+  padding: 0.6em 1em;
+  background: #5c3800;
+  color: #ffe0b2;
+  font-size: 0.87em;
+  font-weight: 500;
+  border-bottom: 2px solid #e65100;
+  flex-shrink: 0;
+}
+
+.application.npc-builder .system-warning i {
+  color: #ffb74d;
+  font-size: 1.15em;
+  flex-shrink: 0;
+}
+
+/* ── Two-panel wrapper ───────────────────────────────────── */
+.application.npc-builder .npc-builder-inner {
+  display: flex;
+  flex-direction: row;
+  flex: 1;
+  min-height: 0;
+  overflow: hidden;
+}
+
+/* ── Left: form panel ────────────────────────────────────── */
+.application.npc-builder .npc-panel-form {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  overflow-y: auto;
+  border-right: 1px solid rgba(0, 0, 0, 0.12);
+}
+
+/* ── Right: history panel ────────────────────────────────── */
+.application.npc-builder .npc-panel-history {
+  width: 240px;
+  flex-shrink: 0;
+  display: flex;
+  flex-direction: column;
+  background: #f7f7f9;
+  overflow: hidden;
+}
+
+.application.npc-builder .history-header {
+  display: flex;
+  align-items: center;
+  gap: 0.5em;
+  padding: 0.6em 0.8em;
+  font-size: 0.78em;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.07em;
+  color: #555;
+  background: #ebebed;
+  border-bottom: 1px solid rgba(0, 0, 0, 0.1);
+  flex-shrink: 0;
+}
+
+.application.npc-builder .history-list {
+  flex: 1;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+}
+
+.application.npc-builder .history-empty {
+  padding: 2em 1em;
+  text-align: center;
+  color: #aaa;
+  font-size: 0.82em;
+  font-style: italic;
+  line-height: 1.5;
+}
+
+/* ── History entry ───────────────────────────────────────── */
+.application.npc-builder .history-entry {
+  padding: 0.5em 0.75em;
+  border-bottom: 1px solid rgba(0, 0, 0, 0.07);
+  cursor: pointer;
+  transition: background 0.1s;
+  position: relative;
+  overflow: hidden;
+  border-left: 3px solid transparent;
+}
+
+.application.npc-builder .history-entry:hover {
+  background: rgba(124, 92, 191, 0.07);
+}
+
+.application.npc-builder .history-entry.is-selected {
+  background: rgba(124, 92, 191, 0.11);
+  border-left-color: #7c5cbf;
+}
+
+.application.npc-builder .history-entry-main {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.4em;
+}
+
+.application.npc-builder .history-entry-info {
+  display: flex;
+  flex-direction: column;
+  gap: 0.1em;
+  min-width: 0;
+  flex: 1;
+}
+
+.application.npc-builder .history-entry-name {
+  font-size: 0.86em;
+  font-weight: 600;
+  color: #333;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.application.npc-builder .history-entry-meta {
+  font-size: 0.73em;
+  color: #999;
+}
+
+.application.npc-builder .history-entry-icon {
+  font-size: 0.88em;
+  flex-shrink: 0;
+  width: 1.1em;
+  text-align: center;
+}
+
+/* Status icon colors */
+.application.npc-builder .history-entry--success .history-entry-icon { color: #38a85a; }
+.application.npc-builder .history-entry--error   .history-entry-icon { color: #cc3333; }
+.application.npc-builder .history-entry--generating .history-entry-icon { color: #7c5cbf; }
+
+/* Error text */
+.application.npc-builder .history-entry-error {
+  font-size: 0.73em;
+  color: #cc3333;
+  margin-top: 0.2em;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* ── Loading progress bar ────────────────────────────────── */
+.application.npc-builder .history-progress {
+  height: 2px;
+  background: rgba(124, 92, 191, 0.18);
+  border-radius: 2px;
+  margin-top: 0.35em;
+  overflow: hidden;
+  position: relative;
+}
+
+.application.npc-builder .history-progress-bar {
+  position: absolute;
+  top: 0;
+  left: -60%;
+  width: 50%;
+  height: 100%;
+  background: linear-gradient(90deg, transparent, #7c5cbf, transparent);
+  border-radius: 2px;
+  animation: npc-history-sweep 1.6s ease-in-out infinite;
+}
+
+@keyframes npc-history-sweep {
+  0%   { left: -60%; }
+  100% { left: 120%; }
+}
+
+/* ── Selected-entry banner (inside form) ─────────────────── */
+.application.npc-builder .history-selected-banner {
+  display: flex;
+  align-items: center;
+  gap: 0.5em;
+  padding: 0.45em 0.75em;
+  background: rgba(124, 92, 191, 0.08);
+  border: 1px solid rgba(124, 92, 191, 0.25);
+  border-radius: 4px;
+  font-size: 0.82em;
+  color: #5a3ea0;
+  margin-bottom: 0.1em;
+}
+
+.application.npc-builder .history-selected-banner i {
+  flex-shrink: 0;
+  opacity: 0.7;
+}
+
+/* ── Auth banner ─────────────────────────────────────────── */
+.application.npc-builder .auth-banner {
+  border-bottom: 1px solid rgba(0, 0, 0, 0.15);
+}
+
+/* --- unsigned state ---------------------------------------- */
+.application.npc-builder .auth-unsigned {
+  display: flex;
+  flex-direction: column;
+  gap: 0.6em;
+  padding: 0.85em 1em;
+  background: #fdf6e3;
+  border-bottom: 2px solid #e8c97a;
+}
+
+.application.npc-builder .auth-unsigned-text {
+  display: flex;
+  align-items: center;
+  gap: 0.5em;
+  font-size: 0.9em;
+  color: #6b5200;
+}
+
+.application.npc-builder .auth-patreon-icon {
+  color: #ff424d;
+  font-size: 1.1em;
+}
+
+.application.npc-builder .auth-unsigned-actions {
+  display: flex;
+  gap: 0.5em;
+}
+
+/* --- signed-in state --------------------------------------- */
+.application.npc-builder .auth-signed {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0.6em 1em;
+  background: #edfbf0;
+  border-bottom: 2px solid #5cb87a;
+}
+
+.application.npc-builder .auth-signed-status {
+  display: flex;
+  align-items: center;
+  gap: 0.45em;
+  font-size: 0.9em;
+  font-weight: 600;
+  color: #1d6b35;
+}
+
+.application.npc-builder .auth-signed-status i {
+  color: #38a85a;
+  font-size: 1.05em;
+}
+
+/* ── CSS-driven visibility (set by JS on root element) ─────── */
+.application.npc-builder .auth-signed          { display: none; }
+.application.npc-builder .auth-unsigned        { display: flex; }
+
+.application.npc-builder.is-authenticated .auth-unsigned { display: none; }
+.application.npc-builder.is-authenticated .auth-signed   { display: flex; }
+
+/* ── Form ────────────────────────────────────────────────── */
+.application.npc-builder .npc-form {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75em;
+  padding: 0.9em 1em 1em;
+}
+
+.application.npc-builder .field {
+  display: flex;
+  flex-direction: column;
+  gap: 0.3em;
+}
+
+.application.npc-builder .field label,
+.application.npc-builder .field > label {
+  font-size: 0.82em;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: #444;
+}
+
+.application.npc-builder .field input[type="text"],
+.application.npc-builder .field input[type="number"],
+.application.npc-builder .field textarea,
+.application.npc-builder .field select {
+  width: 100%;
+  padding: 0.4em 0.55em;
+  border: 1px solid rgba(0, 0, 0, 0.25);
+  border-radius: 4px;
+  background: #fff;
+  color: #333;
+  font-family: inherit;
+  font-size: 0.95em;
+  transition: border-color 0.15s, box-shadow 0.15s;
+  box-sizing: border-box;
+}
+
+.application.npc-builder .field input:focus,
+.application.npc-builder .field textarea:focus,
+.application.npc-builder .field select:focus {
+  outline: none;
+  border-color: #7c5cbf;
+  box-shadow: 0 0 0 2px rgba(124, 92, 191, 0.18);
+}
+
+/* D&D 5e accent colour for select focus */
+.application.npc-builder.system-dnd5e .field select:focus {
+  border-color: #c0392b;
+  box-shadow: 0 0 0 2px rgba(192, 57, 43, 0.18);
+}
+
+.application.npc-builder .field textarea {
+  resize: vertical;
+  min-height: 100px;
+  line-height: 1.45;
+}
+
+.application.npc-builder .field-hint {
+  font-size: 0.78em;
+  color: #777;
+  font-style: italic;
+  line-height: 1.35;
+}
+
+/* ── Two-column name/level row ───────────────────────────── */
+.application.npc-builder .field-row {
+  display: flex;
+  gap: 0.65em;
+  align-items: flex-start;
+}
+
+.application.npc-builder .field--name  { flex: 1; }
+.application.npc-builder .field--level { width: 80px; flex-shrink: 0; }
+
+.application.npc-builder .field--level input {
+  text-align: center;
+}
+
+/* ── Checkbox field ──────────────────────────────────────── */
+.application.npc-builder .field--check {
+  background: #f9f9fb;
+  border: 1px solid #e0e0e8;
+  border-radius: 5px;
+  padding: 0.55em 0.7em;
+  gap: 0.2em;
+}
+
+.application.npc-builder .checkbox-label {
+  display: flex;
+  align-items: center;
+  gap: 0.5em;
+  font-size: 0.9em;
+  font-weight: 500;
+  cursor: pointer;
+  text-transform: none;
+  letter-spacing: normal;
+  color: #333;
+}
+
+.application.npc-builder .checkbox-label input[type="checkbox"] {
+  width: 15px;
+  height: 15px;
+  flex-shrink: 0;
+  cursor: pointer;
+  accent-color: #7c5cbf;
+}
+
+/* ── Action buttons — explicit colors beat PF2e defaults ─── */
+.application.npc-builder .form-actions {
+  display: flex;
+  gap: 0.5em;
+  margin-top: 0.15em;
+}
+
+.application.npc-builder button.btn-primary,
+.application.npc-builder button.btn-secondary,
+.application.npc-builder button.btn-patreon,
+.application.npc-builder button.btn-join,
+.application.npc-builder button.btn-signout {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.4em;
+  padding: 0.48em 0.85em;
+  border-radius: 5px;
+  font-family: inherit;
+  font-size: 0.9em;
+  font-weight: 600;
+  cursor: pointer;
+  transition: filter 0.12s, opacity 0.12s, transform 0.08s;
+  white-space: nowrap;
+  line-height: 1;
+}
+
+.application.npc-builder button.btn-primary,
+.application.npc-builder button.btn-secondary {
+  flex: 1;
+  padding: 0.6em 0.85em;
+  font-size: 0.95em;
+}
+
+/* Primary — purple/indigo */
+.application.npc-builder button.btn-primary {
+  background: #7c5cbf;
+  color: #fff;
+  border: none;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.2);
+}
+.application.npc-builder button.btn-primary:hover:not(:disabled) { filter: brightness(1.1); }
+.application.npc-builder button.btn-primary:active:not(:disabled) { transform: translateY(1px); }
+
+/* Secondary — outline */
+.application.npc-builder button.btn-secondary {
+  background: #f5f5f5;
+  color: #444;
+  border: 1px solid #bbb;
+}
+.application.npc-builder button.btn-secondary:hover:not(:disabled) { background: #e8e8e8; }
+
+/* Disabled state */
+.application.npc-builder button:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+}
+
+/* Generating spinner pulse on primary button */
+.application.npc-builder.is-generating button.btn-primary {
+  animation: npc-pulse 1.2s ease-in-out infinite;
+}
+@keyframes npc-pulse {
+  0%, 100% { opacity: 1; }
+  50%       { opacity: 0.7; }
+}
+
+/* Patreon button */
+.application.npc-builder button.btn-patreon {
+  background: #ff424d;
+  color: #fff;
+  border: none;
+  flex: 1;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.2);
+}
+.application.npc-builder button.btn-patreon:hover { filter: brightness(1.08); }
+
+/* Join Patreon (secondary outline) */
+.application.npc-builder button.btn-join {
+  background: transparent;
+  color: #cc2030;
+  border: 1px solid #ff424d;
+}
+.application.npc-builder button.btn-join:hover { background: rgba(255, 66, 77, 0.06); }
+
+/* Sign-out button */
+.application.npc-builder button.btn-signout {
+  background: transparent;
+  color: #555;
+  border: 1px solid #ccc;
+  font-size: 0.82em;
+  padding: 0.35em 0.65em;
+}
+.application.npc-builder button.btn-signout:hover { background: rgba(0,0,0,0.05); color: #333; }
+
+/* ── Home panel ──────────────────────────────────────────── */
+.application.npc-builder .home-panel {
+  flex: 1;
+  overflow-y: auto;
+  display: flex;
+  align-items: flex-start;
+  justify-content: center;
+  padding: 1.5em 1em;
+  background: #fafafa;
+}
+
+.application.npc-builder .home-content {
+  max-width: 460px;
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  gap: 1.2em;
+}
+
+.application.npc-builder .home-logo {
+  display: flex;
+  align-items: center;
+  gap: 0.55em;
+  color: #7c5cbf;
+}
+
+.application.npc-builder .home-logo i {
+  font-size: 1.6em;
+}
+
+.application.npc-builder .home-logo h2 {
+  margin: 0;
+  font-size: 1.25em;
+  font-weight: 700;
+  color: #333;
+  border: none;
+}
+
+.application.npc-builder .home-intro {
+  margin: 0;
+  font-size: 0.9em;
+  color: #555;
+  line-height: 1.55;
+}
+
+.application.npc-builder .home-steps {
+  display: flex;
+  flex-direction: column;
+  gap: 0.65em;
+}
+
+.application.npc-builder .home-step {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.75em;
+}
+
+.application.npc-builder .home-step-num {
+  width: 1.6em;
+  height: 1.6em;
+  border-radius: 50%;
+  background: #7c5cbf;
+  color: #fff;
+  font-size: 0.78em;
+  font-weight: 700;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  margin-top: 0.1em;
+}
+
+.application.npc-builder .home-step div {
+  display: flex;
+  flex-direction: column;
+  gap: 0.15em;
+}
+
+.application.npc-builder .home-step strong {
+  font-size: 0.88em;
+  color: #333;
+}
+
+.application.npc-builder .home-step span {
+  font-size: 0.8em;
+  color: #777;
+}
+
+.application.npc-builder .home-links {
+  display: flex;
+  gap: 0.6em;
+  flex-wrap: wrap;
+}
+
+.application.npc-builder .btn-discord,
+.application.npc-builder .btn-patreon-link {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.45em;
+  padding: 0.5em 1em;
+  border-radius: 5px;
+  font-family: inherit;
+  font-size: 0.88em;
+  font-weight: 600;
+  cursor: pointer;
+  text-decoration: none;
+  transition: filter 0.12s;
+  white-space: nowrap;
+}
+
+.application.npc-builder .btn-discord {
+  background: #5865f2;
+  color: #fff;
+  border: none;
+}
+.application.npc-builder .btn-discord:hover { filter: brightness(1.1); }
+
+.application.npc-builder .btn-patreon-link {
+  background: transparent;
+  color: #cc2030;
+  border: 1px solid #ff424d;
+}
+.application.npc-builder .btn-patreon-link:hover { background: rgba(255, 66, 77, 0.06); }
+
+/* ── Sidebar injection button ────────────────────────────── */
+.directory .npc-builder-button {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.3em;
+  border: 1px solid #8b6914;
+  border-radius: 3px;
+  padding: 0.2em 0.65em;
+  background: #c9a227;
+  color: #fff;
+  cursor: pointer;
+  margin-left: 0.5em;
+  font-size: 0.85em;
+  font-weight: 600;
+  text-shadow: 0 1px 1px rgba(0,0,0,0.3);
+  box-shadow: 0 1px 3px rgba(0,0,0,0.2);
+}
+.directory .npc-builder-button:hover { background: #d4ac2e; color: #fff; }

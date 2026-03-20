@@ -1,0 +1,204 @@
+<div class="npc-builder-layout">
+
+  <!-- ── System selector tabs ────────────────────────────────────── -->
+  <div class="system-selector">
+    <button type="button" class="system-tab system-tab--home" data-system="home">
+      <i class="fa-solid fa-house"></i> Home
+    </button>
+    <div class="system-tab-group">
+      <button type="button" class="system-tab" data-system="pf2e">
+        <i class="fa-solid fa-dragon"></i> Pathfinder 2e
+      </button>
+      <a href="https://github.com/JamesCfer/Pf2eNpcMaker" target="_blank" rel="noopener noreferrer" class="system-tab-github" title="View on GitHub">
+        <i class="fa-brands fa-github"></i>
+      </a>
+    </div>
+    <div class="system-tab-group">
+      <button type="button" class="system-tab" data-system="dnd5e">
+        <i class="fa-solid fa-shield-halved"></i> D&amp;D 5e
+      </button>
+      <a href="https://github.com/JamesCfer/DnD5eNpcMaker" target="_blank" rel="noopener noreferrer" class="system-tab-github" title="View on GitHub">
+        <i class="fa-brands fa-github"></i>
+      </a>
+    </div>
+    <div class="system-tab-group">
+      <button type="button" class="system-tab" data-system="hero6e">
+        <i class="fa-solid fa-bolt"></i> HERO 6e
+      </button>
+      <a href="https://github.com/JamesCfer/Hero6eNpcMaker" target="_blank" rel="noopener noreferrer" class="system-tab-github" title="View on GitHub">
+        <i class="fa-brands fa-github"></i>
+      </a>
+    </div>
+  </div>
+
+  <!-- ── System warning banners (shown for non-functional systems) ── -->
+  <div class="system-warning system-warning--hero6e">
+    <i class="fa-solid fa-triangle-exclamation"></i>
+    <span>HERO 6e support is currently not in a usable state. This feature is under active development.</span>
+  </div>
+
+  <!-- ── Home panel ───────────────────────────────────────────────── -->
+  <div class="home-panel" style="display:none;">
+    <div class="home-content">
+      <div class="home-logo">
+        <i class="fa-solid fa-wand-magic-sparkles"></i>
+        <h2>NPC Auto-Builder</h2>
+      </div>
+      <p class="home-intro">
+        Generate fully-statted NPCs for Pathfinder 2e and D&amp;D 5e in seconds using AI.
+        Sign in with Patreon, describe your NPC, and let the builder handle the stat block.
+      </p>
+      <div class="home-steps">
+        <div class="home-step">
+          <span class="home-step-num">1</span>
+          <div>
+            <strong>Sign in with Patreon</strong>
+            <span>Free accounts get 3 NPCs per month. Supporters unlock higher limits.</span>
+          </div>
+        </div>
+        <div class="home-step">
+          <span class="home-step-num">2</span>
+          <div>
+            <strong>Choose your system</strong>
+            <span>Pathfinder 2e and D&amp;D 5e are fully supported.</span>
+          </div>
+        </div>
+        <div class="home-step">
+          <span class="home-step-num">3</span>
+          <div>
+            <strong>Describe your NPC</strong>
+            <span>Enter a name, level/CR, and a short description — then hit Generate.</span>
+          </div>
+        </div>
+      </div>
+      <div class="home-links">
+        <a href="https://discord.gg/6AJxmtjZvX" target="_blank" rel="noopener noreferrer" class="btn-discord">
+          <i class="fa-brands fa-discord"></i> Join our Discord
+        </a>
+        <a href="https://www.patreon.com/cw/CelestiaTools" target="_blank" rel="noopener noreferrer" class="btn-patreon-link">
+          <i class="fa-brands fa-patreon"></i> Support on Patreon
+        </a>
+      </div>
+    </div>
+  </div>
+
+  <!-- ── Main two-panel content ──────────────────────────────────── -->
+  <div class="npc-builder-inner">
+
+    <!-- ── Left: form panel ──────────────────────────────────────── -->
+    <div class="npc-panel-form">
+
+      <!-- ── Auth banner ─────────────────────────────────────────── -->
+      <div class="auth-banner">
+
+        <!-- Shown when NOT authenticated -->
+        <div class="auth-unsigned">
+          <div class="auth-unsigned-text">
+            <i class="fa-brands fa-patreon auth-patreon-icon"></i>
+            <span>Sign in with Patreon to generate NPCs</span>
+          </div>
+          <div class="auth-unsigned-actions">
+            <button type="button" data-action="signin" class="btn-patreon">
+              <i class="fa-brands fa-patreon"></i> Sign in with Patreon
+            </button>
+            <button type="button" data-action="patreon" class="btn-join">
+              Join Patreon
+            </button>
+          </div>
+        </div>
+
+        <!-- Shown when authenticated -->
+        <div class="auth-signed">
+          <div class="auth-signed-status">
+            <i class="fa-solid fa-circle-check"></i>
+            <span>Signed in via Patreon</span>
+          </div>
+          <button type="button" data-action="signout" class="btn-signout">
+            <i class="fa-solid fa-right-from-bracket"></i> Sign Out
+          </button>
+        </div>
+
+      </div>
+
+      <!-- ── NPC form ──────────────────────────────────────────────── -->
+      <form class="npc-form" autocomplete="off">
+
+        <div class="history-selected-banner" style="display:none;">
+          <i class="fa-solid fa-arrow-turn-up fa-rotate-90"></i>
+          <span class="history-selected-label">Editing prompt from <strong></strong> — update fields and Generate to recreate</span>
+        </div>
+
+        <div class="field-row">
+          <div class="field field--name">
+            <label for="npc-name" class="label-npc-name">NPC Name</label>
+            <input type="text" id="npc-name" name="name" placeholder="e.g. Goblin Warchief" />
+          </div>
+          <div class="field field--level">
+            <label for="npc-level" class="label-npc-level">Level</label>
+            <input type="number" id="npc-level" name="level" value="1" min="0" max="25" />
+          </div>
+        </div>
+
+        <div class="field">
+          <label for="npc-desc">Description</label>
+          <textarea id="npc-desc" name="description" rows="5"
+            placeholder="Describe this NPC: their role, fighting style, special abilities, equipment, personality traits…"></textarea>
+          <span class="field-hint">The more detail you provide, the better the AI can match your vision.</span>
+        </div>
+
+        <!-- PF2e-only: spell compendium mapping -->
+        <div class="field field--check" data-system-only="pf2e">
+          <label class="checkbox-label">
+            <input type="checkbox" name="includeSpells" />
+            <span>Include spell compendium mapping</span>
+          </label>
+          <span class="field-hint">Indexes your spell compendiums before generating (~10 s extra, enables correct spell links).</span>
+        </div>
+
+        <!-- D&D 5e-only: caster type -->
+        <div class="field" data-system-only="dnd5e">
+          <label for="npc-caster-type">Caster Type</label>
+          <select id="npc-caster-type" name="casterType">
+            <option value="none">None (martial / non-caster)</option>
+            <option value="half">Half Caster (up to 5th-level spells)</option>
+            <option value="full">Full Caster (up to 9th-level spells)</option>
+          </select>
+          <span class="field-hint">Determines spell slot progression included in the stat block.</span>
+        </div>
+
+        <!-- HERO 6e-only: complications -->
+        <div class="field field--check" data-system-only="hero6e">
+          <label class="checkbox-label">
+            <input type="checkbox" name="includeComplications" />
+            <span>Include complications</span>
+          </label>
+          <span class="field-hint">Adds character complications (disadvantages) to the build.</span>
+        </div>
+
+        <div class="form-actions">
+          <button type="button" data-action="generate" class="btn-primary" disabled>
+            <i class="fa-solid fa-wand-magic-sparkles"></i>
+            <span class="btn-label">Generate NPC</span>
+          </button>
+          <button type="button" data-action="export" class="btn-secondary" disabled>
+            <i class="fa-solid fa-file-arrow-down"></i>
+            <span>Export JSON</span>
+          </button>
+        </div>
+
+      </form>
+    </div>
+
+    <!-- ── Right: history panel ──────────────────────────────────── -->
+    <div class="npc-panel-history">
+      <div class="history-header">
+        <i class="fa-solid fa-clock-rotate-left"></i>
+        <span class="history-header-label">Created NPCs</span>
+      </div>
+      <div class="history-list">
+        <!-- Populated by JavaScript -->
+      </div>
+    </div>
+
+  </div>
+</div>
