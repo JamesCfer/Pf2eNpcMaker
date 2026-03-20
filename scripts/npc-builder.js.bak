@@ -1023,13 +1023,6 @@ class NPCBuilderApp extends HandlebarsApplicationMixin(ApplicationV2) {
             }
           }
 
-          // For Hero 6e: _preCreate resets characteristics max/value to base (0).
-          // fullHealth() reads system[KEY].LEVELS (correctly set by n8n) and
-          // propagates base + LEVELS into characteristics[key].max and .value.
-          if (system === 'hero6e') {
-            await actor.fullHealth();
-          }
-
           this.lastGeneratedNPC = actorData;
           this._updateHistoryEntry(historyEntry.id, { status: 'success' });
           ui.notifications.success(`NPC "${actor.name}" created successfully!`);
