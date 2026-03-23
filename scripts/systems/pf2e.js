@@ -6,6 +6,59 @@
  */
 
 /**
+ * Enrich spell items on an actor data object by fetching full system data
+ * from the local PF2e compendium using each spell's compendiumSource UUID.
+ *
+ * Must be called BEFORE sanitizeActorDataPf2e and BEFORE Actor.create().
+ * This is a client-side operation — n8n only knows spell IDs, not full data.
+ *
+ * @param {object} actorData - The raw actor data object from n8n
+ */
+export async function enrichSpellsFromCompendium(actorData) {
+  if (!Array.isArray(actorData.items)) return;
+
+  const spellItems = actorData.items.filter(i => i.type === 'spell');
+  if (!spellItems.length) return;
+
+  console.log(`[NPC Builder] Enriching ${spellItems.length} spells from compendium...`);
+
+  await Promise.all(spellItems.map(async (spellItem) => {
+    const source = spellItem._stats?.compendiumSource;
+    if (!source) return;
+
+    try {
+      const compendiumSpell = await fromUuid(source);
+      if (!compendiumSpell) {
+        console.warn(`[NPC Builder] Could not find compendium spell: ${source}`);
+        return;
+      }
+
+      // Preserve our location linkage — this is what connects the spell to the entry
+      const ourLocation = spellItem.system?.location;
+
+      // Merge the full compendium system data over our skeleton
+      const compendiumData = compendiumSpell.toObject();
+      spellItem.system = foundry.utils.mergeObject(
+        compendiumData.system,
+        { location: ourLocation },
+        { overwrite: true, inplace: false }
+      );
+
+      // Use the real icon from compendium
+      if (compendiumData.img) spellItem.img = compendiumData.img;
+
+      // Preserve our _id and _stats — don't let compendium data overwrite them
+      // (our _id is what the slot prepared array points to)
+
+    } catch (e) {
+      console.warn(`[NPC Builder] Could not enrich spell "${spellItem.name}" from ${source}:`, e);
+    }
+  }));
+
+  console.log('[NPC Builder] Spell enrichment complete');
+}
+
+/**
  * Sanitize a PF2e actor data object in-place.
  * Fixes IDs, removes invalid item types, converts feats to actions, and
  * strips invalid weapon traits.
