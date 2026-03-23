@@ -415,10 +415,20 @@
   box-shadow: 0 0 0 2px rgba(124, 92, 191, 0.18);
 }
 
-/* D&D 5e accent colour for select focus */
+/* D&D 5e accent colour for all input focus */
+.application.npc-builder.system-dnd5e .field input:focus,
+.application.npc-builder.system-dnd5e .field textarea:focus,
 .application.npc-builder.system-dnd5e .field select:focus {
   border-color: #c0392b;
   box-shadow: 0 0 0 2px rgba(192, 57, 43, 0.18);
+}
+
+/* Hero 6e accent colour for all input focus */
+.application.npc-builder.system-hero6e .field input:focus,
+.application.npc-builder.system-hero6e .field textarea:focus,
+.application.npc-builder.system-hero6e .field select:focus {
+  border-color: #2980b9;
+  box-shadow: 0 0 0 2px rgba(41, 128, 185, 0.18);
 }
 
 .application.npc-builder .field textarea {
@@ -714,3 +724,116 @@
   box-shadow: 0 1px 3px rgba(0,0,0,0.2);
 }
 .directory .npc-builder-button:hover { background: #d4ac2e; color: #fff; }
+
+/* ============================================================
+   System-specific theming
+   Each system overrides accent colours for buttons, focus
+   rings, history, and progress bars using the system-{x}
+   class applied to the root element by JS.
+   ============================================================ */
+
+/* ── Form panel top accent strip ────────────────────────── */
+.application.npc-builder.system-pf2e   .npc-panel-form { border-top: 2px solid #7c5cbf; }
+.application.npc-builder.system-dnd5e  .npc-panel-form { border-top: 2px solid #c0392b; }
+.application.npc-builder.system-hero6e .npc-panel-form { border-top: 2px solid #2980b9; }
+
+/* ── Generate button colour ──────────────────────────────── */
+.application.npc-builder.system-pf2e   button.btn-primary { background: #7c5cbf; }
+.application.npc-builder.system-dnd5e  button.btn-primary { background: #c0392b; }
+.application.npc-builder.system-hero6e button.btn-primary { background: #2980b9; }
+
+/* ── Checkbox accent ─────────────────────────────────────── */
+.application.npc-builder.system-dnd5e  .checkbox-label input[type="checkbox"] { accent-color: #c0392b; }
+.application.npc-builder.system-hero6e .checkbox-label input[type="checkbox"] { accent-color: #2980b9; }
+
+/* ── History entry hover / selected ─────────────────────── */
+.application.npc-builder.system-dnd5e  .history-entry:hover     { background: rgba(192, 57, 43, 0.07); }
+.application.npc-builder.system-dnd5e  .history-entry.is-selected {
+  background: rgba(192, 57, 43, 0.11);
+  border-left-color: #c0392b;
+}
+.application.npc-builder.system-hero6e .history-entry:hover     { background: rgba(41, 128, 185, 0.07); }
+.application.npc-builder.system-hero6e .history-entry.is-selected {
+  background: rgba(41, 128, 185, 0.11);
+  border-left-color: #2980b9;
+}
+
+/* ── Progress bar ────────────────────────────────────────── */
+.application.npc-builder.system-dnd5e .history-progress {
+  background: rgba(192, 57, 43, 0.18);
+}
+.application.npc-builder.system-dnd5e .history-progress-bar {
+  background: linear-gradient(90deg, transparent, #c0392b, transparent);
+}
+.application.npc-builder.system-hero6e .history-progress {
+  background: rgba(41, 128, 185, 0.18);
+}
+.application.npc-builder.system-hero6e .history-progress-bar {
+  background: linear-gradient(90deg, transparent, #2980b9, transparent);
+}
+
+/* ── Generating spinner icon ─────────────────────────────── */
+.application.npc-builder.system-dnd5e  .history-entry--generating .history-entry-icon { color: #c0392b; }
+.application.npc-builder.system-hero6e .history-entry--generating .history-entry-icon { color: #2980b9; }
+
+/* ── History selected-entry banner ──────────────────────── */
+.application.npc-builder.system-dnd5e .history-selected-banner {
+  background: rgba(192, 57, 43, 0.08);
+  border-color: rgba(192, 57, 43, 0.25);
+  color: #8b1a1a;
+}
+.application.npc-builder.system-hero6e .history-selected-banner {
+  background: rgba(41, 128, 185, 0.08);
+  border-color: rgba(41, 128, 185, 0.25);
+  color: #1a5278;
+}
+
+/* ── History header accent ───────────────────────────────── */
+.application.npc-builder.system-pf2e   .history-header { color: #5a3ea0; border-bottom-color: rgba(124, 92, 191, 0.3); }
+.application.npc-builder.system-dnd5e  .history-header { color: #8b1a1a; border-bottom-color: rgba(192, 57, 43, 0.3); }
+.application.npc-builder.system-hero6e .history-header { color: #1a5278; border-bottom-color: rgba(41, 128, 185, 0.3); }
+
+/* ── Home panel system cards ─────────────────────────────── */
+.application.npc-builder .home-systems {
+  display: flex;
+  gap: 0.75em;
+}
+
+.application.npc-builder .home-system-card {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.35em;
+  padding: 0.75em 0.5em;
+  border-radius: 7px;
+  border: 1px solid;
+  font-size: 0.78em;
+  font-weight: 600;
+  text-align: center;
+}
+
+.application.npc-builder .home-system-card i {
+  font-size: 1.3em;
+}
+
+.application.npc-builder .home-system-card--pf2e {
+  background: rgba(124, 92, 191, 0.07);
+  border-color: rgba(124, 92, 191, 0.28);
+  color: #5a3ea0;
+}
+.application.npc-builder .home-system-card--pf2e i   { color: #7c5cbf; }
+
+.application.npc-builder .home-system-card--dnd5e {
+  background: rgba(192, 57, 43, 0.07);
+  border-color: rgba(192, 57, 43, 0.28);
+  color: #8b1a1a;
+}
+.application.npc-builder .home-system-card--dnd5e i  { color: #c0392b; }
+
+.application.npc-builder .home-system-card--hero6e {
+  background: rgba(41, 128, 185, 0.07);
+  border-color: rgba(41, 128, 185, 0.28);
+  color: #1a5278;
+}
+.application.npc-builder .home-system-card--hero6e i { color: #2980b9; }
