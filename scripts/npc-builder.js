@@ -495,6 +495,7 @@ class NPCBuilderApp extends HandlebarsApplicationMixin(ApplicationV2) {
       const casterTypeSelect = form.querySelector('[name="casterType"]');
       // Hero 6e-specific fields
       const universeSelect   = form.querySelector('[name="hero6eUniverse"]');
+      const genreSelect      = form.querySelector('[name="hero6eGenre"]');
       const gearSelect       = form.querySelector('[name="hero6eCreateGear"]');
 
       if (nameInput)        nameInput.value         = entry.name;
@@ -504,6 +505,7 @@ class NPCBuilderApp extends HandlebarsApplicationMixin(ApplicationV2) {
       if (casterTypeSelect) casterTypeSelect.value  = entry.casterType || 'none';
       // Restore Hero 6e settings from history
       if (universeSelect)   universeSelect.value    = entry.universe || 'standard';
+      if (genreSelect)      genreSelect.value       = entry.genre    || 'standard';
       if (gearSelect)       gearSelect.value        = entry.createGear ? 'yes' : 'no';
     }
 
@@ -780,7 +782,8 @@ class NPCBuilderApp extends HandlebarsApplicationMixin(ApplicationV2) {
     // Primary source: dedicated form controls (select + checkbox).
     // Fallback: parse inline tags from description for backwards compatibility
     // and convenience (e.g. "universe: mha" anywhere in the text).
-    let hero6eUniverse = (fd.get('hero6eUniverse') || '').toLowerCase().trim();
+    const universeEl = form.querySelector('[name="hero6eUniverse"]');
+    let hero6eUniverse = (fd.get('hero6eUniverse') || universeEl?.value || '').toLowerCase().trim();
     if (!NPCBuilderApp.HERO6E_UNIVERSES.includes(hero6eUniverse)) {
       // Fallback: extract "universe: mha" tag from description
       const uMatch = description.match(/\buniverse\s*:\s*([\w-]+)/i);
@@ -791,8 +794,21 @@ class NPCBuilderApp extends HandlebarsApplicationMixin(ApplicationV2) {
     }
     if (!NPCBuilderApp.HERO6E_UNIVERSES.includes(hero6eUniverse)) hero6eUniverse = 'standard';
 
+    // genre: dedicated select wins; fallback to "genre: <value>" in description
+    const genreEl = form.querySelector('[name="hero6eGenre"]');
+    let hero6eGenre = (fd.get('hero6eGenre') || genreEl?.value || '').toLowerCase().trim();
+    if (!NPCBuilderApp.HERO6E_GENRES.includes(hero6eGenre)) {
+      const genreMatch = description.match(/\bgenre\s*:\s*([\w_-]+)/i);
+      if (genreMatch) {
+        const extracted = genreMatch[1].toLowerCase();
+        if (NPCBuilderApp.HERO6E_GENRES.includes(extracted)) hero6eGenre = extracted;
+      }
+    }
+    if (!NPCBuilderApp.HERO6E_GENRES.includes(hero6eGenre)) hero6eGenre = 'standard';
+
     // createGear: dedicated select wins; fallback to "gear: yes" in description
-    let hero6eCreateGear = fd.get('hero6eCreateGear') === 'yes';
+    const gearEl = form.querySelector('[name="hero6eCreateGear"]');
+    let hero6eCreateGear = (fd.get('hero6eCreateGear') === 'yes') || (gearEl?.value === 'yes');
     if (!hero6eCreateGear) {
       hero6eCreateGear = /\bgear\s*:\s*(yes|true|1)\b/i.test(description);
     }
@@ -821,6 +837,7 @@ class NPCBuilderApp extends HandlebarsApplicationMixin(ApplicationV2) {
       system:        this.selectedSystem,
       // Hero 6e extras — persisted for history recall
       universe:      this.selectedSystem === 'hero6e' ? hero6eUniverse   : undefined,
+      genre:         this.selectedSystem === 'hero6e' ? hero6eGenre      : undefined,
       createGear:    this.selectedSystem === 'hero6e' ? hero6eCreateGear : undefined,
       status:        'generating',
       createdAt:     Date.now(),
@@ -851,7 +868,7 @@ class NPCBuilderApp extends HandlebarsApplicationMixin(ApplicationV2) {
     this._runGeneration(
       historyEntry, key, name, level, description,
       includeSpells, casterType, this.selectedSystem,
-      hero6eUniverse, hero6eCreateGear
+      hero6eUniverse, hero6eCreateGear, hero6eGenre
     );
   }
 
@@ -868,11 +885,12 @@ class NPCBuilderApp extends HandlebarsApplicationMixin(ApplicationV2) {
    * @param {string} system          pf2e | dnd5e | hero6e
    * @param {string} hero6eUniverse  standard | mha | dc | marvel
    * @param {boolean} hero6eCreateGear  Whether to generate gear items
+   * @param {string} hero6eGenre  standard | superhero | pulp | dark_champions | fantasy | sci-fi
    */
   async _runGeneration(
     historyEntry, key, name, level, description,
     includeSpells, casterType = 'none', system = 'pf2e',
-    hero6eUniverse = 'standard', hero6eCreateGear = false
+    hero6eUniverse = 'standard', hero6eCreateGear = false, hero6eGenre = 'standard'
   ) {
     try {
       let endpoint, payload;
@@ -896,25 +914,17 @@ class NPCBuilderApp extends HandlebarsApplicationMixin(ApplicationV2) {
         // Snap points to nearest valid tier
         const points = NPCBuilderApp._snapToHero6eTier(level);
 
-        // Extract optional genre tag from description (e.g. "genre: superhero")
-        let genre = 'standard';
-        const genreMatch = description.match(/\bgenre\s*:\s*([\w_-]+)/i);
-        if (genreMatch) {
-          const extracted = genreMatch[1].toLowerCase();
-          if (NPCBuilderApp.HERO6E_GENRES.includes(extracted)) genre = extracted;
-        }
-
         payload = {
           name,
           points,
-          genre,
+          genre: hero6eGenre,
           description,
           universe:    hero6eUniverse,
           createGear:  hero6eCreateGear,
         };
 
         console.log('[NPC Builder] Hero System 6e generation request:', {
-          name, points, genre,
+          name, points, genre: hero6eGenre,
           universe: hero6eUniverse,
           createGear: hero6eCreateGear,
         });
