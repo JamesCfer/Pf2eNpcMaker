@@ -357,7 +357,6 @@ class NPCBuilderApp extends HandlebarsApplicationMixin(ApplicationV2) {
           'Optional tags (add anywhere in description):',
           '  genre: superhero / standard / pulp / dark_champions / fantasy / sci-fi',
           '  universe: mha / dc / marvel / standard',
-          '  gear: yes   (also generate equipment items)',
         ].join('\n'),
         historyLabel:    'Created Characters',
       },
@@ -496,7 +495,7 @@ class NPCBuilderApp extends HandlebarsApplicationMixin(ApplicationV2) {
       const casterTypeSelect = form.querySelector('[name="casterType"]');
       // Hero 6e-specific fields
       const universeSelect   = form.querySelector('[name="hero6eUniverse"]');
-      const gearCheckbox     = form.querySelector('[name="hero6eCreateGear"]');
+      const gearSelect       = form.querySelector('[name="hero6eCreateGear"]');
 
       if (nameInput)        nameInput.value         = entry.name;
       if (levelInput)       levelInput.value        = entry.level;
@@ -505,7 +504,7 @@ class NPCBuilderApp extends HandlebarsApplicationMixin(ApplicationV2) {
       if (casterTypeSelect) casterTypeSelect.value  = entry.casterType || 'none';
       // Restore Hero 6e settings from history
       if (universeSelect)   universeSelect.value    = entry.universe || 'standard';
-      if (gearCheckbox)     gearCheckbox.checked    = !!entry.createGear;
+      if (gearSelect)       gearSelect.value        = entry.createGear ? 'yes' : 'no';
     }
 
     // Show the "editing from history" banner
@@ -792,8 +791,8 @@ class NPCBuilderApp extends HandlebarsApplicationMixin(ApplicationV2) {
     }
     if (!NPCBuilderApp.HERO6E_UNIVERSES.includes(hero6eUniverse)) hero6eUniverse = 'standard';
 
-    // createGear: dedicated checkbox wins; fallback to "gear: yes" in description
-    let hero6eCreateGear = fd.get('hero6eCreateGear') === 'on';
+    // createGear: dedicated select wins; fallback to "gear: yes" in description
+    let hero6eCreateGear = fd.get('hero6eCreateGear') === 'yes';
     if (!hero6eCreateGear) {
       hero6eCreateGear = /\bgear\s*:\s*(yes|true|1)\b/i.test(description);
     }

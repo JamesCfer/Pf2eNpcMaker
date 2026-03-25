@@ -174,6 +174,28 @@
           <span class="field-hint">Determines spell slot progression included in the stat block.</span>
         </div>
 
+        <!-- HERO 6e-only: universe / campaign setting -->
+        <div class="field" data-system-only="hero6e">
+          <label for="npc-hero6e-universe">Universe / Setting</label>
+          <select id="npc-hero6e-universe" name="hero6eUniverse">
+            <option value="standard">Standard (no universe rules)</option>
+            <option value="mha">My Hero Academia</option>
+            <option value="dc">DC Universe</option>
+            <option value="marvel">Marvel Comics</option>
+          </select>
+          <span class="field-hint">Sets stat caps, power structure rules, and complication suggestions for the chosen universe.</span>
+        </div>
+
+        <!-- HERO 6e-only: create gear -->
+        <div class="field" data-system-only="hero6e">
+          <label for="npc-hero6e-gear">Create Gear</label>
+          <select id="npc-hero6e-gear" name="hero6eCreateGear">
+            <option value="no">No gear items</option>
+            <option value="yes">Yes — generate equipment</option>
+          </select>
+          <span class="field-hint">When enabled, adds 2–4 gear items (weapons, armor, gadgets) with appropriate Focus limitations.</span>
+        </div>
+
         <!-- HERO 6e-only: complications -->
         <div class="field field--check" data-system-only="hero6e">
           <label class="checkbox-label">
