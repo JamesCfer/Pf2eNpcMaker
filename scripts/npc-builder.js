@@ -506,7 +506,7 @@ class NPCBuilderApp extends HandlebarsApplicationMixin(ApplicationV2) {
       // Restore Hero 6e settings from history
       if (universeSelect)   universeSelect.value    = entry.universe || 'standard';
       if (genreSelect)      genreSelect.value       = entry.genre    || 'standard';
-      if (gearSelect)       gearSelect.value        = entry.createGear ? 'yes' : 'no';
+      if (gearSelect)       gearSelect.checked       = !!entry.createGear;
     }
 
     // Show the "editing from history" banner
@@ -806,9 +806,9 @@ class NPCBuilderApp extends HandlebarsApplicationMixin(ApplicationV2) {
     }
     if (!NPCBuilderApp.HERO6E_GENRES.includes(hero6eGenre)) hero6eGenre = 'standard';
 
-    // createGear: dedicated select wins; fallback to "gear: yes" in description
+    // createGear: checkbox — .checked is authoritative; 'on' is the FormData value when checked
     const gearEl = form.querySelector('[name="hero6eCreateGear"]');
-    let hero6eCreateGear = (fd.get('hero6eCreateGear') === 'yes') || (gearEl?.value === 'yes');
+    let hero6eCreateGear = gearEl?.checked === true || fd.get('hero6eCreateGear') === 'on';
     if (!hero6eCreateGear) {
       hero6eCreateGear = /\bgear\s*:\s*(yes|true|1)\b/i.test(description);
     }

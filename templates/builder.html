@@ -201,12 +201,11 @@
         </div>
 
         <!-- HERO 6e-only: create gear -->
-        <div class="field" data-system-only="hero6e">
-          <label for="npc-hero6e-gear">Create Gear</label>
-          <select id="npc-hero6e-gear" name="hero6eCreateGear">
-            <option value="no">No gear items</option>
-            <option value="yes">Yes — generate equipment</option>
-          </select>
+        <div class="field field--check" data-system-only="hero6e">
+          <label class="checkbox-label">
+            <input type="checkbox" id="npc-hero6e-gear" name="hero6eCreateGear" />
+            <span>Create Gear</span>
+          </label>
           <span class="field-hint">When enabled, adds 2–4 gear items (weapons, armor, gadgets) with appropriate Focus limitations.</span>
         </div>
 
