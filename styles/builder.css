@@ -837,3 +837,87 @@
   color: #1a5278;
 }
 .application.npc-builder .home-system-card--hero6e i { color: #2980b9; }
+
+/* ── Feedback section ────────────────────────────────────── */
+.application.npc-builder .feedback-section {
+  flex-shrink: 0;
+  border-top: 1px solid rgba(0, 0, 0, 0.12);
+  background: #f2f2f5;
+  padding: 0.55em 0.9em 0.6em;
+}
+
+.application.npc-builder .feedback-header {
+  display: flex;
+  align-items: center;
+  gap: 0.4em;
+  font-size: 0.73em;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: #777;
+  margin-bottom: 0.4em;
+}
+
+.application.npc-builder .feedback-header i {
+  color: #7c5cbf;
+}
+
+.application.npc-builder .feedback-body {
+  display: flex;
+  gap: 0.5em;
+  align-items: flex-end;
+}
+
+.application.npc-builder .feedback-textarea {
+  flex: 1;
+  min-height: 2.6em;
+  resize: vertical;
+  font-size: 0.82em;
+  padding: 0.38em 0.5em;
+  border: 1px solid rgba(0, 0, 0, 0.18);
+  border-radius: 4px;
+  background: #fff;
+  color: #333;
+  font-family: inherit;
+  line-height: 1.4;
+}
+
+.application.npc-builder .feedback-textarea:focus {
+  outline: none;
+  border-color: rgba(124, 92, 191, 0.5);
+  box-shadow: 0 0 0 2px rgba(124, 92, 191, 0.1);
+}
+
+.application.npc-builder .feedback-send-btn {
+  flex-shrink: 0;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.3em;
+  padding: 0.38em 0.8em;
+  font-size: 0.82em;
+  font-weight: 600;
+  border: none;
+  border-radius: 4px;
+  background: #7c5cbf;
+  color: #fff;
+  cursor: pointer;
+  transition: background 0.15s, opacity 0.15s;
+  line-height: 1.4;
+}
+
+.application.npc-builder .feedback-send-btn:hover {
+  background: #6a4aad;
+}
+
+.application.npc-builder .feedback-send-btn:disabled {
+  opacity: 0.55;
+  cursor: default;
+}
+
+.application.npc-builder .feedback-status {
+  font-size: 0.78em;
+  margin-top: 0.3em;
+}
+
+.application.npc-builder .feedback-status--success { color: #2e7d32; }
+.application.npc-builder .feedback-status--error   { color: #c0392b; }

@@ -60,8 +60,9 @@ class NPCBuilderApp extends HandlebarsApplicationMixin(ApplicationV2) {
   static N8N_AUTH_URL   = 'https://foundryrelay.dedicated2.com/webhook/oauth/patreon/login';
   static N8N_NPC_URL    = 'https://foundryrelay.dedicated2.com/webhook/npc-builder';
   static N8N_DND5E_URL  = 'https://foundryrelay.dedicated2.com/webhook/dnd5e-npc-builder';
-  static N8N_HERO6E_URL = 'https://foundryrelay.dedicated2.com/webhook/hero6e-npc-builder';
-  static PATREON_URL    = 'https://www.patreon.com/cw/CelestiaTools';
+  static N8N_HERO6E_URL    = 'https://foundryrelay.dedicated2.com/webhook/hero6e-npc-builder';
+  static N8N_FEEDBACK_URL  = 'https://foundryrelay.dedicated2.com/webhook/feedback';
+  static PATREON_URL       = 'https://www.patreon.com/cw/CelestiaTools';
 
   /** localStorage slots */
   static STORAGE_KEYS = [`${_MODULE_FOLDER}.key`, `${_MODULE_FOLDER}:key`];
@@ -114,6 +115,7 @@ class NPCBuilderApp extends HandlebarsApplicationMixin(ApplicationV2) {
       generate:      function(event) { this._generateNPC(event); },
       export:        function(event) { this._exportJSON(event); },
       patreon:       function()      { window.open(this.constructor.PATREON_URL, '_blank'); },
+      sendfeedback:  function(event) { this._sendFeedback(event); },
       selectsystem:  function(event) { this._selectSystem(event); },
     },
   };
@@ -201,6 +203,7 @@ class NPCBuilderApp extends HandlebarsApplicationMixin(ApplicationV2) {
     this.lastGeneratedNPC  = null;
     this.selectedHistoryId = null;
     this.selectedSystem    = NPCBuilderApp.getStoredSystem();
+    this.patreonTier       = null;
 
     // Load history; clean up any entries stuck in "generating" from a prior session
     this.npcHistory = NPCBuilderApp.loadHistory();
@@ -1015,6 +1018,9 @@ class NPCBuilderApp extends HandlebarsApplicationMixin(ApplicationV2) {
         const message      = data?.message || 'Monthly NPC limit reached.';
         const currentUsage = data?.currentUsage || 0;
         const limit        = data?.limit || 0;
+        // Infer and cache the tier for feedback submissions
+        const tierMap = { 3: 'Free', 15: 'Local Adventurer', 50: 'Standard', 80: 'Champion' };
+        if (limit && tierMap[limit]) this.patreonTier = tierMap[limit];
         ui.notifications.error(message, { permanent: true });
         ui.notifications.warn(
           `You've used ${currentUsage}/${limit} NPCs this month. Opening Patreon to upgrade…`,
@@ -1176,6 +1182,67 @@ class NPCBuilderApp extends HandlebarsApplicationMixin(ApplicationV2) {
     URL.revokeObjectURL(url);
 
     ui.notifications.info('NPC exported to JSON file.');
+  }
+
+  /* ── Send feedback ───────────────────────────────────────── */
+
+  async _sendFeedback(event) {
+    event?.preventDefault?.();
+
+    const root = this.element;
+    if (!root) return;
+
+    const textarea = root.querySelector('.feedback-textarea');
+    const sendBtn  = root.querySelector('.feedback-send-btn');
+    const status   = root.querySelector('.feedback-status');
+
+    const message = textarea?.value?.trim() || '';
+    if (!message) {
+      ui.notifications?.warn?.('Please enter a feedback message before sending.');
+      return;
+    }
+
+    if (sendBtn) sendBtn.disabled = true;
+
+    try {
+      const tabLabels = { home: 'Home', pf2e: 'Pathfinder 2e', dnd5e: 'D&D 5e', hero6e: 'HERO 6e' };
+      const tab   = tabLabels[this.selectedSystem] || this.selectedSystem || 'Unknown';
+      const email = game.user?.email || '';
+      const tier  = this.patreonTier || (this.authenticated ? 'Supporter (tier unknown)' : 'Free');
+
+      const response = await fetch(NPCBuilderApp.N8N_FEEDBACK_URL, {
+        method:  'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body:    JSON.stringify({
+          message,
+          tab,
+          email,
+          tier,
+          sessionKey: this.accessKey || '',
+        }),
+      });
+
+      if (!response.ok) throw new Error(`Server returned ${response.status}`);
+
+      if (textarea) textarea.value = '';
+      if (status) {
+        status.textContent = 'Feedback sent! Thank you.';
+        status.className   = 'feedback-status feedback-status--success';
+        status.style.display = '';
+        setTimeout(() => { status.style.display = 'none'; }, 4000);
+      }
+
+    } catch (err) {
+      console.error('[NPC Builder] feedback send error', err);
+      if (status) {
+        status.textContent   = 'Failed to send feedback. Please try again.';
+        status.className     = 'feedback-status feedback-status--error';
+        status.style.display = '';
+        setTimeout(() => { status.style.display = 'none'; }, 5000);
+      }
+    } finally {
+      if (sendBtn) sendBtn.disabled = false;
+    }
   }
 }
 
