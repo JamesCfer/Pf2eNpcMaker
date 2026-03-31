@@ -79,6 +79,19 @@
           </div>
         </div>
       </div>
+      <!-- ── Art style setting ──────────────────────────────── -->
+      <div class="home-art-style">
+        <label for="npc-art-style" class="home-art-style-label">
+          <i class="fa-solid fa-palette"></i>
+          <span>Custom Art Style</span>
+        </label>
+        <input type="text" id="npc-art-style" class="home-art-style-input"
+          placeholder="e.g. watercolor fantasy, anime, oil painting, comic book…" />
+        <span class="home-art-style-hint">
+          Specify an art style for generated NPC images. Leave blank to use the system default style.
+        </span>
+      </div>
+
       <div class="home-links">
         <a href="https://discord.gg/6AJxmtjZvX" target="_blank" rel="noopener noreferrer" class="btn-discord">
           <i class="fa-brands fa-discord"></i> Join our Discord
@@ -226,6 +239,13 @@
           <button type="button" data-action="export" class="btn-secondary" disabled>
             <i class="fa-solid fa-file-arrow-down"></i>
             <span>Export JSON</span>
+          </button>
+        </div>
+        <div class="form-actions form-actions--image">
+          <button type="button" data-action="generateimage" class="btn-image" disabled>
+            <i class="fa-solid fa-image"></i>
+            <span>Generate NPC Image</span>
+            <span class="btn-cost-badge">4 uses</span>
           </button>
         </div>
 

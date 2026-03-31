@@ -921,3 +921,142 @@
 
 .application.npc-builder .feedback-status--success { color: #2e7d32; }
 .application.npc-builder .feedback-status--error   { color: #c0392b; }
+
+/* ── Home: art style setting ────────────────────────────── */
+.application.npc-builder .home-art-style {
+  display: flex;
+  flex-direction: column;
+  gap: 0.35em;
+  background: #f3f0fa;
+  border: 1px solid rgba(124, 92, 191, 0.22);
+  border-radius: 7px;
+  padding: 0.75em 0.85em;
+}
+
+.application.npc-builder .home-art-style-label {
+  display: flex;
+  align-items: center;
+  gap: 0.45em;
+  font-size: 0.85em;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: #5a3ea0;
+}
+
+.application.npc-builder .home-art-style-label i {
+  font-size: 1.1em;
+  color: #7c5cbf;
+}
+
+.application.npc-builder .home-art-style-input {
+  width: 100%;
+  padding: 0.4em 0.55em;
+  border: 1px solid rgba(0, 0, 0, 0.2);
+  border-radius: 4px;
+  background: #fff;
+  color: #333;
+  font-family: inherit;
+  font-size: 0.9em;
+  box-sizing: border-box;
+  transition: border-color 0.15s, box-shadow 0.15s;
+}
+
+.application.npc-builder .home-art-style-input:focus {
+  outline: none;
+  border-color: #7c5cbf;
+  box-shadow: 0 0 0 2px rgba(124, 92, 191, 0.18);
+}
+
+.application.npc-builder .home-art-style-hint {
+  font-size: 0.78em;
+  color: #777;
+  font-style: italic;
+  line-height: 1.35;
+}
+
+/* ── Generate Image button ──────────────────────────────── */
+.application.npc-builder .form-actions--image {
+  margin-top: 0;
+}
+
+.application.npc-builder button.btn-image {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.4em;
+  flex: 1;
+  padding: 0.5em 0.85em;
+  border-radius: 5px;
+  font-family: inherit;
+  font-size: 0.88em;
+  font-weight: 600;
+  cursor: pointer;
+  transition: filter 0.12s, opacity 0.12s, transform 0.08s;
+  white-space: nowrap;
+  line-height: 1;
+  background: #2e7d32;
+  color: #fff;
+  border: none;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.2);
+}
+
+.application.npc-builder button.btn-image:hover:not(:disabled) { filter: brightness(1.1); }
+.application.npc-builder button.btn-image:active:not(:disabled) { transform: translateY(1px); }
+.application.npc-builder button.btn-image:disabled { opacity: 0.45; cursor: not-allowed; }
+
+.application.npc-builder .btn-cost-badge {
+  display: inline-block;
+  padding: 0.15em 0.45em;
+  border-radius: 3px;
+  background: rgba(255, 255, 255, 0.25);
+  font-size: 0.78em;
+  font-weight: 700;
+  letter-spacing: 0.02em;
+}
+
+/* ── PF2e NPC sheet injected buttons ────────────────────── */
+.npc-builder-levelup-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.3em;
+  padding: 0.2em 0.5em;
+  border: 1px solid #5a3ea0;
+  border-radius: 3px;
+  background: #7c5cbf;
+  color: #fff;
+  cursor: pointer;
+  font-size: 0.78em;
+  font-weight: 600;
+  white-space: nowrap;
+  box-shadow: 0 1px 2px rgba(0,0,0,0.2);
+  transition: filter 0.12s;
+}
+.npc-builder-levelup-btn:hover { filter: brightness(1.15); }
+
+.npc-builder-sheet-image-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.3em;
+  padding: 0.2em 0.5em;
+  border: 1px solid #1b5e20;
+  border-radius: 3px;
+  background: #2e7d32;
+  color: #fff;
+  cursor: pointer;
+  font-size: 0.78em;
+  font-weight: 600;
+  white-space: nowrap;
+  box-shadow: 0 1px 2px rgba(0,0,0,0.2);
+  transition: filter 0.12s;
+}
+.npc-builder-sheet-image-btn:hover { filter: brightness(1.15); }
+
+.npc-builder-sheet-image-btn .btn-cost-badge {
+  display: inline-block;
+  padding: 0.1em 0.35em;
+  border-radius: 2px;
+  background: rgba(255, 255, 255, 0.25);
+  font-size: 0.8em;
+  font-weight: 700;
+}

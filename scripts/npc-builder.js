@@ -61,8 +61,13 @@ class NPCBuilderApp extends HandlebarsApplicationMixin(ApplicationV2) {
   static N8N_NPC_URL    = 'https://foundryrelay.dedicated2.com/webhook/npc-builder';
   static N8N_DND5E_URL  = 'https://foundryrelay.dedicated2.com/webhook/dnd5e-npc-builder';
   static N8N_HERO6E_URL    = 'https://foundryrelay.dedicated2.com/webhook/hero6e-npc-builder';
+  static N8N_IMAGE_URL     = 'https://foundryrelay.dedicated2.com/webhook/npc-image';
+  static N8N_LEVELUP_URL   = 'https://foundryrelay.dedicated2.com/webhook/npc-levelup';
   static N8N_FEEDBACK_URL  = 'https://foundryrelay.dedicated2.com/webhook/feedback';
   static PATREON_URL       = 'https://www.patreon.com/cw/CelestiaTools';
+
+  /** Cost in uses for generating an NPC image */
+  static IMAGE_COST = 4;
 
   /** localStorage slots */
   static STORAGE_KEYS = [`${_MODULE_FOLDER}.key`, `${_MODULE_FOLDER}:key`];
@@ -75,6 +80,9 @@ class NPCBuilderApp extends HandlebarsApplicationMixin(ApplicationV2) {
 
   /** localStorage slot for last-seen module version (used to force sign-out on updates) */
   static VERSION_KEY = `${_MODULE_FOLDER}.module-version`;
+
+  /** localStorage slot for custom art style */
+  static ART_STYLE_KEY = `${_MODULE_FOLDER}.art-style`;
 
   /** Max history entries to retain */
   static MAX_HISTORY = 50;
@@ -127,6 +135,7 @@ class NPCBuilderApp extends HandlebarsApplicationMixin(ApplicationV2) {
       patreon:       function()      { window.open(this.constructor.PATREON_URL, '_blank'); },
       sendfeedback:  function(event) { this._sendFeedback(event); },
       selectsystem:  function(event) { this._selectSystem(event); },
+      generateimage: function(event) { this._generateImage(event); },
     },
   };
 
@@ -185,6 +194,16 @@ class NPCBuilderApp extends HandlebarsApplicationMixin(ApplicationV2) {
 
   static setStoredVersion(version) {
     try { localStorage.setItem(NPCBuilderApp.VERSION_KEY, version); } catch (_) {}
+  }
+
+  /* ── Art style storage helpers ──────────────────────────── */
+
+  static getStoredArtStyle() {
+    try { return localStorage.getItem(NPCBuilderApp.ART_STYLE_KEY) || ''; } catch (_) { return ''; }
+  }
+
+  static setStoredArtStyle(style) {
+    try { localStorage.setItem(NPCBuilderApp.ART_STYLE_KEY, style); } catch (_) {}
   }
 
   /* ── History storage helpers ─────────────────────────────── */
@@ -252,6 +271,15 @@ class NPCBuilderApp extends HandlebarsApplicationMixin(ApplicationV2) {
 
     this._applySystemUI();  // also calls _applyAuthStateUI
     this._renderHistory();
+
+    // Bind art style input — persist on change
+    const artStyleInput = this.element.querySelector('#npc-art-style');
+    if (artStyleInput) {
+      artStyleInput.value = NPCBuilderApp.getStoredArtStyle();
+      artStyleInput.addEventListener('input', () => {
+        NPCBuilderApp.setStoredArtStyle(artStyleInput.value.trim());
+      });
+    }
   }
 
   /* ── Auth state UI ───────────────────────────────────────── */
@@ -274,6 +302,9 @@ class NPCBuilderApp extends HandlebarsApplicationMixin(ApplicationV2) {
 
     const expBtn = root.querySelector('button[data-action="export"]');
     if (expBtn) expBtn.disabled = !this.authenticated;
+
+    const imgBtn = root.querySelector('button[data-action="generateimage"]');
+    if (imgBtn) imgBtn.disabled = !this.authenticated;
   }
 
   /* ── System selection ────────────────────────────────────── */
@@ -1177,6 +1208,331 @@ class NPCBuilderApp extends HandlebarsApplicationMixin(ApplicationV2) {
     return tryFixValidationError(actorData, errorMessage);
   }
 
+  /* ── Generate NPC Image (costs 4 uses) ───────────────────── */
+
+  /**
+   * Prompt the user to confirm image generation (costs 4 uses), then send
+   * the NPC data + system + art style to the n8n image workflow.
+   *
+   * Can be called from the builder form (uses lastGeneratedNPC) or from
+   * a sheet injection (receives actorData directly).
+   *
+   * @param {Event|null} event       DOM event (may be null for sheet calls)
+   * @param {object}     [actorData] Actor data to generate an image for (optional — falls back to lastGeneratedNPC)
+   * @param {string}     [system]    System override (optional — falls back to selectedSystem)
+   */
+  async _generateImage(event, actorData, system) {
+    event?.preventDefault?.();
+
+    if (!this.authenticated) {
+      ui.notifications.warn('Please sign in with Patreon before generating an image.');
+      return;
+    }
+
+    const npcData = actorData || this.lastGeneratedNPC;
+    if (!npcData) {
+      ui.notifications.warn('No NPC available. Generate or open an NPC first.');
+      return;
+    }
+
+    const targetSystem = system || this.selectedSystem || 'pf2e';
+    const artStyle     = NPCBuilderApp.getStoredArtStyle();
+    const cost         = NPCBuilderApp.IMAGE_COST;
+
+    // Confirmation dialog
+    const confirmed = await new Promise(resolve => {
+      const DialogV2 = foundry.applications?.api?.DialogV2;
+      const content  = `
+        <div style="display:flex;flex-direction:column;gap:0.6em;padding:0.25em 0;">
+          <p style="margin:0;">
+            Generate an image for <strong>${this._escapeHtml(npcData.name || 'this NPC')}</strong>?
+          </p>
+          <p style="margin:0;padding:0.5em 0.7em;background:rgba(46,125,50,0.1);border:1px solid rgba(46,125,50,0.3);border-radius:4px;font-size:0.92em;">
+            <i class="fa-solid fa-coins" style="color:#2e7d32;"></i>
+            This will use <strong>${cost} NPC uses</strong> from your monthly allowance.
+          </p>
+          ${artStyle ? `<p style="margin:0;font-size:0.88em;color:#555;"><i class="fa-solid fa-palette"></i> Art style: <em>${this._escapeHtml(artStyle)}</em></p>` : ''}
+        </div>`;
+
+      if (DialogV2) {
+        DialogV2.confirm({
+          window:  { title: 'Generate NPC Image' },
+          content,
+          yes: { label: 'Generate Image', icon: 'fa-solid fa-image' },
+          no:  { label: 'Cancel' },
+          rejectClose: false,
+        }).then(result => resolve(result === true)).catch(() => resolve(false));
+      } else {
+        new Dialog({
+          title:   'Generate NPC Image',
+          content,
+          buttons: {
+            yes:     { label: '<i class="fa-solid fa-image"></i> Generate Image', callback: () => resolve(true) },
+            cancel:  { label: 'Cancel', callback: () => resolve(false) },
+          },
+          default: 'cancel',
+          close:   () => resolve(false),
+        }).render(true);
+      }
+    });
+
+    if (!confirmed) return;
+
+    const key = this.accessKey || NPCBuilderApp.getStoredKey() || '';
+    if (!key) {
+      this.authenticated = false;
+      this._applyAuthStateUI();
+      ui.notifications.error('Session missing. Please sign in again.');
+      return;
+    }
+
+    ui.notifications.info('Generating NPC image… this may take a moment.');
+
+    try {
+      const payload = {
+        npcData: JSON.parse(JSON.stringify(npcData)),
+        system:  targetSystem,
+        artStyle: artStyle || '',
+      };
+
+      const response = await fetch(NPCBuilderApp._url(NPCBuilderApp.N8N_IMAGE_URL), {
+        method:  'POST',
+        headers: {
+          'Content-Type':     'application/json',
+          'X-Builder-Key':    key,
+          'X-Foundry-Origin': window.location.origin,
+        },
+        body: JSON.stringify(payload),
+      });
+
+      if (response.status === 401 || response.status === 403) {
+        NPCBuilderApp.setStoredKey('');
+        this.accessKey     = '';
+        this.authenticated = false;
+        this._applyAuthStateUI();
+        ui.notifications.error('Authentication failed. Please sign in again.', { permanent: true });
+        return;
+      }
+
+      if (response.status === 429) {
+        const data = await response.json().catch(() => ({}));
+        const currentUsage = data?.currentUsage || 0;
+        const limit        = data?.limit || 0;
+        ui.notifications.error(data?.message || 'Monthly limit reached.', { permanent: true });
+        if (limit) ui.notifications.warn(`You've used ${currentUsage}/${limit} uses this month.`, { permanent: true });
+        return;
+      }
+
+      if (!response.ok) {
+        const data = await response.json().catch(() => ({}));
+        throw new Error(data?.message || `Server returned status ${response.status}`);
+      }
+
+      const data = await response.json();
+
+      if (data?.imageUrl) {
+        // Update the actor's image if we have a reference
+        const actorId = npcData._id;
+        const actor   = actorId ? game.actors?.get(actorId) : null;
+        if (actor) {
+          await actor.update({
+            'img': data.imageUrl,
+            'prototypeToken.texture.src': data.imageUrl,
+          });
+          ui.notifications.success(`Image set for "${actor.name}"!`);
+        } else {
+          ui.notifications.success('NPC image generated! URL: ' + data.imageUrl);
+        }
+      } else {
+        ui.notifications.success('Image generation request sent successfully.');
+      }
+
+    } catch (err) {
+      console.error('[NPC Builder] Image generation error:', err);
+      ui.notifications.error(`Image generation failed: ${err.message}`);
+    }
+  }
+
+  /* ── Level Up NPC (PF2e only) ───────────────────────────── */
+
+  /**
+   * Opens a dialog to select a new level, then sends the NPC's JSON
+   * + target level to the n8n level-up workflow for PF2e.
+   *
+   * @param {Actor} actor  The Foundry Actor to level up
+   */
+  async _levelUpNpc(actor) {
+    if (!this.authenticated) {
+      ui.notifications.warn('Please sign in with Patreon to use Level Up.');
+      return;
+    }
+
+    const currentLevel = actor.system?.details?.level?.value ?? actor.system?.details?.level ?? 0;
+
+    // Prompt for target level + level-up instructions
+    const result = await new Promise(resolve => {
+      const DialogV2 = foundry.applications?.api?.DialogV2;
+      const content  = `
+        <div style="display:flex;flex-direction:column;gap:0.7em;padding:0.25em 0;">
+          <p style="margin:0;">
+            Level up (or down) <strong>${this._escapeHtml(actor.name)}</strong>
+            (currently level <strong>${currentLevel}</strong>).
+          </p>
+          <div style="display:flex;flex-direction:column;gap:0.25em;">
+            <label for="npc-levelup-target" style="font-weight:600;font-size:0.88em;">Target Level</label>
+            <input type="number" id="npc-levelup-target" value="${currentLevel + 1}" min="0" max="25" step="1"
+              style="width:80px;text-align:center;padding:0.35em;border:1px solid #999;border-radius:4px;" />
+          </div>
+          <div style="display:flex;flex-direction:column;gap:0.25em;">
+            <label for="npc-levelup-instructions" style="font-weight:600;font-size:0.88em;">Level-Up Instructions</label>
+            <textarea id="npc-levelup-instructions" rows="4"
+              placeholder="Describe what the NPC gains at this level: new abilities, improved spells, stronger attacks, additional resistances…"
+              style="width:100%;padding:0.4em 0.5em;border:1px solid #999;border-radius:4px;font-family:inherit;font-size:0.92em;resize:vertical;box-sizing:border-box;"></textarea>
+            <span style="font-size:0.78em;color:#777;font-style:italic;">
+              Describe how this NPC should change. The more detail, the better the result.
+            </span>
+          </div>
+          <p style="margin:0;font-size:0.85em;color:#666;">
+            The NPC will be re-processed through the builder at the selected level.
+            This costs <strong>1 NPC use</strong>.
+          </p>
+        </div>`;
+
+      const _extractValues = (container) => {
+        const root = container instanceof HTMLElement ? container : container?.[0] ?? document;
+        const levelInput = root.querySelector?.('#npc-levelup-target') ?? document.getElementById('npc-levelup-target');
+        const instrInput = root.querySelector?.('#npc-levelup-instructions') ?? document.getElementById('npc-levelup-instructions');
+        const level = levelInput ? parseInt(levelInput.value) : null;
+        const instructions = instrInput ? instrInput.value.trim() : '';
+        return (level !== null && !isNaN(level)) ? { level, instructions } : null;
+      };
+
+      if (DialogV2) {
+        DialogV2.prompt({
+          window:  { title: 'Level Up NPC' },
+          content,
+          ok: { label: 'Level Up', icon: 'fa-solid fa-arrow-up' },
+          rejectClose: false,
+        }).then(() => {
+          resolve(_extractValues(document));
+        }).catch(() => resolve(null));
+      } else {
+        new Dialog({
+          title:   'Level Up NPC',
+          content,
+          buttons: {
+            confirm: {
+              label:    '<i class="fa-solid fa-arrow-up"></i> Level Up',
+              callback: (html) => resolve(_extractValues(html)),
+            },
+            cancel: { label: 'Cancel', callback: () => resolve(null) },
+          },
+          default: 'cancel',
+          close:   () => resolve(null),
+        }).render(true);
+      }
+    });
+
+    if (!result) return;
+    const { level: targetLevel, instructions: levelUpInstructions } = result;
+    if (targetLevel === currentLevel) {
+      ui.notifications.info('Target level is the same as current level.');
+      return;
+    }
+
+    const key = this.accessKey || NPCBuilderApp.getStoredKey() || '';
+    if (!key) {
+      this.authenticated = false;
+      this._applyAuthStateUI();
+      ui.notifications.error('Session missing. Please sign in again.');
+      return;
+    }
+
+    ui.notifications.info(`Processing level change for "${actor.name}" to level ${targetLevel}…`);
+
+    try {
+      const actorJson = actor.toObject();
+
+      const payload = {
+        npcData:      actorJson,
+        targetLevel:  targetLevel,
+        instructions: levelUpInstructions || '',
+        system:       'pf2e',
+      };
+
+      const response = await fetch(NPCBuilderApp._url(NPCBuilderApp.N8N_LEVELUP_URL), {
+        method:  'POST',
+        headers: {
+          'Content-Type':     'application/json',
+          'X-Builder-Key':    key,
+          'X-Foundry-Origin': window.location.origin,
+        },
+        body: JSON.stringify(payload),
+      });
+
+      if (response.status === 401 || response.status === 403) {
+        NPCBuilderApp.setStoredKey('');
+        this.accessKey     = '';
+        this.authenticated = false;
+        this._applyAuthStateUI();
+        ui.notifications.error('Authentication failed. Please sign in again.', { permanent: true });
+        return;
+      }
+
+      if (response.status === 429) {
+        const data = await response.json().catch(() => ({}));
+        ui.notifications.error(data?.message || 'Monthly limit reached.', { permanent: true });
+        return;
+      }
+
+      if (!response.ok) {
+        const data = await response.json().catch(() => ({}));
+        throw new Error(data?.message || `Server returned status ${response.status}`);
+      }
+
+      const data = await response.json();
+      const newActorData = data.foundryNpc || data.npcDesign || data.actor || data;
+
+      if (!newActorData || typeof newActorData !== 'object') {
+        throw new Error('No valid actor data returned from server');
+      }
+
+      // Enrich spells from compendium
+      await enrichSpellsFromCompendium(newActorData);
+
+      // Sanitize
+      sanitizeActorDataPf2e(newActorData);
+
+      // Create the leveled NPC as a new actor
+      let newActor, attempts = 0;
+      const maxAttempts = 10;
+      while (!newActor && attempts < maxAttempts) {
+        attempts++;
+        try {
+          newActor = await Actor.create(newActorData);
+        } catch (error) {
+          const errorText = error.toString ? error.toString() : String(error.message || error);
+          if (tryFixValidationError(newActorData, errorText)) {
+            console.warn(`[NPC Builder] Fixed validation error on level-up, retrying (attempt ${attempts})...`);
+            continue;
+          }
+          throw error;
+        }
+      }
+
+      if (newActor) {
+        ui.notifications.success(`"${newActor.name}" leveled to ${targetLevel}!`);
+        newActor.sheet.render(true);
+      } else {
+        throw new Error('Failed to create leveled actor after maximum retry attempts');
+      }
+
+    } catch (err) {
+      console.error('[NPC Builder] Level-up error:', err);
+      ui.notifications.error(`Level-up failed: ${err.message}`);
+    }
+  }
+
   /* ── Export last generated NPC as JSON ───────────────────── */
 
   async _exportJSON(event) {
@@ -1417,6 +1773,100 @@ Hooks.on('renderActorDirectory',             injectSidebarButton);
 Hooks.on('renderCompendiumDirectory',        injectSidebarButton);
 Hooks.on('renderActorDirectoryPF2e',         injectSidebarButton);
 Hooks.on('renderCompendiumDirectoryPF2e',    injectSidebarButton);
+
+/* -----------------------------------------------------------------------------
+   PF2e NPC sheet injection — Level Up + Generate Image buttons
+----------------------------------------------------------------------------- */
+
+function _ensureBuilderApp() {
+  if (!_npcBuilderApp?.rendered || !_npcBuilderApp?.element?.isConnected) {
+    _npcBuilderApp = new NPCBuilderApp();
+    // Don't render the window — we just need the instance for auth + methods
+  }
+  // Ensure auth state is current
+  _npcBuilderApp.accessKey     = NPCBuilderApp.getStoredKey() || '';
+  _npcBuilderApp.authenticated = !!_npcBuilderApp.accessKey;
+  return _npcBuilderApp;
+}
+
+/**
+ * Injects "Level Up" and "Generate Image" buttons into PF2e NPC sheets.
+ * - Level Up: inserted to the left of Elite/Weak buttons in the header area
+ * - Generate Image: inserted above the AC section
+ */
+function injectPf2eSheetButtons(app, html) {
+  if (!game.user?.isGM) return;
+
+  const actor = app.actor || app.document;
+  if (!actor || actor.type !== 'npc') return;
+
+  const root = html instanceof HTMLElement ? html : html?.[0];
+  if (!root) return;
+
+  // Avoid double-injection
+  if (root.querySelector('.npc-builder-levelup-btn')) return;
+
+  // ── Level Up button — look for the elite/weak adjustment area ──
+  // PF2e sheets use various selectors depending on version
+  const eliteWeakArea =
+    root.querySelector('.adjustment') ||          // PF2e v6+
+    root.querySelector('.elite-weak') ||          // older PF2e
+    root.querySelector('[data-action="elite"]')?.parentElement ||
+    root.querySelector('.npc-header')?.querySelector('.tags') ||
+    root.querySelector('.sheet-header .tags');
+
+  if (eliteWeakArea) {
+    const levelUpBtn = document.createElement('button');
+    levelUpBtn.type = 'button';
+    levelUpBtn.className = 'npc-builder-levelup-btn';
+    levelUpBtn.innerHTML = '<i class="fa-solid fa-arrow-up"></i> Level Up';
+    levelUpBtn.title = 'Change this NPC\'s level via the NPC Builder';
+    levelUpBtn.addEventListener('click', (ev) => {
+      ev.preventDefault();
+      ev.stopPropagation();
+      const builderApp = _ensureBuilderApp();
+      builderApp._levelUpNpc(actor);
+    });
+
+    // Insert before the first child to place it left of elite/weak
+    eliteWeakArea.insertBefore(levelUpBtn, eliteWeakArea.firstChild);
+  }
+
+  // ── Generate Image button — look for AC / armor class area ──
+  const acSection =
+    root.querySelector('.armor-class') ||         // PF2e v6+
+    root.querySelector('.ac') ||                  // alternate
+    root.querySelector('[data-slug="ac"]') ||
+    root.querySelector('.side-bar-section');       // fallback
+
+  if (acSection) {
+    const imageBtn = document.createElement('button');
+    imageBtn.type = 'button';
+    imageBtn.className = 'npc-builder-sheet-image-btn';
+    imageBtn.innerHTML = '<i class="fa-solid fa-image"></i> Generate Image <span class="btn-cost-badge">4 uses</span>';
+    imageBtn.title = 'Generate an AI image for this NPC (costs 4 NPC uses)';
+    imageBtn.addEventListener('click', (ev) => {
+      ev.preventDefault();
+      ev.stopPropagation();
+      const builderApp = _ensureBuilderApp();
+      builderApp._generateImage(null, actor.toObject(), 'pf2e');
+    });
+
+    // Insert just before the AC section
+    acSection.parentNode.insertBefore(imageBtn, acSection);
+  }
+}
+
+// Hook into PF2e NPC sheet rendering
+Hooks.on('renderNPCSheetPF2e',   injectPf2eSheetButtons);
+Hooks.on('renderActorSheetPF2e', (app, html) => {
+  if (app.actor?.type === 'npc') injectPf2eSheetButtons(app, html);
+});
+// Generic fallback for various Foundry/PF2e versions
+Hooks.on('renderActorSheet', (app, html) => {
+  if (game.system?.id !== 'pf2e') return;
+  if (app.actor?.type === 'npc') injectPf2eSheetButtons(app, html);
+});
 
 Hooks.once('init', () => {
   game.settings.register(_MODULE_FOLDER, 'devMode', {
