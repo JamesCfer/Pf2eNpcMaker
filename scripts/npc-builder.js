@@ -79,6 +79,16 @@ class NPCBuilderApp extends HandlebarsApplicationMixin(ApplicationV2) {
   /** Max history entries to retain */
   static MAX_HISTORY = 50;
 
+  /** Returns true when dev-mode is enabled (routes to -dev webhook endpoints). */
+  static _devMode() {
+    try { return game.settings?.get(_MODULE_FOLDER, 'devMode') ?? false; } catch (_) { return false; }
+  }
+
+  /** Returns the URL with a '-dev' suffix appended when dev-mode is active. */
+  static _url(base) {
+    return NPCBuilderApp._devMode() ? base + '-dev' : base;
+  }
+
   /** Supported game systems */
   static SYSTEMS = ['pf2e', 'dnd5e', 'hero6e'];
 
@@ -560,8 +570,8 @@ class NPCBuilderApp extends HandlebarsApplicationMixin(ApplicationV2) {
   async _signIn(event) {
     event?.preventDefault?.();
 
-    const N8N_ORIGIN  = new URL(NPCBuilderApp.N8N_AUTH_URL).origin;
-    const POLL_URL    = N8N_ORIGIN + '/webhook/oauth/patreon/poll';
+    const N8N_ORIGIN  = new URL(NPCBuilderApp._url(NPCBuilderApp.N8N_AUTH_URL)).origin;
+    const POLL_URL    = N8N_ORIGIN + NPCBuilderApp._url('/webhook/oauth/patreon/poll');
     const POLL_MS     = 2500;   // poll every 2.5 s
     const TIMEOUT_MS  = 5 * 60 * 1000; // give up after 5 min
 
@@ -575,7 +585,7 @@ class NPCBuilderApp extends HandlebarsApplicationMixin(ApplicationV2) {
       const nonce = Array.from(crypto.getRandomValues(new Uint8Array(12)))
         .map(b => b.toString(16).padStart(2,'0')).join('');
 
-      const authUrl = NPCBuilderApp.N8N_AUTH_URL
+      const authUrl = NPCBuilderApp._url(NPCBuilderApp.N8N_AUTH_URL)
         + '?origin=' + encodeURIComponent(window.location.origin)
         + '&nonce='  + encodeURIComponent(nonce);
 
@@ -900,7 +910,7 @@ class NPCBuilderApp extends HandlebarsApplicationMixin(ApplicationV2) {
 
       if (system === 'dnd5e') {
         // ── D&D 5e ───────────────────────────────────────────────────────────
-        endpoint = NPCBuilderApp.N8N_DND5E_URL;
+        endpoint = NPCBuilderApp._url(NPCBuilderApp.N8N_DND5E_URL);
         payload  = { name, cr: level, description, casterType };
         console.log('[NPC Builder] D&D 5e generation request:', { name, cr: level, casterType });
 
@@ -912,7 +922,7 @@ class NPCBuilderApp extends HandlebarsApplicationMixin(ApplicationV2) {
 
       } else if (system === 'hero6e') {
         // ── Hero System 6e ───────────────────────────────────────────────────
-        endpoint = NPCBuilderApp.N8N_HERO6E_URL;
+        endpoint = NPCBuilderApp._url(NPCBuilderApp.N8N_HERO6E_URL);
 
         // Snap points to nearest valid tier
         const points = NPCBuilderApp._snapToHero6eTier(level);
@@ -934,7 +944,7 @@ class NPCBuilderApp extends HandlebarsApplicationMixin(ApplicationV2) {
 
       } else {
         // ── Pathfinder 2e (default) ───────────────────────────────────────────
-        endpoint = NPCBuilderApp.N8N_NPC_URL;
+        endpoint = NPCBuilderApp._url(NPCBuilderApp.N8N_NPC_URL);
         payload  = { name, level, description };
 
         if (includeSpells) {
@@ -1210,7 +1220,7 @@ class NPCBuilderApp extends HandlebarsApplicationMixin(ApplicationV2) {
       const email = game.user?.email || '';
       const tier  = this.patreonTier || (this.authenticated ? 'Supporter (tier unknown)' : 'Free');
 
-      const response = await fetch(NPCBuilderApp.N8N_FEEDBACK_URL, {
+      const response = await fetch(NPCBuilderApp._url(NPCBuilderApp.N8N_FEEDBACK_URL), {
         method:  'POST',
         headers: { 'Content-Type': 'application/json' },
         body:    JSON.stringify({
@@ -1402,6 +1412,17 @@ Hooks.on('renderActorDirectory',             injectSidebarButton);
 Hooks.on('renderCompendiumDirectory',        injectSidebarButton);
 Hooks.on('renderActorDirectoryPF2e',         injectSidebarButton);
 Hooks.on('renderCompendiumDirectoryPF2e',    injectSidebarButton);
+
+Hooks.once('init', () => {
+  game.settings.register(_MODULE_FOLDER, 'devMode', {
+    name: 'Developer Mode',
+    hint: 'When enabled, all webhook URLs are routed to the -dev endpoints. Disable before going live.',
+    scope:  'world',
+    config: true,
+    type:   Boolean,
+    default: false,
+  });
+});
 
 Hooks.once('ready', () => {
   const modId         = _MODULE_FOLDER;
