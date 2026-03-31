@@ -1828,8 +1828,8 @@ function injectPf2eSheetButtons(app, html) {
       builderApp._levelUpNpc(actor);
     });
 
-    // Insert before the first child to place it left of elite/weak
-    eliteWeakArea.insertBefore(levelUpBtn, eliteWeakArea.firstChild);
+    // Insert as a sibling before the elite/weak container (to its left)
+    eliteWeakArea.parentNode.insertBefore(levelUpBtn, eliteWeakArea);
   }
 
   // ── Generate Image button — look for AC / armor class area ──
