@@ -37,7 +37,7 @@
  * - scripts/systems/hero6e.js       ← Hero System 6e actor sanitization
  */
 
-import { sanitizeActorDataPf2e, tryFixValidationError } from './systems/pf2e.js';
+import { sanitizeActorDataPf2e, tryFixValidationError, enrichSpellsFromCompendium } from './systems/pf2e.js';
 import { sanitizeActorDataDnd5e }                       from './systems/dnd5e.js';
 import { sanitizeActorDataHero6e }                      from './systems/hero6e.js';
 
@@ -1048,6 +1048,11 @@ class NPCBuilderApp extends HandlebarsApplicationMixin(ApplicationV2) {
         if (!actorData.name || !actorData.type) throw new Error(`Invalid actor data: missing ${!actorData.name ? 'name' : 'type'}`);
 
         console.log('[NPC Builder] Creating actor in Foundry...', actorData);
+
+        // PF2e: enrich spell skeletons with full compendium data before validation
+        if (system === 'pf2e') {
+          await enrichSpellsFromCompendium(actorData);
+        }
 
         if (system === 'dnd5e') {
           this._sanitizeActorDataDnd5e(actorData);

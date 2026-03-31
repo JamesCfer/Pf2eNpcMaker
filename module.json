@@ -21,7 +21,7 @@
     "styles/builder.css"
   ],
   "templateDir": "templates",
-  "version": "2.1.5",
+  "version": "2.1.9",
   "manifest": "https://github.com/JamesCfer/Pf2eNpcMaker/releases/download/latest/module.json",
   "download": "https://github.com/JamesCfer/Pf2eNpcMaker/releases/download/latest/Pf2eNpcMaker.zip"
 }
