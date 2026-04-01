@@ -1331,17 +1331,52 @@ class NPCBuilderApp extends HandlebarsApplicationMixin(ApplicationV2) {
       const data = await response.json();
 
       if (data?.imageUrl) {
-        // Update the actor's image if we have a reference
+        // Fetch the image from n8n and save it into Foundry's user data via FilePicker.upload
         const actorId = npcData._id;
         const actor   = actorId ? game.actors?.get(actorId) : null;
+
+        let savedPath = null;
+        try {
+          // Download the image bytes
+          const imgResp = await fetch(data.imageUrl);
+          if (!imgResp.ok) throw new Error(`Image fetch failed: ${imgResp.status}`);
+          const blob = await imgResp.blob();
+
+          // Build a safe filename: slug of NPC name + short random id
+          const slug = (npcData.name || 'npc')
+            .toLowerCase()
+            .replace(/[^a-z0-9]+/g, '-')
+            .replace(/^-+|-+$/g, '')
+            .substring(0, 48);
+          const uid  = foundry.utils.randomID(8);
+          const ext  = blob.type === 'image/webp' ? 'webp' : (blob.type === 'image/png' ? 'png' : 'webp');
+          const filename = `${slug}-${uid}.${ext}`;
+
+          // Ensure the target folder exists, then upload
+          const folder = 'npc-images';
+          try {
+            await FilePicker.createDirectory('data', folder, {});
+          } catch (_) {
+            // Directory likely already exists — that's fine
+          }
+
+          const file   = new File([blob], filename, { type: blob.type });
+          const result = await FilePicker.upload('data', folder, file, {});
+          savedPath    = result?.path ?? `${folder}/${filename}`;
+          console.log('[NPC Builder] Image saved to Foundry:', savedPath);
+        } catch (uploadErr) {
+          console.error('[NPC Builder] Failed to save image to Foundry, falling back to URL:', uploadErr);
+          savedPath = data.imageUrl;
+        }
+
         if (actor) {
           await actor.update({
-            'img': data.imageUrl,
-            'prototypeToken.texture.src': data.imageUrl,
+            'img': savedPath,
+            'prototypeToken.texture.src': savedPath,
           });
           ui.notifications.success(`Image set for "${actor.name}"!`);
         } else {
-          ui.notifications.success('NPC image generated! URL: ' + data.imageUrl);
+          ui.notifications.success('NPC image saved: ' + savedPath);
         }
       } else {
         ui.notifications.success('Image generation request sent successfully.');
