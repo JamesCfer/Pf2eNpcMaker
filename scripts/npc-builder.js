@@ -51,7 +51,7 @@ const { HandlebarsApplicationMixin, ApplicationV2 } = foundry.applications.api;
 const _MODULE_FOLDER = (() => {
   const match = (import.meta?.url ?? '').match(/\/modules\/([^/]+)\//);
   if (match) return match[1];
-  const ids = ['Pf2eNpcMaker', 'Hero6NpcMaker', 'DnD5eNpcMaker', 'pf2e-npc-auto-builder'];
+  const ids = ['Pf2eNpcMaker', 'Hero6eNpcMaker', 'DnD5eNpcMaker', 'pf2e-npc-auto-builder'];
   return ids.find(id => game.modules?.get(id)) ?? 'pf2e-npc-auto-builder';
 })();
 
