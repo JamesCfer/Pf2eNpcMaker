@@ -1089,7 +1089,17 @@ class NPCBuilderApp extends HandlebarsApplicationMixin(ApplicationV2) {
             throw new Error('No valid HDC data returned from server');
           }
 
-          const charName = data?.name || name || 'npc';
+          // Parse XML to extract the character name directly from the HDC
+          const parser   = new DOMParser();
+          const xmlDoc   = parser.parseFromString(hdcXml, 'text/xml');
+          const parseErr = xmlDoc.querySelector('parsererror');
+          if (parseErr) {
+            throw new Error(`Failed to parse HDC file: ${parseErr.textContent.substring(0, 200)}`);
+          }
+          const charName = xmlDoc.querySelector('CHARACTER_NAME')?.textContent?.trim()
+                        || data?.name
+                        || name
+                        || 'npc';
           console.log('[NPC Builder] Hero 6e HDC received for:', charName, `(${hdcXml.length} bytes)`);
 
           // 1. Download the .hdc file to the user's machine
@@ -1102,25 +1112,21 @@ class NPCBuilderApp extends HandlebarsApplicationMixin(ApplicationV2) {
           URL.revokeObjectURL(blobUrl);
           ui.notifications.info(`Downloaded "${charName}.hdc" to your device.`);
 
-          // 2. Import the HDC using the hero6e system's uploadFromXml
-          const parser  = new DOMParser();
-          const xmlDoc  = parser.parseFromString(hdcXml, 'text/xml');
-          const parseErr = xmlDoc.querySelector('parsererror');
-          if (parseErr) {
-            throw new Error(`Failed to parse HDC file: ${parseErr.textContent.substring(0, 200)}`);
-          }
-
-          // Create a blank hero6e actor, then populate it via the system's HDC import
+          // 2. Import the HDC using the hero6e system's uploadFromXml.
+          // uploadFromXml(xml, options) accepts a string or xmlDoc as the first arg.
+          // The second arg `options` must be an object — if omitted the function crashes
+          // trying to read `options.quenchUpload` on undefined.
           const actor = await Actor.create({ name: charName, type: 'pc' });
           if (!actor) throw new Error('Failed to create actor for HDC import');
 
-          await actor.uploadFromXml(xmlDoc);
+          await actor.uploadFromXml(xmlDoc, {});
 
           this.lastGeneratedNPC = null;
           this.lastGeneratedHDC = hdcXml;
           this._updateHistoryEntry(historyEntry.id, { status: 'success' });
           ui.notifications.success(`NPC "${actor.name}" created successfully via HDC import!`);
-          actor.sheet.render(true);
+          // actor.sheet may not exist immediately after upload; render only if available
+          try { actor.sheet?.render(true); } catch (_) {}
 
         // ── PF2e / D&D 5e: standard JSON actor creation ──────────────
         } else {
