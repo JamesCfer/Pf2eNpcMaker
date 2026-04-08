@@ -1116,7 +1116,26 @@ class NPCBuilderApp extends HandlebarsApplicationMixin(ApplicationV2) {
           // uploadFromXml(xml, options) accepts a string or xmlDoc as the first arg.
           // The second arg `options` must be an object — if omitted the function crashes
           // trying to read `options.quenchUpload` on undefined.
-          const actor = await Actor.create({ name: charName, type: 'pc' });
+          // Extract template name from HDC XML (e.g. "builtIn.Heroic6E.hdt")
+          const templateEl   = xmlDoc.querySelector('TEMPLATE');
+          const templateName = templateEl?.getAttribute('name')
+                            || templateEl?.getAttribute('EXTENDS')
+                            || 'builtIn.Heroic6E.hdt';
+
+          // Pre-seed CHARACTER.TEMPLATE so uploadFromXml's _templateType getter
+          // doesn't crash reading `.name` on undefined (Foundry V13 update lag).
+          const actor = await Actor.create({
+            name: charName,
+            type: 'pc',
+            system: {
+              is5e: false,
+              CHARACTER: {
+                TEMPLATE: { name: templateName, EXTENDS: templateName },
+                BASIC_CONFIGURATION: {},
+                CHARACTER_INFO: { CHARACTER_NAME: charName },
+              },
+            },
+          });
           if (!actor) throw new Error('Failed to create actor for HDC import');
 
           await actor.uploadFromXml(xmlDoc, {});
