@@ -60,7 +60,7 @@ class NPCBuilderApp extends HandlebarsApplicationMixin(ApplicationV2) {
   static N8N_AUTH_URL   = 'https://foundryrelay.dedicated2.com/webhook/oauth/patreon/login';
   static N8N_NPC_URL    = 'https://foundryrelay.dedicated2.com/webhook/npc-builder';
   static N8N_DND5E_URL  = 'https://foundryrelay.dedicated2.com/webhook/dnd5e-npc-builder';
-  static N8N_HERO6E_URL    = 'https://foundryrelay.dedicated2.com/webhook/hero6e-npc-builder';
+  static N8N_HERO6E_URL    = 'https://foundryrelay.dedicated2.com/webhook/hero6e-hdc-builder';
   static N8N_IMAGE_URL     = 'https://foundryrelay.dedicated2.com/webhook/npc-image';
   static N8N_LEVELUP_URL   = 'https://foundryrelay.dedicated2.com/webhook/npc-levelup';
   static N8N_FEEDBACK_URL  = 'https://foundryrelay.dedicated2.com/webhook/feedback';
