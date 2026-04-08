@@ -1138,7 +1138,31 @@ class NPCBuilderApp extends HandlebarsApplicationMixin(ApplicationV2) {
           });
           if (!actor) throw new Error('Failed to create actor for HDC import');
 
+          // Monkey-patch _templateType to be null-safe.
+          // uploadFromXml (actor.mjs:2448) calls this._templateType.replace(...)
+          // but _templateType returns undefined when system.CHARACTER.TEMPLATE.name
+          // isn't populated yet (Foundry V13 update lag). This patch returns the
+          // template name from the HDC XML directly, falling back gracefully.
+          const origDescriptor = Object.getOwnPropertyDescriptor(
+            Object.getPrototypeOf(actor), '_templateType'
+          );
+          Object.defineProperty(actor, '_templateType', {
+            get() {
+              const val = actor.system?.CHARACTER?.TEMPLATE?.name;
+              if (val) return val;
+              return templateName; // fallback to what we extracted from the XML
+            },
+            configurable: true,
+          });
+
           await actor.uploadFromXml(xmlDoc, {});
+
+          // Restore original getter after upload completes
+          if (origDescriptor) {
+            Object.defineProperty(actor, '_templateType', origDescriptor);
+          } else {
+            delete actor._templateType;
+          }
 
           this.lastGeneratedNPC = null;
           this.lastGeneratedHDC = hdcXml;
