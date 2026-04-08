@@ -230,6 +230,7 @@ class NPCBuilderApp extends HandlebarsApplicationMixin(ApplicationV2) {
     this.accessKey         = NPCBuilderApp.getStoredKey() || '';
     this.authenticated     = !!this.accessKey;
     this.lastGeneratedNPC  = null;
+    this.lastGeneratedHDC  = null;
     this.selectedHistoryId = null;
     this.selectedSystem    = NPCBuilderApp.getStoredSystem();
     this.patreonTier       = null;
@@ -431,6 +432,13 @@ class NPCBuilderApp extends HandlebarsApplicationMixin(ApplicationV2) {
 
     const historyLabel = root.querySelector('.history-header-label');
     if (historyLabel) historyLabel.textContent = cfg.historyLabel;
+
+    // Update export button label (HDC for hero6e, JSON for others)
+    const expBtn = root.querySelector('button[data-action="export"]');
+    if (expBtn) {
+      const expLabel = expBtn.querySelector('span');
+      if (expLabel) expLabel.textContent = system === 'hero6e' ? 'Export HDC' : 'Export JSON';
+    }
 
     // Sync auth UI
     this._applyAuthStateUI();
@@ -1040,7 +1048,8 @@ class NPCBuilderApp extends HandlebarsApplicationMixin(ApplicationV2) {
           }
         }
 
-        if (!data) throw new Error(`Invalid JSON response (${responseText.length} bytes): ${err.message}`);
+        // For hero6e, the server may return raw HDC/XML instead of JSON
+        if (!data && system !== 'hero6e') throw new Error(`Invalid JSON response (${responseText.length} bytes): ${err.message}`);
       }
 
       if (response.status === 401 || response.status === 403) {
@@ -1072,111 +1081,147 @@ class NPCBuilderApp extends HandlebarsApplicationMixin(ApplicationV2) {
       } else if (response.ok) {
         if (data?.ok === false) throw new Error(data?.message || data?.error || 'Server rejected the request');
 
-        const actorData    = data.foundryNpc || data.npcDesign || data.actor || data;
-        const chosenSpells = Array.isArray(data.chosenSpells) ? data.chosenSpells : [];
+        // ── Hero 6e: HDC download + import ────────────────────────────
+        if (system === 'hero6e') {
+          // Extract HDC XML — either from a JSON wrapper or raw XML response
+          const hdcXml = data?.hdcXml || (!data ? responseText : null);
+          if (!hdcXml || typeof hdcXml !== 'string') {
+            throw new Error('No valid HDC data returned from server');
+          }
 
-        if (!actorData || typeof actorData !== 'object') throw new Error('No valid actor data returned from server');
-        if (!actorData.name || !actorData.type) throw new Error(`Invalid actor data: missing ${!actorData.name ? 'name' : 'type'}`);
+          const charName = data?.name || name || 'npc';
+          console.log('[NPC Builder] Hero 6e HDC received for:', charName, `(${hdcXml.length} bytes)`);
 
-        console.log('[NPC Builder] Creating actor in Foundry...', actorData);
+          // 1. Download the .hdc file to the user's machine
+          const blob    = new Blob([hdcXml], { type: 'application/xml' });
+          const blobUrl = URL.createObjectURL(blob);
+          const anchor  = document.createElement('a');
+          anchor.href     = blobUrl;
+          anchor.download = `${charName}.hdc`;
+          anchor.click();
+          URL.revokeObjectURL(blobUrl);
+          ui.notifications.info(`Downloaded "${charName}.hdc" to your device.`);
 
-        // PF2e: enrich spell skeletons with full compendium data before validation
-        if (system === 'pf2e') {
-          await enrichSpellsFromCompendium(actorData);
-        }
+          // 2. Import the HDC using the hero6e system's uploadFromXml
+          const parser  = new DOMParser();
+          const xmlDoc  = parser.parseFromString(hdcXml, 'text/xml');
+          const parseErr = xmlDoc.querySelector('parsererror');
+          if (parseErr) {
+            throw new Error(`Failed to parse HDC file: ${parseErr.textContent.substring(0, 200)}`);
+          }
 
-        if (system === 'dnd5e') {
-          this._sanitizeActorDataDnd5e(actorData);
-        } else if (system === 'hero6e') {
-          this._sanitizeActorDataHero6e(actorData);
+          // Create a blank hero6e actor, then populate it via the system's HDC import
+          const actor = await Actor.create({ name: charName, type: 'pc' });
+          if (!actor) throw new Error('Failed to create actor for HDC import');
+
+          await actor.uploadFromXml(xmlDoc);
+
+          this.lastGeneratedNPC = null;
+          this.lastGeneratedHDC = hdcXml;
+          this._updateHistoryEntry(historyEntry.id, { status: 'success' });
+          ui.notifications.success(`NPC "${actor.name}" created successfully via HDC import!`);
+          actor.sheet.render(true);
+
+        // ── PF2e / D&D 5e: standard JSON actor creation ──────────────
         } else {
-          this._sanitizeActorData(actorData);
-        }
+          const actorData    = data.foundryNpc || data.npcDesign || data.actor || data;
+          const chosenSpells = Array.isArray(data.chosenSpells) ? data.chosenSpells : [];
 
-        // prototypeToken was deleted by _sanitizeActorDataDnd5e. Save name/img to
-        // restore on the live document after Actor.create() completes.
-        const _dnd5eTokenName = actorData.name;
-        const _dnd5eTokenImg  = actorData.img || 'icons/svg/mystery-man.svg';
+          if (!actorData || typeof actorData !== 'object') throw new Error('No valid actor data returned from server');
+          if (!actorData.name || !actorData.type) throw new Error(`Invalid actor data: missing ${!actorData.name ? 'name' : 'type'}`);
 
-        // ── dnd5e 5.x / Foundry v14: merge system data against the blank NPC schema ──
-        if (system === 'dnd5e') {
-          try {
-            const blankSchema = foundry.utils.deepClone(
-              game.system.model?.Actor?.npc ?? {}
-            );
-            actorData.system = foundry.utils.mergeObject(
-              blankSchema,
-              actorData.system ?? {},
-              { inplace: false, insertKeys: true, insertValues: true, overwrite: true }
-            );
-            console.log('[NPC Builder] D&D 5e: system merged against blank NPC schema');
-            if (!actorData.system.token || typeof actorData.system.token !== 'object') {
-              actorData.system.token = {};
-            }
-          } catch (mergeErr) {
-            console.warn('[NPC Builder] D&D 5e: schema merge failed (non-fatal):', mergeErr);
+          console.log('[NPC Builder] Creating actor in Foundry...', actorData);
+
+          // PF2e: enrich spell skeletons with full compendium data before validation
+          if (system === 'pf2e') {
+            await enrichSpellsFromCompendium(actorData);
           }
-        }
 
-        let actor, attempts = 0;
-        const maxAttempts = 10;
-
-        while (!actor && attempts < maxAttempts) {
-          attempts++;
-          try {
-            actor = await Actor.create(actorData);
-          } catch (error) {
-            const errorText = error.toString ? error.toString() : String(error.message || error);
-            if (system !== 'dnd5e' && system !== 'hero6e' && this._tryFixValidationError(actorData, errorText)) {
-              console.warn(`[NPC Builder] Fixed validation error, retrying (attempt ${attempts})...`);
-              continue;
-            }
-            throw error;
-          }
-        }
-
-        if (actor) {
           if (system === 'dnd5e') {
-            // Patch token name + img now that the DataModel is fully initialized
-            await actor.update({
-              'prototypeToken.name': _dnd5eTokenName,
-              'prototypeToken.texture.src': _dnd5eTokenImg,
-            });
+            this._sanitizeActorDataDnd5e(actorData);
+          } else {
+            this._sanitizeActorData(actorData);
+          }
 
-            // Embed chosen spells from compendium
-            if (chosenSpells.length > 0) {
-              ui.notifications.info(`Adding ${chosenSpells.length} spells…`);
-              const spellItems = [];
-              for (const spell of chosenSpells) {
-                try {
-                  const pack = game.packs.get(spell.packId);
-                  if (!pack) { console.warn('[NPC Builder] Pack not found:', spell.packId); continue; }
-                  const doc = await pack.getDocument(spell.id);
-                  if (doc) spellItems.push(doc.toObject());
-                } catch (e) {
-                  console.warn('[NPC Builder] Failed to load spell:', spell.name, e.message);
+          // prototypeToken was deleted by _sanitizeActorDataDnd5e. Save name/img to
+          // restore on the live document after Actor.create() completes.
+          const _dnd5eTokenName = actorData.name;
+          const _dnd5eTokenImg  = actorData.img || 'icons/svg/mystery-man.svg';
+
+          // ── dnd5e 5.x / Foundry v14: merge system data against the blank NPC schema ──
+          if (system === 'dnd5e') {
+            try {
+              const blankSchema = foundry.utils.deepClone(
+                game.system.model?.Actor?.npc ?? {}
+              );
+              actorData.system = foundry.utils.mergeObject(
+                blankSchema,
+                actorData.system ?? {},
+                { inplace: false, insertKeys: true, insertValues: true, overwrite: true }
+              );
+              console.log('[NPC Builder] D&D 5e: system merged against blank NPC schema');
+              if (!actorData.system.token || typeof actorData.system.token !== 'object') {
+                actorData.system.token = {};
+              }
+            } catch (mergeErr) {
+              console.warn('[NPC Builder] D&D 5e: schema merge failed (non-fatal):', mergeErr);
+            }
+          }
+
+          let actor, attempts = 0;
+          const maxAttempts = 10;
+
+          while (!actor && attempts < maxAttempts) {
+            attempts++;
+            try {
+              actor = await Actor.create(actorData);
+            } catch (error) {
+              const errorText = error.toString ? error.toString() : String(error.message || error);
+              if (system !== 'dnd5e' && this._tryFixValidationError(actorData, errorText)) {
+                console.warn(`[NPC Builder] Fixed validation error, retrying (attempt ${attempts})...`);
+                continue;
+              }
+              throw error;
+            }
+          }
+
+          if (actor) {
+            if (system === 'dnd5e') {
+              // Patch token name + img now that the DataModel is fully initialized
+              await actor.update({
+                'prototypeToken.name': _dnd5eTokenName,
+                'prototypeToken.texture.src': _dnd5eTokenImg,
+              });
+
+              // Embed chosen spells from compendium
+              if (chosenSpells.length > 0) {
+                ui.notifications.info(`Adding ${chosenSpells.length} spells…`);
+                const spellItems = [];
+                for (const spell of chosenSpells) {
+                  try {
+                    const pack = game.packs.get(spell.packId);
+                    if (!pack) { console.warn('[NPC Builder] Pack not found:', spell.packId); continue; }
+                    const doc = await pack.getDocument(spell.id);
+                    if (doc) spellItems.push(doc.toObject());
+                  } catch (e) {
+                    console.warn('[NPC Builder] Failed to load spell:', spell.name, e.message);
+                  }
+                }
+                if (spellItems.length > 0) {
+                  await actor.createEmbeddedDocuments('Item', spellItems);
+                  console.log(`[NPC Builder] Embedded ${spellItems.length} spells on actor`);
                 }
               }
-              if (spellItems.length > 0) {
-                await actor.createEmbeddedDocuments('Item', spellItems);
-                console.log(`[NPC Builder] Embedded ${spellItems.length} spells on actor`);
-              }
             }
-          }
 
-          // For Hero 6e: _preCreate resets characteristics max/value to base (0).
-          // fullHealth() reads system[KEY].LEVELS (correctly set by n8n) and
-          // propagates base + LEVELS into characteristics[key].max and .value.
-          if (system === 'hero6e') {
-            await actor.fullHealth();
+            this.lastGeneratedNPC = actorData;
+            this.lastGeneratedHDC = null;
+            this._updateHistoryEntry(historyEntry.id, { status: 'success' });
+            ui.notifications.success(`NPC "${actor.name}" created successfully!`);
+            actor.sheet.render(true);
+          } else {
+            throw new Error('Failed to create actor after maximum retry attempts');
           }
-
-          this.lastGeneratedNPC = actorData;
-          this._updateHistoryEntry(historyEntry.id, { status: 'success' });
-          ui.notifications.success(`NPC "${actor.name}" created successfully!`);
-          actor.sheet.render(true);
-        } else {
-          throw new Error('Failed to create actor after maximum retry attempts');
         }
 
       } else {
@@ -1572,6 +1617,24 @@ class NPCBuilderApp extends HandlebarsApplicationMixin(ApplicationV2) {
 
   async _exportJSON(event) {
     event?.preventDefault?.();
+
+    // Hero 6e: export as .hdc file
+    if (this.lastGeneratedHDC) {
+      const parser  = new DOMParser();
+      const xmlDoc  = parser.parseFromString(this.lastGeneratedHDC, 'text/xml');
+      const charName = xmlDoc.querySelector('CHARACTER_INFO')?.getAttribute('CHARACTER_NAME')
+                    || xmlDoc.documentElement?.getAttribute('name')
+                    || 'npc';
+      const blob = new Blob([this.lastGeneratedHDC], { type: 'application/xml' });
+      const url  = URL.createObjectURL(blob);
+      const a    = document.createElement('a');
+      a.href     = url;
+      a.download = `${charName}.hdc`;
+      a.click();
+      URL.revokeObjectURL(url);
+      ui.notifications.info('NPC exported to HDC file.');
+      return;
+    }
 
     if (!this.lastGeneratedNPC) {
       ui.notifications.warn('No NPC has been generated yet.');
