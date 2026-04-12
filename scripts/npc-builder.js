@@ -2024,6 +2024,13 @@ Hooks.once('init', () => {
     type:   Boolean,
     default: false,
   });
+
+  game.settings.register(_MODULE_FOLDER, 'welcomeMessageShown', {
+    scope:  'world',
+    config: false,
+    type:   Boolean,
+    default: false,
+  });
 });
 
 Hooks.once('ready', () => {
@@ -2042,4 +2049,32 @@ Hooks.once('ready', () => {
 
   (foundry.applications.handlebars?.loadTemplates ?? loadTemplates)([`modules/${modId}/templates/builder.html`]);
   console.log(`PF2E NPC Auto-Builder ready (module folder: ${modId}, version: ${currentVersion}).`);
+
+  // Send a one-time welcome message to the GM explaining how to use the module
+  if (game.user.isGM && !game.settings.get(modId, 'welcomeMessageShown')) {
+    const welcomeContent = `
+<h3>Welcome to the NPC Auto-Builder!</h3>
+<p>Here's how to get started:</p>
+<ol>
+  <li><strong>Open the Builder</strong> — Click the <em>NPC Builder</em> button in the <strong>Actors</strong> or <strong>Compendium</strong> sidebar header.</li>
+  <li><strong>Sign In</strong> — Click <em>Sign in with Patreon</em> to authenticate. Your tier determines how many NPCs you can generate per month.</li>
+  <li><strong>Pick Your System</strong> — Choose between <em>Pathfinder 2e</em>, <em>D&amp;D 5e</em>, or <em>Hero System 6e</em>.</li>
+  <li><strong>Describe Your NPC</strong> — Fill in a name, level (or CR/points), and a description. The more detail you provide, the better the result.</li>
+  <li><strong>Generate!</strong> — Click <em>Generate NPC</em> and a fully-statted actor will be created in your world. You can generate multiple NPCs at once.</li>
+</ol>
+<p><strong>Extra Features:</strong></p>
+<ul>
+  <li><strong>Generate Image</strong> — Create AI art for any NPC (costs 4 uses).</li>
+  <li><strong>Level Up</strong> <em>(PF2e only)</em> — Level Up and Generate Image buttons appear directly on NPC sheets.</li>
+  <li><strong>History</strong> — The builder tracks all your past generations so you can revisit or re-generate.</li>
+  <li><strong>Export</strong> — Download generated NPC data as JSON (or HDC for Hero System).</li>
+</ul>
+<p><em>This message is only shown once. Happy building!</em></p>`.trim();
+
+    ChatMessage.create({
+      content: welcomeContent,
+      whisper: game.users.filter(u => u.isGM).map(u => u.id),
+    });
+    game.settings.set(modId, 'welcomeMessageShown', true);
+  }
 });
