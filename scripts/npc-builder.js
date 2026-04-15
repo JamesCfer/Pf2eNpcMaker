@@ -101,12 +101,6 @@ class NPCBuilderApp extends HandlebarsApplicationMixin(ApplicationV2) {
   static SYSTEMS = ['pf2e', 'dnd5e', 'hero6e'];
 
   /**
-   * Valid Hero System 6e point tiers.
-   * Used to snap the input value to the nearest recognised budget.
-   */
-  static HERO6E_POINT_TIERS = [25, 50, 75, 100, 150, 175, 200, 250, 300, 350, 400, 500, 600];
-
-  /**
    * Valid Hero System 6e genre values accepted by the n8n workflow.
    */
   static HERO6E_GENRES = ['standard', 'superhero', 'pulp', 'dark_champions', 'fantasy', 'sci-fi'];
@@ -393,7 +387,7 @@ class NPCBuilderApp extends HandlebarsApplicationMixin(ApplicationV2) {
         levelLabel:      'Point Value',
         levelMin:        '25',
         levelMax:        '600',
-        levelStep:       '25',
+        levelStep:       '1',
         levelDefault:    '150',
         namePlaceholder: 'e.g. Ironclad',
         descPlaceholder: [
@@ -417,11 +411,6 @@ class NPCBuilderApp extends HandlebarsApplicationMixin(ApplicationV2) {
       levelInput.min  = cfg.levelMin;
       levelInput.max  = cfg.levelMax;
       levelInput.step = cfg.levelStep;
-      // Snap current value to a valid Hero tier if switching to hero6e
-      if (system === 'hero6e') {
-        const raw = parseInt(levelInput.value) || 150;
-        levelInput.value = NPCBuilderApp._snapToHero6eTier(raw);
-      }
     }
 
     const nameInput = root.querySelector('#npc-name');
@@ -442,16 +431,6 @@ class NPCBuilderApp extends HandlebarsApplicationMixin(ApplicationV2) {
 
     // Sync auth UI
     this._applyAuthStateUI();
-  }
-
-  /**
-   * Snap a raw point value to the nearest valid Hero System 6e tier.
-   */
-  static _snapToHero6eTier(raw) {
-    const tiers = NPCBuilderApp.HERO6E_POINT_TIERS;
-    return tiers.reduce((prev, curr) =>
-      Math.abs(curr - raw) < Math.abs(prev - raw) ? curr : prev
-    );
   }
 
   /* ── History rendering ───────────────────────────────────── */
@@ -963,8 +942,8 @@ class NPCBuilderApp extends HandlebarsApplicationMixin(ApplicationV2) {
         // ── Hero System 6e ───────────────────────────────────────────────────
         endpoint = NPCBuilderApp._url(NPCBuilderApp.N8N_HERO6E_URL);
 
-        // Snap points to nearest valid tier
-        const points = NPCBuilderApp._snapToHero6eTier(level);
+        // Use the exact point value provided — no rounding or tier snapping
+        const points = level;
 
         payload = {
           name,
