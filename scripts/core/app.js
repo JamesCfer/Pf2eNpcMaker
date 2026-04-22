@@ -141,9 +141,22 @@ export class BuilderApp extends HandlebarsApplicationMixin(ApplicationV2) {
 
   /* ── Action wiring ──────────────────────────────────────── */
 
-  static DEFAULT_OPTIONS_BASE = {
-    classes: ['npc-builder'],
-    window:  { resizable: true },
+  /* ── ApplicationV2 static config ───────────────────────── */
+
+  /**
+   * Base DEFAULT_OPTIONS shared by every module. The per-module factory
+   * in `openBuilder` merges in `id`, `window.title`, and `classes` that
+   * depend on the running module.
+   *
+   * We also set DEFAULT_OPTIONS directly so a BuilderApp can render
+   * without subclassing (the factory still overrides it with per-module
+   * fields).
+   */
+  static DEFAULT_OPTIONS = {
+    id:       'npc-builder-app',
+    classes:  ['npc-builder'],
+    tag:      'div',
+    window:   { title: 'NPC Builder', resizable: true },
     position: { width: 800 },
     actions: {
       signin:        function(event) { this._signIn(event); },
@@ -155,6 +168,13 @@ export class BuilderApp extends HandlebarsApplicationMixin(ApplicationV2) {
       generateimage: function(event) { this._generateImage(event); },
     },
   };
+
+  /**
+   * PARTS is overridden by the per-module factory subclass in openBuilder.
+   * Leaving it empty here means an un-subclassed BuilderApp will render
+   * nothing, which is the desired behaviour (you should always use the factory).
+   */
+  static PARTS = {};
 
   /* ── Auth actions ───────────────────────────────────────── */
 
@@ -558,12 +578,51 @@ export class BuilderApp extends HandlebarsApplicationMixin(ApplicationV2) {
 }
 
 /* ============================================================================
-   Singleton helpers — one app instance per module folder.
+   Per-module ApplicationV2 subclass factory.
+
+   ApplicationV2 + HandlebarsApplicationMixin require `static PARTS` and a
+   `static DEFAULT_OPTIONS` with `id` + `window.title` + `classes` set on the
+   class itself — not on the instance. Since BuilderApp is shared across
+   modules, we build a thin subclass per module folder that bakes the right
+   template path and titles in, then instantiate that.
    ============================================================================ */
 
+const _appClasses   = new Map();
 const _appInstances = new Map();
 
-export function openBuilder(adapter, AppClass = BuilderApp) {
+function getAppClass(adapter) {
+  const folder = adapter.moduleFolder;
+  let cls = _appClasses.get(folder);
+  if (cls) return cls;
+
+  const templatePath = `modules/${folder}/templates/builder.html`;
+  const baseClasses  = BuilderApp.DEFAULT_OPTIONS.classes || ['npc-builder'];
+
+  cls = class extends BuilderApp {
+    static PARTS = {
+      form: { template: templatePath },
+    };
+
+    static DEFAULT_OPTIONS = foundry.utils.mergeObject(
+      BuilderApp.DEFAULT_OPTIONS,
+      {
+        id:      `${folder}-app`,
+        classes: [...baseClasses, `module-${folder}`],
+        window:  { title: `${adapter.module.label} Builder` },
+      },
+      { inplace: false }
+    );
+  };
+
+  // Name the class for easier debugging in the Foundry console.
+  try { Object.defineProperty(cls, 'name', { value: `BuilderApp_${folder}` }); } catch (_) {}
+
+  _appClasses.set(folder, cls);
+  return cls;
+}
+
+export function openBuilder(adapter) {
+  const AppClass = getAppClass(adapter);
   let app = _appInstances.get(adapter.moduleFolder);
   if (app?.rendered && app?.element?.isConnected) {
     app.bringToTop?.();
@@ -580,7 +639,8 @@ export function openBuilder(adapter, AppClass = BuilderApp) {
 }
 
 /** Returns an instance for sheet button callbacks (does not render the window). */
-export function ensureBuilder(adapter, AppClass = BuilderApp) {
+export function ensureBuilder(adapter) {
+  const AppClass = getAppClass(adapter);
   let app = _appInstances.get(adapter.moduleFolder);
   if (!app?.rendered || !app?.element?.isConnected) {
     app = new AppClass(adapter);
