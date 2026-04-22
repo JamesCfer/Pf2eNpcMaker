@@ -1,85 +1,55 @@
 <div class="npc-builder-layout">
 
-  <!-- ── System selector tabs ────────────────────────────────────── -->
-  <div class="system-selector">
-    <button type="button" class="system-tab system-tab--home" data-system="home">
+  <!-- ── Tab strip (Home + this module's builder) ──────────────────────── -->
+  <div class="builder-tabs">
+    <button type="button" class="builder-tab builder-tab--home" data-tab="home">
       <i class="fa-solid fa-house"></i> Home
     </button>
-    <div class="system-tab-group">
-      <button type="button" class="system-tab" data-system="pf2e">
-        <i class="fa-solid fa-dragon"></i> Pathfinder 2e
+    <div class="builder-tab-group">
+      <button type="button" class="builder-tab builder-tab--builder" data-tab="builder">
+        <i class="{{module.icon}}"></i> {{module.label}}
       </button>
-      <a href="https://github.com/JamesCfer/Pf2eNpcMaker" target="_blank" rel="noopener noreferrer" class="system-tab-github" title="View on GitHub">
-        <i class="fa-brands fa-github"></i>
-      </a>
-    </div>
-    <div class="system-tab-group">
-      <button type="button" class="system-tab" data-system="dnd5e">
-        <i class="fa-solid fa-shield-halved"></i> D&amp;D 5e
-      </button>
-      <a href="https://github.com/JamesCfer/DnD5eNpcMaker" target="_blank" rel="noopener noreferrer" class="system-tab-github" title="View on GitHub">
-        <i class="fa-brands fa-github"></i>
-      </a>
-    </div>
-    <div class="system-tab-group">
-      <button type="button" class="system-tab" data-system="hero6e">
-        <i class="fa-solid fa-bolt"></i> HERO 6e
-      </button>
-      <a href="https://github.com/JamesCfer/Hero6eNpcMaker" target="_blank" rel="noopener noreferrer" class="system-tab-github" title="View on GitHub">
+      <a href="{{module.githubUrl}}" target="_blank" rel="noopener noreferrer" class="builder-tab-github" title="View on GitHub">
         <i class="fa-brands fa-github"></i>
       </a>
     </div>
   </div>
 
-  <!-- ── Home panel ───────────────────────────────────────────────── -->
+  <!-- ── Home panel (links to all 4 modules) ──────────────────────────── -->
   <div class="home-panel" style="display:none;">
     <div class="home-content">
       <div class="home-logo">
         <i class="fa-solid fa-wand-magic-sparkles"></i>
-        <h2>NPC Auto-Builder</h2>
+        <h2>CferNpcMaker — {{module.label}}</h2>
       </div>
       <p class="home-intro">
-        Generate fully-statted NPCs for Pathfinder 2e, D&amp;D 5e, and HERO System 6e in seconds using AI.
-        Sign in with Patreon, describe your NPC, and let the builder handle the stat block.
+        You're using <strong>{{module.label}}</strong>. The CferNpcMaker family ships
+        a separate Foundry module for each system so each install only contains the
+        code it needs. Install any of the others to round out your toolset.
       </p>
-      <div class="home-systems">
-        <div class="home-system-card home-system-card--pf2e">
-          <i class="fa-solid fa-dragon"></i>
-          <span>Pathfinder 2e</span>
+
+      <div class="home-modules-grid">
+        {{#each homeModules}}
+        <div class="home-module-card {{accentClass}}{{#if isCurrent}} home-module-card--current{{/if}}">
+          <div class="home-module-icon"><i class="{{icon}}"></i></div>
+          <div class="home-module-body">
+            <div class="home-module-title">{{label}}</div>
+            <div class="home-module-desc">{{description}}</div>
+          </div>
+          <div class="home-module-cta">
+            {{#if isCurrent}}
+              <span class="home-module-current-badge"><i class="fa-solid fa-check"></i> Installed</span>
+            {{else}}
+              <a href="{{install}}" target="_blank" rel="noopener noreferrer" class="home-module-install">
+                <i class="fa-brands fa-github"></i> Install
+              </a>
+            {{/if}}
+          </div>
         </div>
-        <div class="home-system-card home-system-card--dnd5e">
-          <i class="fa-solid fa-shield-halved"></i>
-          <span>D&amp;D 5e</span>
-        </div>
-        <div class="home-system-card home-system-card--hero6e">
-          <i class="fa-solid fa-bolt"></i>
-          <span>HERO 6e</span>
-        </div>
+        {{/each}}
       </div>
-      <div class="home-steps">
-        <div class="home-step">
-          <span class="home-step-num">1</span>
-          <div>
-            <strong>Sign in with Patreon</strong>
-            <span>Free accounts get 3 NPCs per month. Supporters unlock higher limits.</span>
-          </div>
-        </div>
-        <div class="home-step">
-          <span class="home-step-num">2</span>
-          <div>
-            <strong>Choose your system</strong>
-            <span>Pathfinder 2e, D&amp;D 5e, and HERO System 6e are all fully supported.</span>
-          </div>
-        </div>
-        <div class="home-step">
-          <span class="home-step-num">3</span>
-          <div>
-            <strong>Describe your NPC</strong>
-            <span>Enter a name, level/CR/points, and a short description — then hit Generate.</span>
-          </div>
-        </div>
-      </div>
-      <!-- ── Art style setting ──────────────────────────────── -->
+
+      <!-- Custom art style -->
       <div class="home-art-style">
         <label for="npc-art-style" class="home-art-style-label">
           <i class="fa-solid fa-palette"></i>
@@ -88,7 +58,7 @@
         <input type="text" id="npc-art-style" class="home-art-style-input"
           placeholder="e.g. watercolor fantasy, anime, oil painting, comic book…" />
         <span class="home-art-style-hint">
-          Specify an art style for generated NPC images. Leave blank to use the system default style.
+          Specify an art style for generated NPC images. Leave blank to use the system default.
         </span>
       </div>
 
@@ -103,20 +73,18 @@
     </div>
   </div>
 
-  <!-- ── Main two-panel content ──────────────────────────────────── -->
-  <div class="npc-builder-inner">
+  <!-- ── Main builder content ─────────────────────────────────────────── -->
+  <div class="builder-inner">
 
-    <!-- ── Left: form panel ──────────────────────────────────────── -->
+    <!-- Left: form panel -->
     <div class="npc-panel-form">
 
-      <!-- ── Auth banner ─────────────────────────────────────────── -->
+      <!-- Auth banner -->
       <div class="auth-banner">
-
-        <!-- Shown when NOT authenticated -->
         <div class="auth-unsigned">
           <div class="auth-unsigned-text">
             <i class="fa-brands fa-patreon auth-patreon-icon"></i>
-            <span>Sign in with Patreon to generate NPCs</span>
+            <span>Sign in with Patreon to use this module</span>
           </div>
           <div class="auth-unsigned-actions">
             <button type="button" data-action="signin" class="btn-patreon">
@@ -127,8 +95,6 @@
             </button>
           </div>
         </div>
-
-        <!-- Shown when authenticated -->
         <div class="auth-signed">
           <div class="auth-signed-status">
             <i class="fa-solid fa-circle-check"></i>
@@ -138,10 +104,9 @@
             <i class="fa-solid fa-right-from-bracket"></i> Sign Out
           </button>
         </div>
-
       </div>
 
-      <!-- ── NPC form ──────────────────────────────────────────────── -->
+      <!-- Module-specific form -->
       <form class="npc-form" autocomplete="off">
 
         <div class="history-selected-banner" style="display:none;">
@@ -151,12 +116,12 @@
 
         <div class="field-row">
           <div class="field field--name">
-            <label for="npc-name" class="label-npc-name">NPC Name</label>
+            <label for="npc-name">NPC Name</label>
             <input type="text" id="npc-name" name="name" placeholder="e.g. Goblin Warchief" />
           </div>
           <div class="field field--level">
-            <label for="npc-level" class="label-npc-level">Level</label>
-            <input type="number" id="npc-level" name="level" value="1" min="0" max="25" />
+            <label for="npc-level">Level</label>
+            <input type="number" id="npc-level" name="level" value="1" min="0" max="25" step="1" />
           </div>
         </div>
 
@@ -167,68 +132,12 @@
           <span class="field-hint">The more detail you provide, the better the AI can match your vision.</span>
         </div>
 
-        <!-- PF2e-only: spell compendium mapping -->
-        <div class="field field--check" data-system-only="pf2e">
+        <div class="field field--check">
           <label class="checkbox-label">
             <input type="checkbox" name="includeSpells" />
             <span>Include spell compendium mapping</span>
           </label>
           <span class="field-hint">Indexes your spell compendiums before generating (~10 s extra, enables correct spell links).</span>
-        </div>
-
-        <!-- D&D 5e-only: caster type -->
-        <div class="field" data-system-only="dnd5e">
-          <label for="npc-caster-type">Caster Type</label>
-          <select id="npc-caster-type" name="casterType">
-            <option value="none">None (martial / non-caster)</option>
-            <option value="half">Half Caster (up to 5th-level spells)</option>
-            <option value="full">Full Caster (up to 9th-level spells)</option>
-          </select>
-          <span class="field-hint">Determines spell slot progression included in the stat block.</span>
-        </div>
-
-        <!-- HERO 6e-only: universe / campaign setting -->
-        <div class="field" data-system-only="hero6e">
-          <label for="npc-hero6e-universe">Universe / Setting</label>
-          <select id="npc-hero6e-universe" name="hero6eUniverse">
-            <option value="standard">Standard (no universe rules)</option>
-            <option value="mha">My Hero Academia</option>
-            <option value="dc">DC Universe</option>
-            <option value="marvel">Marvel Comics</option>
-          </select>
-          <span class="field-hint">Sets stat caps, power structure rules, and complication suggestions for the chosen universe.</span>
-        </div>
-
-        <!-- HERO 6e-only: genre -->
-        <div class="field" data-system-only="hero6e">
-          <label for="npc-hero6e-genre">Genre</label>
-          <select id="npc-hero6e-genre" name="hero6eGenre">
-            <option value="standard">Standard</option>
-            <option value="superhero">Superhero</option>
-            <option value="pulp">Pulp</option>
-            <option value="dark_champions">Dark Champions</option>
-            <option value="fantasy">Fantasy</option>
-            <option value="sci-fi">Sci-Fi</option>
-          </select>
-          <span class="field-hint">Shapes the tone, power scale, and ability suggestions for the generated NPC.</span>
-        </div>
-
-        <!-- HERO 6e-only: create gear -->
-        <div class="field field--check" data-system-only="hero6e">
-          <label class="checkbox-label">
-            <input type="checkbox" id="npc-hero6e-gear" name="hero6eCreateGear" />
-            <span>Create Gear</span>
-          </label>
-          <span class="field-hint">When enabled, adds 2–4 gear items (weapons, armor, gadgets) with appropriate Focus limitations.</span>
-        </div>
-
-        <!-- HERO 6e-only: complications -->
-        <div class="field field--check" data-system-only="hero6e">
-          <label class="checkbox-label">
-            <input type="checkbox" name="includeComplications" />
-            <span>Include complications</span>
-          </label>
-          <span class="field-hint">Adds character complications (disadvantages) to the build.</span>
         </div>
 
         <div class="form-actions">
@@ -241,6 +150,7 @@
             <span>Export JSON</span>
           </button>
         </div>
+
         <div class="form-actions form-actions--image">
           <button type="button" data-action="generateimage" class="btn-image" disabled>
             <i class="fa-solid fa-image"></i>
@@ -252,20 +162,18 @@
       </form>
     </div>
 
-    <!-- ── Right: history panel ──────────────────────────────────── -->
+    <!-- Right: history panel -->
     <div class="npc-panel-history">
       <div class="history-header">
         <i class="fa-solid fa-clock-rotate-left"></i>
-        <span class="history-header-label">Created NPCs</span>
+        <span class="history-header-label">{{module.historyLabel}}</span>
       </div>
-      <div class="history-list">
-        <!-- Populated by JavaScript -->
-      </div>
+      <div class="history-list"></div>
     </div>
 
   </div>
 
-  <!-- ── Feedback section ────────────────────────────────────── -->
+  <!-- ── Feedback section ─────────────────────────────────────────────── -->
   <div class="feedback-section">
     <div class="feedback-header">
       <i class="fa-solid fa-comment-dots"></i>

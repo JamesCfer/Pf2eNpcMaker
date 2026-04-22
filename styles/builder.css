@@ -1,10 +1,10 @@
 /* ============================================================
-   PF2E NPC Auto-Builder — Application Styles
-   Uses .application.npc-builder as root to override PF2e/Foundry
-   button defaults in ApplicationV2 windows.
+   CferNpcMaker — Shared core styles
+   The per-module accents.css overrides these for system-specific
+   theming (parchment for PF2e, comic-book panels for Hero 6e, etc.).
    ============================================================ */
 
-/* ── Outer layout wrapper (flex column: tabs → warning → panels) ── */
+/* ── Outer layout wrapper ────────────────────────────────── */
 .application.npc-builder .npc-builder-layout {
   display: flex;
   flex-direction: column;
@@ -12,15 +12,15 @@
   overflow: hidden;
 }
 
-/* ── System selector tabs ────────────────────────────────── */
-.application.npc-builder .system-selector {
+/* ── Tab strip (Home + Builder) ──────────────────────────── */
+.application.npc-builder .builder-tabs {
   display: flex;
   flex-direction: row;
   flex-shrink: 0;
   background: #2c2c3a;
 }
 
-.application.npc-builder .system-tab {
+.application.npc-builder .builder-tab {
   flex: 1;
   padding: 0.55em 0.75em;
   font-size: 0.85em;
@@ -38,23 +38,19 @@
   gap: 0.4em;
 }
 
-.application.npc-builder .system-tab:hover {
+.application.npc-builder .builder-tab:hover {
   background: rgba(255, 255, 255, 0.08);
   color: rgba(255, 255, 255, 0.85);
 }
 
-/* System tab group (tab button + GitHub icon link) */
-.application.npc-builder .system-tab-group {
+.application.npc-builder .builder-tab-group {
   flex: 1;
   display: flex;
   align-items: stretch;
 }
+.application.npc-builder .builder-tab-group .builder-tab { flex: 1; }
 
-.application.npc-builder .system-tab-group .system-tab {
-  flex: 1;
-}
-
-.application.npc-builder .system-tab-github {
+.application.npc-builder .builder-tab-github {
   display: flex;
   align-items: center;
   padding: 0 0.55em;
@@ -68,68 +64,32 @@
   transition: color 0.15s, background 0.15s;
   flex-shrink: 0;
 }
-
-.application.npc-builder .system-tab-github:hover {
+.application.npc-builder .builder-tab-github:hover {
   color: rgba(255, 255, 255, 0.9);
   background: rgba(255, 255, 255, 0.08);
   text-decoration: none;
 }
 
-/* Home tab — visually distinct, narrower */
-.application.npc-builder .system-tab--home {
+.application.npc-builder .builder-tab--home {
   flex: 0 0 auto;
   padding-left: 0.9em;
   padding-right: 0.9em;
   border-right: 1px solid rgba(255, 255, 255, 0.08);
 }
 
-/* Active tab — each system gets its own accent colour */
-.application.npc-builder .system-tab[data-system="home"].is-active {
+.application.npc-builder .builder-tab[data-tab="home"].is-active {
   color: #fff;
   background: rgba(255, 255, 255, 0.06);
   border-bottom-color: #e8a020;
 }
-
-.application.npc-builder.system-pf2e .system-tab[data-system="pf2e"].is-active {
+.application.npc-builder .builder-tab[data-tab="builder"].is-active {
   color: #fff;
   background: rgba(255, 255, 255, 0.06);
-  border-bottom-color: #7c5cbf;
-}
-
-.application.npc-builder.system-dnd5e .system-tab[data-system="dnd5e"].is-active {
-  color: #fff;
-  background: rgba(255, 255, 255, 0.06);
-  border-bottom-color: #c0392b;
-}
-
-.application.npc-builder.system-hero6e .system-tab[data-system="hero6e"].is-active {
-  color: #fff;
-  background: rgba(255, 255, 255, 0.06);
-  border-bottom-color: #2980b9;
-}
-
-/* ── System warning banner ───────────────────────────────── */
-.application.npc-builder .system-warning {
-  display: none;
-  align-items: center;
-  gap: 0.65em;
-  padding: 0.6em 1em;
-  background: #5c3800;
-  color: #ffe0b2;
-  font-size: 0.87em;
-  font-weight: 500;
-  border-bottom: 2px solid #e65100;
-  flex-shrink: 0;
-}
-
-.application.npc-builder .system-warning i {
-  color: #ffb74d;
-  font-size: 1.15em;
-  flex-shrink: 0;
+  /* per-module accents.css sets border-bottom-color */
 }
 
 /* ── Two-panel wrapper ───────────────────────────────────── */
-.application.npc-builder .npc-builder-inner {
+.application.npc-builder .builder-inner {
   display: flex;
   flex-direction: row;
   flex: 1;
@@ -137,7 +97,6 @@
   overflow: hidden;
 }
 
-/* ── Left: form panel ────────────────────────────────────── */
 .application.npc-builder .npc-panel-form {
   flex: 1;
   min-width: 0;
@@ -147,7 +106,6 @@
   border-right: 1px solid rgba(0, 0, 0, 0.12);
 }
 
-/* ── Right: history panel ────────────────────────────────── */
 .application.npc-builder .npc-panel-history {
   width: 240px;
   flex-shrink: 0;
@@ -202,7 +160,6 @@
 .application.npc-builder .history-entry:hover {
   background: rgba(124, 92, 191, 0.07);
 }
-
 .application.npc-builder .history-entry.is-selected {
   background: rgba(124, 92, 191, 0.11);
   border-left-color: #7c5cbf;
@@ -244,12 +201,10 @@
   text-align: center;
 }
 
-/* Status icon colors */
 .application.npc-builder .history-entry--success .history-entry-icon { color: #38a85a; }
 .application.npc-builder .history-entry--error   .history-entry-icon { color: #cc3333; }
 .application.npc-builder .history-entry--generating .history-entry-icon { color: #7c5cbf; }
 
-/* Error text */
 .application.npc-builder .history-entry-error {
   font-size: 0.73em;
   color: #cc3333;
@@ -285,7 +240,7 @@
   100% { left: 120%; }
 }
 
-/* ── Selected-entry banner (inside form) ─────────────────── */
+/* ── Selected-entry banner ──────────────────────────────── */
 .application.npc-builder .history-selected-banner {
   display: flex;
   align-items: center;
@@ -298,18 +253,13 @@
   color: #5a3ea0;
   margin-bottom: 0.1em;
 }
-
-.application.npc-builder .history-selected-banner i {
-  flex-shrink: 0;
-  opacity: 0.7;
-}
+.application.npc-builder .history-selected-banner i { flex-shrink: 0; opacity: 0.7; }
 
 /* ── Auth banner ─────────────────────────────────────────── */
 .application.npc-builder .auth-banner {
   border-bottom: 1px solid rgba(0, 0, 0, 0.15);
 }
 
-/* --- unsigned state ---------------------------------------- */
 .application.npc-builder .auth-unsigned {
   display: flex;
   flex-direction: column;
@@ -318,7 +268,6 @@
   background: #fdf6e3;
   border-bottom: 2px solid #e8c97a;
 }
-
 .application.npc-builder .auth-unsigned-text {
   display: flex;
   align-items: center;
@@ -326,18 +275,15 @@
   font-size: 0.9em;
   color: #6b5200;
 }
-
 .application.npc-builder .auth-patreon-icon {
   color: #ff424d;
   font-size: 1.1em;
 }
-
 .application.npc-builder .auth-unsigned-actions {
   display: flex;
   gap: 0.5em;
 }
 
-/* --- signed-in state --------------------------------------- */
 .application.npc-builder .auth-signed {
   display: flex;
   align-items: center;
@@ -346,7 +292,6 @@
   background: #edfbf0;
   border-bottom: 2px solid #5cb87a;
 }
-
 .application.npc-builder .auth-signed-status {
   display: flex;
   align-items: center;
@@ -355,16 +300,10 @@
   font-weight: 600;
   color: #1d6b35;
 }
+.application.npc-builder .auth-signed-status i { color: #38a85a; font-size: 1.05em; }
 
-.application.npc-builder .auth-signed-status i {
-  color: #38a85a;
-  font-size: 1.05em;
-}
-
-/* ── CSS-driven visibility (set by JS on root element) ─────── */
-.application.npc-builder .auth-signed          { display: none; }
-.application.npc-builder .auth-unsigned        { display: flex; }
-
+.application.npc-builder .auth-signed   { display: none; }
+.application.npc-builder .auth-unsigned { display: flex; }
 .application.npc-builder.is-authenticated .auth-unsigned { display: none; }
 .application.npc-builder.is-authenticated .auth-signed   { display: flex; }
 
@@ -415,22 +354,6 @@
   box-shadow: 0 0 0 2px rgba(124, 92, 191, 0.18);
 }
 
-/* D&D 5e accent colour for all input focus */
-.application.npc-builder.system-dnd5e .field input:focus,
-.application.npc-builder.system-dnd5e .field textarea:focus,
-.application.npc-builder.system-dnd5e .field select:focus {
-  border-color: #c0392b;
-  box-shadow: 0 0 0 2px rgba(192, 57, 43, 0.18);
-}
-
-/* Hero 6e accent colour for all input focus */
-.application.npc-builder.system-hero6e .field input:focus,
-.application.npc-builder.system-hero6e .field textarea:focus,
-.application.npc-builder.system-hero6e .field select:focus {
-  border-color: #2980b9;
-  box-shadow: 0 0 0 2px rgba(41, 128, 185, 0.18);
-}
-
 .application.npc-builder .field textarea {
   resize: vertical;
   min-height: 100px;
@@ -444,21 +367,15 @@
   line-height: 1.35;
 }
 
-/* ── Two-column name/level row ───────────────────────────── */
 .application.npc-builder .field-row {
   display: flex;
   gap: 0.65em;
   align-items: flex-start;
 }
-
 .application.npc-builder .field--name  { flex: 1; }
 .application.npc-builder .field--level { width: 80px; flex-shrink: 0; }
+.application.npc-builder .field--level input { text-align: center; }
 
-.application.npc-builder .field--level input {
-  text-align: center;
-}
-
-/* ── Checkbox field ──────────────────────────────────────── */
 .application.npc-builder .field--check {
   background: #f9f9fb;
   border: 1px solid #e0e0e8;
@@ -478,7 +395,6 @@
   letter-spacing: normal;
   color: #333;
 }
-
 .application.npc-builder .checkbox-label input[type="checkbox"] {
   width: 15px;
   height: 15px;
@@ -487,7 +403,7 @@
   accent-color: #7c5cbf;
 }
 
-/* ── Action buttons — explicit colors beat PF2e defaults ─── */
+/* ── Action buttons ──────────────────────────────────────── */
 .application.npc-builder .form-actions {
   display: flex;
   gap: 0.5em;
@@ -521,7 +437,6 @@
   font-size: 0.95em;
 }
 
-/* Primary — purple/indigo */
 .application.npc-builder button.btn-primary {
   background: #7c5cbf;
   color: #fff;
@@ -531,7 +446,6 @@
 .application.npc-builder button.btn-primary:hover:not(:disabled) { filter: brightness(1.1); }
 .application.npc-builder button.btn-primary:active:not(:disabled) { transform: translateY(1px); }
 
-/* Secondary — outline */
 .application.npc-builder button.btn-secondary {
   background: #f5f5f5;
   color: #444;
@@ -539,13 +453,11 @@
 }
 .application.npc-builder button.btn-secondary:hover:not(:disabled) { background: #e8e8e8; }
 
-/* Disabled state */
 .application.npc-builder button:disabled {
   opacity: 0.45;
   cursor: not-allowed;
 }
 
-/* Generating spinner pulse on primary button */
 .application.npc-builder.is-generating button.btn-primary {
   animation: npc-pulse 1.2s ease-in-out infinite;
 }
@@ -554,7 +466,6 @@
   50%       { opacity: 0.7; }
 }
 
-/* Patreon button */
 .application.npc-builder button.btn-patreon {
   background: #ff424d;
   color: #fff;
@@ -564,7 +475,6 @@
 }
 .application.npc-builder button.btn-patreon:hover { filter: brightness(1.08); }
 
-/* Join Patreon (secondary outline) */
 .application.npc-builder button.btn-join {
   background: transparent;
   color: #cc2030;
@@ -572,7 +482,6 @@
 }
 .application.npc-builder button.btn-join:hover { background: rgba(255, 66, 77, 0.06); }
 
-/* Sign-out button */
 .application.npc-builder button.btn-signout {
   background: transparent;
   color: #555;
@@ -581,6 +490,44 @@
   padding: 0.35em 0.65em;
 }
 .application.npc-builder button.btn-signout:hover { background: rgba(0,0,0,0.05); color: #333; }
+
+/* ── Generate Image button ──────────────────────────────── */
+.application.npc-builder .form-actions--image { margin-top: 0; }
+
+.application.npc-builder button.btn-image {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.4em;
+  flex: 1;
+  padding: 0.5em 0.85em;
+  border-radius: 5px;
+  font-family: inherit;
+  font-size: 0.88em;
+  font-weight: 600;
+  cursor: pointer;
+  transition: filter 0.12s, opacity 0.12s, transform 0.08s;
+  white-space: nowrap;
+  line-height: 1;
+  background: #2e7d32;
+  color: #fff;
+  border: none;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.2);
+}
+
+.application.npc-builder button.btn-image:hover:not(:disabled) { filter: brightness(1.1); }
+.application.npc-builder button.btn-image:active:not(:disabled) { transform: translateY(1px); }
+.application.npc-builder button.btn-image:disabled { opacity: 0.45; cursor: not-allowed; }
+
+.application.npc-builder .btn-cost-badge {
+  display: inline-block;
+  padding: 0.15em 0.45em;
+  border-radius: 3px;
+  background: rgba(255, 255, 255, 0.25);
+  font-size: 0.78em;
+  font-weight: 700;
+  letter-spacing: 0.02em;
+}
 
 /* ── Home panel ──────────────────────────────────────────── */
 .application.npc-builder .home-panel {
@@ -594,7 +541,7 @@
 }
 
 .application.npc-builder .home-content {
-  max-width: 460px;
+  max-width: 520px;
   width: 100%;
   display: flex;
   flex-direction: column;
@@ -608,9 +555,7 @@
   color: #7c5cbf;
 }
 
-.application.npc-builder .home-logo i {
-  font-size: 1.6em;
-}
+.application.npc-builder .home-logo i { font-size: 1.6em; }
 
 .application.npc-builder .home-logo h2 {
   margin: 0;
@@ -627,47 +572,148 @@
   line-height: 1.55;
 }
 
-.application.npc-builder .home-steps {
-  display: flex;
-  flex-direction: column;
-  gap: 0.65em;
-}
-
-.application.npc-builder .home-step {
-  display: flex;
-  align-items: flex-start;
+/* ── Home: 4 module cards (linking to GitHub releases) ──── */
+.application.npc-builder .home-modules-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
   gap: 0.75em;
 }
 
-.application.npc-builder .home-step-num {
-  width: 1.6em;
-  height: 1.6em;
-  border-radius: 50%;
-  background: #7c5cbf;
-  color: #fff;
-  font-size: 0.78em;
-  font-weight: 700;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  flex-shrink: 0;
-  margin-top: 0.1em;
-}
-
-.application.npc-builder .home-step div {
+.application.npc-builder .home-module-card {
   display: flex;
   flex-direction: column;
-  gap: 0.15em;
+  gap: 0.5em;
+  padding: 0.75em 0.85em;
+  border-radius: 7px;
+  border: 1px solid rgba(0, 0, 0, 0.15);
+  background: #fff;
+  transition: transform 0.1s, box-shadow 0.1s;
 }
 
-.application.npc-builder .home-step strong {
-  font-size: 0.88em;
+.application.npc-builder .home-module-card:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.08);
+}
+
+.application.npc-builder .home-module-card--current {
+  border-width: 2px;
+  background: linear-gradient(180deg, #f7f3ff 0%, #fff 100%);
+}
+
+.application.npc-builder .home-module-icon {
+  font-size: 1.3em;
+}
+
+.application.npc-builder .home-module-body {
+  display: flex;
+  flex-direction: column;
+  gap: 0.2em;
+  flex: 1;
+}
+
+.application.npc-builder .home-module-title {
+  font-size: 0.92em;
+  font-weight: 700;
   color: #333;
 }
 
-.application.npc-builder .home-step span {
-  font-size: 0.8em;
+.application.npc-builder .home-module-desc {
+  font-size: 0.78em;
+  color: #666;
+  line-height: 1.4;
+}
+
+.application.npc-builder .home-module-cta {
+  margin-top: 0.25em;
+}
+
+.application.npc-builder .home-module-install {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35em;
+  padding: 0.35em 0.7em;
+  border-radius: 4px;
+  background: #24292e;
+  color: #fff;
+  font-size: 0.78em;
+  font-weight: 600;
+  text-decoration: none;
+  transition: background 0.12s;
+}
+.application.npc-builder .home-module-install:hover {
+  background: #3a3f44;
+  text-decoration: none;
+  color: #fff;
+}
+
+.application.npc-builder .home-module-current-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.3em;
+  padding: 0.25em 0.55em;
+  border-radius: 4px;
+  background: rgba(46, 125, 50, 0.12);
+  color: #1d6b35;
+  font-size: 0.78em;
+  font-weight: 700;
+}
+
+/* Per-module accent classes (border + icon colors) */
+.application.npc-builder .home-module-card.card--pf2e     { border-color: rgba(124, 92, 191, 0.45); }
+.application.npc-builder .home-module-card.card--pf2e .home-module-icon i { color: #7c5cbf; }
+.application.npc-builder .home-module-card.card--dnd5e    { border-color: rgba(192, 57, 43, 0.45); }
+.application.npc-builder .home-module-card.card--dnd5e .home-module-icon i { color: #c0392b; }
+.application.npc-builder .home-module-card.card--hero6e   { border-color: rgba(41, 128, 185, 0.45); }
+.application.npc-builder .home-module-card.card--hero6e .home-module-icon i { color: #2980b9; }
+.application.npc-builder .home-module-card.card--pf2eitem { border-color: rgba(46, 125, 50, 0.45); }
+.application.npc-builder .home-module-card.card--pf2eitem .home-module-icon i { color: #2e7d32; }
+
+/* ── Home: art style + external links ───────────────────── */
+.application.npc-builder .home-art-style {
+  display: flex;
+  flex-direction: column;
+  gap: 0.35em;
+  background: #f3f0fa;
+  border: 1px solid rgba(124, 92, 191, 0.22);
+  border-radius: 7px;
+  padding: 0.75em 0.85em;
+}
+
+.application.npc-builder .home-art-style-label {
+  display: flex;
+  align-items: center;
+  gap: 0.45em;
+  font-size: 0.85em;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: #5a3ea0;
+}
+.application.npc-builder .home-art-style-label i { font-size: 1.1em; color: #7c5cbf; }
+
+.application.npc-builder .home-art-style-input {
+  width: 100%;
+  padding: 0.4em 0.55em;
+  border: 1px solid rgba(0, 0, 0, 0.2);
+  border-radius: 4px;
+  background: #fff;
+  color: #333;
+  font-family: inherit;
+  font-size: 0.9em;
+  box-sizing: border-box;
+  transition: border-color 0.15s, box-shadow 0.15s;
+}
+.application.npc-builder .home-art-style-input:focus {
+  outline: none;
+  border-color: #7c5cbf;
+  box-shadow: 0 0 0 2px rgba(124, 92, 191, 0.18);
+}
+
+.application.npc-builder .home-art-style-hint {
+  font-size: 0.78em;
   color: #777;
+  font-style: italic;
+  line-height: 1.35;
 }
 
 .application.npc-builder .home-links {
@@ -725,605 +771,6 @@
 }
 .directory .npc-builder-button:hover { background: #d4ac2e; color: #fff; }
 
-/* ============================================================
-   System-specific theming
-   Each system gets a fully distinct visual identity applied via
-   the system-{x} class on the root element.
-
-     system-pf2e   → Arcane Grimoire   (violet runes on parchment)
-     system-dnd5e  → Heraldic Tome     (crimson + gold heraldry)
-     system-hero6e → Comic Book Panel  (halftone dots, action yellow)
-   ============================================================ */
-
-/* ============================================================
-   ▸ PF2e — ARCANE GRIMOIRE
-   Aged parchment, deep violet ink, gold leaf accents, serif
-   script, faint runic ornamentation.
-   ============================================================ */
-
-.application.npc-builder.system-pf2e .npc-panel-form {
-  background:
-    radial-gradient(circle at 18% 0%, rgba(124, 92, 191, 0.10), transparent 55%),
-    radial-gradient(circle at 85% 100%, rgba(201, 162, 39, 0.09), transparent 50%),
-    repeating-linear-gradient(45deg, rgba(90, 62, 160, 0.015) 0 2px, transparent 2px 6px),
-    linear-gradient(180deg, #f5eed8 0%, #ece3c4 100%);
-  border-top: 3px double #8b6914;
-  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.5);
-  color: #2a1c4a;
-}
-
-.application.npc-builder.system-pf2e .npc-panel-history {
-  background:
-    repeating-linear-gradient(45deg, rgba(90, 62, 160, 0.025) 0 2px, transparent 2px 6px),
-    linear-gradient(180deg, #efe6c8 0%, #e1d5ad 100%);
-  border-left: 3px double #8b6914;
-}
-
-.application.npc-builder.system-pf2e .history-header {
-  font-family: "Cinzel", "Modesto Condensed", "Signika", serif;
-  font-weight: 700;
-  font-size: 0.82em;
-  letter-spacing: 0.12em;
-  color: #3e2875;
-  background: linear-gradient(180deg, #e8d8a5 0%, #d4bf7f 100%);
-  border-bottom: 2px solid #8b6914;
-  text-shadow: 0 1px 0 rgba(255, 255, 255, 0.4);
-}
-
-.application.npc-builder.system-pf2e .history-header i { color: #a08028; }
-
-.application.npc-builder.system-pf2e .history-entry {
-  background: transparent;
-  border-bottom: 1px dashed rgba(139, 105, 20, 0.35);
-  border-left: 3px solid transparent;
-}
-.application.npc-builder.system-pf2e .history-entry:hover {
-  background: rgba(124, 92, 191, 0.10);
-}
-.application.npc-builder.system-pf2e .history-entry.is-selected {
-  background: rgba(124, 92, 191, 0.14);
-  border-left-color: #7c5cbf;
-  box-shadow: inset 3px 0 0 #c9a227;
-}
-.application.npc-builder.system-pf2e .history-entry-name {
-  font-family: "Cinzel", "Modesto Condensed", serif;
-  color: #2a1c4a;
-}
-.application.npc-builder.system-pf2e .history-entry-meta { color: #6a5a2f; font-style: italic; }
-.application.npc-builder.system-pf2e .history-entry--generating .history-entry-icon { color: #7c5cbf; }
-
-.application.npc-builder.system-pf2e .history-selected-banner {
-  background: linear-gradient(180deg, rgba(124, 92, 191, 0.12), rgba(201, 162, 39, 0.10));
-  border: 1px solid #8b6914;
-  border-left: 3px solid #7c5cbf;
-  border-radius: 2px;
-  color: #3e2875;
-  font-family: "Cinzel", serif;
-  font-size: 0.8em;
-  letter-spacing: 0.02em;
-}
-
-.application.npc-builder.system-pf2e .field > label {
-  font-family: "Cinzel", "Modesto Condensed", serif;
-  letter-spacing: 0.08em;
-  color: #3e2875;
-  font-size: 0.8em;
-}
-
-.application.npc-builder.system-pf2e .field input[type="text"],
-.application.npc-builder.system-pf2e .field input[type="number"],
-.application.npc-builder.system-pf2e .field textarea,
-.application.npc-builder.system-pf2e .field select {
-  background: #fbf6e4;
-  border: 1px solid #8b6914;
-  border-radius: 3px;
-  color: #2a1c4a;
-  box-shadow: inset 0 1px 2px rgba(139, 105, 20, 0.12);
-}
-.application.npc-builder.system-pf2e .field input:focus,
-.application.npc-builder.system-pf2e .field textarea:focus,
-.application.npc-builder.system-pf2e .field select:focus {
-  border-color: #7c5cbf;
-  box-shadow: 0 0 0 2px rgba(124, 92, 191, 0.25), inset 0 1px 2px rgba(139, 105, 20, 0.10);
-}
-.application.npc-builder.system-pf2e .field-hint { color: #6a5a2f; }
-
-.application.npc-builder.system-pf2e .field--check {
-  background: rgba(255, 250, 228, 0.6);
-  border: 1px solid #8b6914;
-  border-radius: 3px;
-}
-
-.application.npc-builder.system-pf2e button.btn-primary {
-  background: linear-gradient(180deg, #8e6bd8 0%, #6a4aad 100%);
-  border: 1px solid #3e2875;
-  border-radius: 3px;
-  box-shadow:
-    inset 0 1px 0 rgba(255, 255, 255, 0.25),
-    0 1px 0 #c9a227,
-    0 2px 4px rgba(42, 28, 74, 0.35);
-  text-shadow: 0 1px 1px rgba(0, 0, 0, 0.35);
-  font-family: "Cinzel", serif;
-  letter-spacing: 0.04em;
-}
-
-.application.npc-builder.system-pf2e button.btn-secondary {
-  background: #fbf6e4;
-  color: #3e2875;
-  border: 1px solid #8b6914;
-  border-radius: 3px;
-  font-family: "Cinzel", serif;
-  letter-spacing: 0.04em;
-}
-.application.npc-builder.system-pf2e button.btn-secondary:hover:not(:disabled) {
-  background: #f2e7c0;
-}
-
-.application.npc-builder.system-pf2e button.btn-image {
-  background: linear-gradient(180deg, #c9a227 0%, #8b6914 100%);
-  border: 1px solid #5e4408;
-  font-family: "Cinzel", serif;
-  letter-spacing: 0.04em;
-  text-shadow: 0 1px 1px rgba(0, 0, 0, 0.35);
-}
-
-.application.npc-builder.system-pf2e .history-progress {
-  background: rgba(124, 92, 191, 0.18);
-}
-.application.npc-builder.system-pf2e .history-progress-bar {
-  background: linear-gradient(90deg, transparent, #7c5cbf 40%, #c9a227 60%, transparent);
-}
-
-.application.npc-builder.system-pf2e .auth-unsigned {
-  background: linear-gradient(180deg, #f8eec2 0%, #eadf9b 100%);
-  border-bottom: 2px solid #8b6914;
-}
-.application.npc-builder.system-pf2e .auth-signed {
-  background: linear-gradient(180deg, #e6edd4 0%, #d2dbb5 100%);
-  border-bottom: 2px solid #8b6914;
-}
-
-/* ============================================================
-   ▸ D&D 5e — HERALDIC TOME
-   Leather-bound tome: deep crimson, warm cream, antique gold,
-   Cinzel headings, embossed crest-style history cards.
-   ============================================================ */
-
-.application.npc-builder.system-dnd5e .npc-panel-form {
-  background:
-    radial-gradient(circle at 100% 0%, rgba(192, 57, 43, 0.08), transparent 60%),
-    radial-gradient(circle at 0% 100%, rgba(139, 90, 43, 0.10), transparent 60%),
-    linear-gradient(180deg, #f3e7ce 0%, #e3cfa3 100%);
-  border-top: 4px solid #8b1a1a;
-  box-shadow:
-    inset 0 1px 0 rgba(255, 255, 255, 0.4),
-    inset 0 -1px 0 rgba(139, 26, 26, 0.15);
-  color: #3a1f1f;
-}
-
-.application.npc-builder.system-dnd5e .npc-panel-history {
-  background:
-    linear-gradient(180deg, #e8d4a8 0%, #d4b87f 100%);
-  border-left: 4px solid #8b1a1a;
-}
-
-.application.npc-builder.system-dnd5e .history-header {
-  font-family: "Cinzel", "Modesto Condensed", serif;
-  font-weight: 900;
-  font-size: 0.82em;
-  letter-spacing: 0.16em;
-  color: #fff2d8;
-  background: linear-gradient(180deg, #a8241c 0%, #6b140f 100%);
-  border-bottom: 3px solid #c9a227;
-  text-shadow: 0 1px 1px rgba(0, 0, 0, 0.5);
-}
-.application.npc-builder.system-dnd5e .history-header i { color: #f1c40f; }
-
-.application.npc-builder.system-dnd5e .history-entry {
-  background: transparent;
-  border-bottom: 1px solid rgba(139, 26, 26, 0.22);
-  border-left: 4px solid transparent;
-}
-.application.npc-builder.system-dnd5e .history-entry:hover {
-  background: rgba(192, 57, 43, 0.10);
-}
-.application.npc-builder.system-dnd5e .history-entry.is-selected {
-  background: rgba(192, 57, 43, 0.16);
-  border-left-color: #c0392b;
-  box-shadow: inset -3px 0 0 #c9a227;
-}
-.application.npc-builder.system-dnd5e .history-entry-name {
-  font-family: "Cinzel", serif;
-  font-weight: 700;
-  color: #3a1f1f;
-  letter-spacing: 0.02em;
-}
-.application.npc-builder.system-dnd5e .history-entry-meta { color: #7a5230; }
-.application.npc-builder.system-dnd5e .history-entry--generating .history-entry-icon { color: #c0392b; }
-
-.application.npc-builder.system-dnd5e .history-selected-banner {
-  background: linear-gradient(180deg, rgba(192, 57, 43, 0.12), rgba(201, 162, 39, 0.08));
-  border: 1px solid #8b1a1a;
-  border-left: 3px solid #c0392b;
-  color: #6b140f;
-  font-family: "Cinzel", serif;
-  font-size: 0.8em;
-}
-
-.application.npc-builder.system-dnd5e .field > label {
-  font-family: "Cinzel", serif;
-  font-weight: 700;
-  letter-spacing: 0.12em;
-  color: #6b140f;
-  font-size: 0.8em;
-}
-
-.application.npc-builder.system-dnd5e .field input[type="text"],
-.application.npc-builder.system-dnd5e .field input[type="number"],
-.application.npc-builder.system-dnd5e .field textarea,
-.application.npc-builder.system-dnd5e .field select {
-  background: #fbf3dd;
-  border: 1px solid #8b5a2b;
-  border-radius: 2px;
-  color: #3a1f1f;
-  box-shadow: inset 0 1px 2px rgba(139, 90, 43, 0.15);
-}
-.application.npc-builder.system-dnd5e .field input:focus,
-.application.npc-builder.system-dnd5e .field textarea:focus,
-.application.npc-builder.system-dnd5e .field select:focus {
-  border-color: #c0392b;
-  box-shadow: 0 0 0 2px rgba(192, 57, 43, 0.25), inset 0 1px 2px rgba(139, 90, 43, 0.10);
-}
-.application.npc-builder.system-dnd5e .field-hint { color: #7a5230; font-style: italic; }
-
-.application.npc-builder.system-dnd5e .field--check {
-  background: rgba(251, 243, 221, 0.7);
-  border: 1px solid #8b5a2b;
-  border-radius: 2px;
-}
-.application.npc-builder.system-dnd5e .checkbox-label input[type="checkbox"] { accent-color: #c0392b; }
-
-.application.npc-builder.system-dnd5e button.btn-primary {
-  background: linear-gradient(180deg, #d84a3a 0%, #8b1a1a 100%);
-  border: 1px solid #5c0f0f;
-  border-radius: 2px;
-  box-shadow:
-    inset 0 1px 0 rgba(255, 255, 255, 0.25),
-    0 0 0 1px #c9a227,
-    0 2px 4px rgba(60, 10, 10, 0.4);
-  text-shadow: 0 1px 1px rgba(0, 0, 0, 0.5);
-  font-family: "Cinzel", serif;
-  font-weight: 700;
-  letter-spacing: 0.08em;
-  text-transform: uppercase;
-}
-
-.application.npc-builder.system-dnd5e button.btn-secondary {
-  background: #fbf3dd;
-  color: #6b140f;
-  border: 1px solid #8b5a2b;
-  border-radius: 2px;
-  font-family: "Cinzel", serif;
-  font-weight: 700;
-  letter-spacing: 0.06em;
-  text-transform: uppercase;
-}
-.application.npc-builder.system-dnd5e button.btn-secondary:hover:not(:disabled) {
-  background: #f0e3c0;
-}
-
-.application.npc-builder.system-dnd5e button.btn-image {
-  background: linear-gradient(180deg, #d4a64a 0%, #8b6914 100%);
-  border: 1px solid #5e4408;
-  border-radius: 2px;
-  font-family: "Cinzel", serif;
-  letter-spacing: 0.06em;
-  text-transform: uppercase;
-  text-shadow: 0 1px 1px rgba(0, 0, 0, 0.4);
-}
-
-.application.npc-builder.system-dnd5e .history-progress {
-  background: rgba(192, 57, 43, 0.20);
-}
-.application.npc-builder.system-dnd5e .history-progress-bar {
-  background: linear-gradient(90deg, transparent, #c0392b 40%, #c9a227 60%, transparent);
-}
-
-.application.npc-builder.system-dnd5e .auth-unsigned {
-  background: linear-gradient(180deg, #f5dba0 0%, #e6c472 100%);
-  border-bottom: 3px solid #8b5a2b;
-}
-.application.npc-builder.system-dnd5e .auth-signed {
-  background: linear-gradient(180deg, #dfe8c4 0%, #c4d29a 100%);
-  border-bottom: 3px solid #8b5a2b;
-}
-
-/* ============================================================
-   ▸ HERO 6e — COMIC BOOK PANEL
-   Halftone Ben-Day dots, bold blue + action yellow, thick
-   black strokes, Impact-style headings, hard "POW" shadows.
-   ============================================================ */
-
-.application.npc-builder.system-hero6e .npc-panel-form {
-  background:
-    radial-gradient(circle at 2px 2px, rgba(0, 0, 0, 0.10) 1.2px, transparent 1.6px) 0 0 / 10px 10px,
-    linear-gradient(135deg, #eaf3ff 0%, #fff8d9 100%);
-  border-top: 5px solid #0a0a0a;
-  box-shadow: inset 0 -4px 0 #0a0a0a;
-  color: #0a0a0a;
-}
-
-.application.npc-builder.system-hero6e .npc-panel-history {
-  background:
-    radial-gradient(circle at 2px 2px, rgba(41, 128, 185, 0.18) 1.2px, transparent 1.6px) 0 0 / 8px 8px,
-    linear-gradient(135deg, #e0ebff 0%, #fff3b8 100%);
-  border-left: 5px solid #0a0a0a;
-}
-
-.application.npc-builder.system-hero6e .history-header {
-  font-family: "Impact", "Bebas Neue", "Oswald", "Signika", sans-serif;
-  font-weight: 900;
-  font-size: 0.95em;
-  letter-spacing: 0.14em;
-  font-style: italic;
-  color: #fff;
-  background: #2980b9;
-  border-bottom: 4px solid #0a0a0a;
-  text-shadow: 2px 2px 0 #0a0a0a, 3px 3px 0 #f1c40f;
-  padding: 0.7em 0.8em;
-}
-.application.npc-builder.system-hero6e .history-header i {
-  color: #f1c40f;
-  text-shadow: 1px 1px 0 #0a0a0a;
-}
-
-.application.npc-builder.system-hero6e .history-entry {
-  background: #fff;
-  border: 2px solid #0a0a0a;
-  border-left: 5px solid #0a0a0a;
-  border-radius: 0;
-  margin: 0.45em 0.5em;
-  padding: 0.5em 0.65em;
-  box-shadow: 3px 3px 0 #0a0a0a;
-  transition: transform 0.08s, box-shadow 0.08s, background 0.1s;
-}
-.application.npc-builder.system-hero6e .history-entry:hover {
-  background: #fff3b8;
-  transform: translate(-1px, -1px);
-  box-shadow: 4px 4px 0 #0a0a0a;
-}
-.application.npc-builder.system-hero6e .history-entry.is-selected {
-  background: #f1c40f;
-  border-left-color: #2980b9;
-  box-shadow: 3px 3px 0 #2980b9;
-}
-.application.npc-builder.system-hero6e .history-entry-name {
-  font-family: "Impact", "Bebas Neue", "Oswald", sans-serif;
-  font-weight: 900;
-  letter-spacing: 0.06em;
-  color: #0a0a0a;
-  text-transform: uppercase;
-}
-.application.npc-builder.system-hero6e .history-entry-meta {
-  color: #0a0a0a;
-  font-weight: 700;
-  font-size: 0.72em;
-}
-.application.npc-builder.system-hero6e .history-entry--generating .history-entry-icon { color: #2980b9; }
-.application.npc-builder.system-hero6e .history-entry-universe {
-  display: inline-block;
-  padding: 0 0.3em;
-  background: #0a0a0a;
-  color: #f1c40f;
-  font-size: 0.9em;
-  letter-spacing: 0.08em;
-}
-
-.application.npc-builder.system-hero6e .history-selected-banner {
-  background: #f1c40f;
-  border: 2px solid #0a0a0a;
-  border-radius: 0;
-  color: #0a0a0a;
-  font-family: "Impact", "Bebas Neue", sans-serif;
-  font-weight: 700;
-  letter-spacing: 0.05em;
-  text-transform: uppercase;
-  box-shadow: 3px 3px 0 #0a0a0a;
-}
-
-.application.npc-builder.system-hero6e .field > label {
-  font-family: "Impact", "Bebas Neue", "Oswald", sans-serif;
-  font-weight: 900;
-  letter-spacing: 0.12em;
-  color: #0a0a0a;
-  font-size: 0.82em;
-  text-transform: uppercase;
-}
-
-.application.npc-builder.system-hero6e .field input[type="text"],
-.application.npc-builder.system-hero6e .field input[type="number"],
-.application.npc-builder.system-hero6e .field textarea,
-.application.npc-builder.system-hero6e .field select {
-  background: #fff;
-  border: 2px solid #0a0a0a;
-  border-radius: 0;
-  color: #0a0a0a;
-  box-shadow: 3px 3px 0 rgba(10, 10, 10, 0.85);
-  font-weight: 600;
-}
-.application.npc-builder.system-hero6e .field input:focus,
-.application.npc-builder.system-hero6e .field textarea:focus,
-.application.npc-builder.system-hero6e .field select:focus {
-  border-color: #2980b9;
-  box-shadow: 3px 3px 0 #2980b9;
-}
-.application.npc-builder.system-hero6e .field-hint {
-  color: #1a5278;
-  font-weight: 600;
-  font-style: normal;
-}
-
-.application.npc-builder.system-hero6e .field--check {
-  background: #fff3b8;
-  border: 2px solid #0a0a0a;
-  border-radius: 0;
-  box-shadow: 3px 3px 0 #0a0a0a;
-}
-.application.npc-builder.system-hero6e .checkbox-label {
-  font-weight: 700;
-  color: #0a0a0a;
-}
-.application.npc-builder.system-hero6e .checkbox-label input[type="checkbox"] { accent-color: #2980b9; }
-
-.application.npc-builder.system-hero6e button.btn-primary {
-  background: #2980b9;
-  color: #fff;
-  border: 2px solid #0a0a0a;
-  border-radius: 0;
-  box-shadow: 4px 4px 0 #0a0a0a;
-  text-shadow: 1px 1px 0 #0a0a0a;
-  font-family: "Impact", "Bebas Neue", sans-serif;
-  font-weight: 900;
-  letter-spacing: 0.12em;
-  text-transform: uppercase;
-  font-style: italic;
-}
-.application.npc-builder.system-hero6e button.btn-primary:hover:not(:disabled) {
-  filter: none;
-  background: #3498db;
-  transform: translate(-1px, -1px);
-  box-shadow: 5px 5px 0 #0a0a0a;
-}
-.application.npc-builder.system-hero6e button.btn-primary:active:not(:disabled) {
-  transform: translate(2px, 2px);
-  box-shadow: 2px 2px 0 #0a0a0a;
-}
-
-.application.npc-builder.system-hero6e button.btn-secondary {
-  background: #f1c40f;
-  color: #0a0a0a;
-  border: 2px solid #0a0a0a;
-  border-radius: 0;
-  box-shadow: 4px 4px 0 #0a0a0a;
-  font-family: "Impact", "Bebas Neue", sans-serif;
-  font-weight: 900;
-  letter-spacing: 0.1em;
-  text-transform: uppercase;
-}
-.application.npc-builder.system-hero6e button.btn-secondary:hover:not(:disabled) {
-  background: #ffd93d;
-  transform: translate(-1px, -1px);
-  box-shadow: 5px 5px 0 #0a0a0a;
-}
-.application.npc-builder.system-hero6e button.btn-secondary:active:not(:disabled) {
-  transform: translate(2px, 2px);
-  box-shadow: 2px 2px 0 #0a0a0a;
-}
-
-.application.npc-builder.system-hero6e button.btn-image {
-  background: #e74c3c;
-  color: #fff;
-  border: 2px solid #0a0a0a;
-  border-radius: 0;
-  box-shadow: 4px 4px 0 #0a0a0a;
-  text-shadow: 1px 1px 0 #0a0a0a;
-  font-family: "Impact", "Bebas Neue", sans-serif;
-  font-weight: 900;
-  letter-spacing: 0.1em;
-  text-transform: uppercase;
-}
-.application.npc-builder.system-hero6e button.btn-image:hover:not(:disabled) {
-  filter: none;
-  background: #ff6355;
-  transform: translate(-1px, -1px);
-  box-shadow: 5px 5px 0 #0a0a0a;
-}
-
-.application.npc-builder.system-hero6e .history-progress {
-  background: rgba(10, 10, 10, 0.15);
-  border: 1px solid #0a0a0a;
-  border-radius: 0;
-  height: 4px;
-}
-.application.npc-builder.system-hero6e .history-progress-bar {
-  background: linear-gradient(90deg, transparent, #2980b9 30%, #f1c40f 70%, transparent);
-}
-
-.application.npc-builder.system-hero6e .auth-unsigned {
-  background:
-    radial-gradient(circle at 2px 2px, rgba(10, 10, 10, 0.12) 1.2px, transparent 1.6px) 0 0 / 8px 8px,
-    #fff3b8;
-  border-bottom: 3px solid #0a0a0a;
-}
-.application.npc-builder.system-hero6e .auth-unsigned-text {
-  color: #0a0a0a;
-  font-weight: 700;
-}
-.application.npc-builder.system-hero6e .auth-signed {
-  background:
-    radial-gradient(circle at 2px 2px, rgba(41, 128, 185, 0.18) 1.2px, transparent 1.6px) 0 0 / 8px 8px,
-    #eaf3ff;
-  border-bottom: 3px solid #0a0a0a;
-}
-.application.npc-builder.system-hero6e .auth-signed-status { color: #0a0a0a; font-weight: 800; }
-
-.application.npc-builder.system-hero6e button.btn-patreon,
-.application.npc-builder.system-hero6e button.btn-join,
-.application.npc-builder.system-hero6e button.btn-signout {
-  border: 2px solid #0a0a0a;
-  border-radius: 0;
-  box-shadow: 3px 3px 0 #0a0a0a;
-  font-family: "Impact", "Bebas Neue", sans-serif;
-  font-weight: 900;
-  letter-spacing: 0.08em;
-  text-transform: uppercase;
-}
-
-/* ── Home panel system cards ─────────────────────────────── */
-.application.npc-builder .home-systems {
-  display: flex;
-  gap: 0.75em;
-}
-
-.application.npc-builder .home-system-card {
-  flex: 1;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 0.35em;
-  padding: 0.75em 0.5em;
-  border-radius: 7px;
-  border: 1px solid;
-  font-size: 0.78em;
-  font-weight: 600;
-  text-align: center;
-}
-
-.application.npc-builder .home-system-card i {
-  font-size: 1.3em;
-}
-
-.application.npc-builder .home-system-card--pf2e {
-  background: rgba(124, 92, 191, 0.07);
-  border-color: rgba(124, 92, 191, 0.28);
-  color: #5a3ea0;
-}
-.application.npc-builder .home-system-card--pf2e i   { color: #7c5cbf; }
-
-.application.npc-builder .home-system-card--dnd5e {
-  background: rgba(192, 57, 43, 0.07);
-  border-color: rgba(192, 57, 43, 0.28);
-  color: #8b1a1a;
-}
-.application.npc-builder .home-system-card--dnd5e i  { color: #c0392b; }
-
-.application.npc-builder .home-system-card--hero6e {
-  background: rgba(41, 128, 185, 0.07);
-  border-color: rgba(41, 128, 185, 0.28);
-  color: #1a5278;
-}
-.application.npc-builder .home-system-card--hero6e i { color: #2980b9; }
-
 /* ── Feedback section ────────────────────────────────────── */
 .application.npc-builder .feedback-section {
   flex-shrink: 0;
@@ -1343,10 +790,7 @@
   color: #777;
   margin-bottom: 0.4em;
 }
-
-.application.npc-builder .feedback-header i {
-  color: #7c5cbf;
-}
+.application.npc-builder .feedback-header i { color: #7c5cbf; }
 
 .application.npc-builder .feedback-body {
   display: flex;
@@ -1390,118 +834,159 @@
   transition: background 0.15s, opacity 0.15s;
   line-height: 1.4;
 }
-
-.application.npc-builder .feedback-send-btn:hover {
-  background: #6a4aad;
-}
-
-.application.npc-builder .feedback-send-btn:disabled {
-  opacity: 0.55;
-  cursor: default;
-}
+.application.npc-builder .feedback-send-btn:hover { background: #6a4aad; }
+.application.npc-builder .feedback-send-btn:disabled { opacity: 0.55; cursor: default; }
 
 .application.npc-builder .feedback-status {
   font-size: 0.78em;
   margin-top: 0.3em;
 }
-
 .application.npc-builder .feedback-status--success { color: #2e7d32; }
 .application.npc-builder .feedback-status--error   { color: #c0392b; }
+/* ============================================================
+   PF2e NPC Maker — Arcane Grimoire accents
+   Aged parchment, deep violet ink, gold leaf, serif script.
+   ============================================================ */
 
-/* ── Home: art style setting ────────────────────────────── */
-.application.npc-builder .home-art-style {
-  display: flex;
-  flex-direction: column;
-  gap: 0.35em;
-  background: #f3f0fa;
-  border: 1px solid rgba(124, 92, 191, 0.22);
-  border-radius: 7px;
-  padding: 0.75em 0.85em;
+/* Builder tab active underline */
+.application.npc-builder .builder-tab[data-tab="builder"].is-active {
+  border-bottom-color: #7c5cbf;
 }
 
-.application.npc-builder .home-art-style-label {
-  display: flex;
-  align-items: center;
-  gap: 0.45em;
-  font-size: 0.85em;
+.application.npc-builder .npc-panel-form {
+  background:
+    radial-gradient(circle at 18% 0%, rgba(124, 92, 191, 0.10), transparent 55%),
+    radial-gradient(circle at 85% 100%, rgba(201, 162, 39, 0.09), transparent 50%),
+    repeating-linear-gradient(45deg, rgba(90, 62, 160, 0.015) 0 2px, transparent 2px 6px),
+    linear-gradient(180deg, #f5eed8 0%, #ece3c4 100%);
+  border-top: 3px double #8b6914;
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.5);
+  color: #2a1c4a;
+}
+
+.application.npc-builder .npc-panel-history {
+  background:
+    repeating-linear-gradient(45deg, rgba(90, 62, 160, 0.025) 0 2px, transparent 2px 6px),
+    linear-gradient(180deg, #efe6c8 0%, #e1d5ad 100%);
+  border-left: 3px double #8b6914;
+}
+
+.application.npc-builder .history-header {
+  font-family: "Cinzel", "Modesto Condensed", "Signika", serif;
   font-weight: 700;
-  text-transform: uppercase;
-  letter-spacing: 0.04em;
-  color: #5a3ea0;
+  font-size: 0.82em;
+  letter-spacing: 0.12em;
+  color: #3e2875;
+  background: linear-gradient(180deg, #e8d8a5 0%, #d4bf7f 100%);
+  border-bottom: 2px solid #8b6914;
+  text-shadow: 0 1px 0 rgba(255, 255, 255, 0.4);
 }
+.application.npc-builder .history-header i { color: #a08028; }
 
-.application.npc-builder .home-art-style-label i {
-  font-size: 1.1em;
-  color: #7c5cbf;
+.application.npc-builder .history-entry {
+  background: transparent;
+  border-bottom: 1px dashed rgba(139, 105, 20, 0.35);
+  border-left: 3px solid transparent;
 }
-
-.application.npc-builder .home-art-style-input {
-  width: 100%;
-  padding: 0.4em 0.55em;
-  border: 1px solid rgba(0, 0, 0, 0.2);
-  border-radius: 4px;
-  background: #fff;
-  color: #333;
-  font-family: inherit;
-  font-size: 0.9em;
-  box-sizing: border-box;
-  transition: border-color 0.15s, box-shadow 0.15s;
+.application.npc-builder .history-entry:hover { background: rgba(124, 92, 191, 0.10); }
+.application.npc-builder .history-entry.is-selected {
+  background: rgba(124, 92, 191, 0.14);
+  border-left-color: #7c5cbf;
+  box-shadow: inset 3px 0 0 #c9a227;
 }
-
-.application.npc-builder .home-art-style-input:focus {
-  outline: none;
-  border-color: #7c5cbf;
-  box-shadow: 0 0 0 2px rgba(124, 92, 191, 0.18);
+.application.npc-builder .history-entry-name {
+  font-family: "Cinzel", "Modesto Condensed", serif;
+  color: #2a1c4a;
 }
+.application.npc-builder .history-entry-meta { color: #6a5a2f; font-style: italic; }
 
-.application.npc-builder .home-art-style-hint {
-  font-size: 0.78em;
-  color: #777;
-  font-style: italic;
-  line-height: 1.35;
-}
-
-/* ── Generate Image button ──────────────────────────────── */
-.application.npc-builder .form-actions--image {
-  margin-top: 0;
-}
-
-.application.npc-builder button.btn-image {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  gap: 0.4em;
-  flex: 1;
-  padding: 0.5em 0.85em;
-  border-radius: 5px;
-  font-family: inherit;
-  font-size: 0.88em;
-  font-weight: 600;
-  cursor: pointer;
-  transition: filter 0.12s, opacity 0.12s, transform 0.08s;
-  white-space: nowrap;
-  line-height: 1;
-  background: #2e7d32;
-  color: #fff;
-  border: none;
-  box-shadow: 0 1px 3px rgba(0,0,0,0.2);
-}
-
-.application.npc-builder button.btn-image:hover:not(:disabled) { filter: brightness(1.1); }
-.application.npc-builder button.btn-image:active:not(:disabled) { transform: translateY(1px); }
-.application.npc-builder button.btn-image:disabled { opacity: 0.45; cursor: not-allowed; }
-
-.application.npc-builder .btn-cost-badge {
-  display: inline-block;
-  padding: 0.15em 0.45em;
-  border-radius: 3px;
-  background: rgba(255, 255, 255, 0.25);
-  font-size: 0.78em;
-  font-weight: 700;
+.application.npc-builder .history-selected-banner {
+  background: linear-gradient(180deg, rgba(124, 92, 191, 0.12), rgba(201, 162, 39, 0.10));
+  border: 1px solid #8b6914;
+  border-left: 3px solid #7c5cbf;
+  border-radius: 2px;
+  color: #3e2875;
+  font-family: "Cinzel", serif;
+  font-size: 0.8em;
   letter-spacing: 0.02em;
 }
 
-/* ── PF2e NPC sheet injected buttons ────────────────────── */
+.application.npc-builder .field > label {
+  font-family: "Cinzel", "Modesto Condensed", serif;
+  letter-spacing: 0.08em;
+  color: #3e2875;
+  font-size: 0.8em;
+}
+
+.application.npc-builder .field input[type="text"],
+.application.npc-builder .field input[type="number"],
+.application.npc-builder .field textarea,
+.application.npc-builder .field select {
+  background: #fbf6e4;
+  border: 1px solid #8b6914;
+  border-radius: 3px;
+  color: #2a1c4a;
+  box-shadow: inset 0 1px 2px rgba(139, 105, 20, 0.12);
+}
+.application.npc-builder .field input:focus,
+.application.npc-builder .field textarea:focus,
+.application.npc-builder .field select:focus {
+  border-color: #7c5cbf;
+  box-shadow: 0 0 0 2px rgba(124, 92, 191, 0.25), inset 0 1px 2px rgba(139, 105, 20, 0.10);
+}
+.application.npc-builder .field-hint { color: #6a5a2f; }
+
+.application.npc-builder .field--check {
+  background: rgba(255, 250, 228, 0.6);
+  border: 1px solid #8b6914;
+  border-radius: 3px;
+}
+
+.application.npc-builder button.btn-primary {
+  background: linear-gradient(180deg, #8e6bd8 0%, #6a4aad 100%);
+  border: 1px solid #3e2875;
+  border-radius: 3px;
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.25),
+    0 1px 0 #c9a227,
+    0 2px 4px rgba(42, 28, 74, 0.35);
+  text-shadow: 0 1px 1px rgba(0, 0, 0, 0.35);
+  font-family: "Cinzel", serif;
+  letter-spacing: 0.04em;
+}
+
+.application.npc-builder button.btn-secondary {
+  background: #fbf6e4;
+  color: #3e2875;
+  border: 1px solid #8b6914;
+  border-radius: 3px;
+  font-family: "Cinzel", serif;
+  letter-spacing: 0.04em;
+}
+.application.npc-builder button.btn-secondary:hover:not(:disabled) { background: #f2e7c0; }
+
+.application.npc-builder button.btn-image {
+  background: linear-gradient(180deg, #c9a227 0%, #8b6914 100%);
+  border: 1px solid #5e4408;
+  font-family: "Cinzel", serif;
+  letter-spacing: 0.04em;
+  text-shadow: 0 1px 1px rgba(0, 0, 0, 0.35);
+}
+
+.application.npc-builder .history-progress-bar {
+  background: linear-gradient(90deg, transparent, #7c5cbf 40%, #c9a227 60%, transparent);
+}
+
+.application.npc-builder .auth-unsigned {
+  background: linear-gradient(180deg, #f8eec2 0%, #eadf9b 100%);
+  border-bottom: 2px solid #8b6914;
+}
+.application.npc-builder .auth-signed {
+  background: linear-gradient(180deg, #e6edd4 0%, #d2dbb5 100%);
+  border-bottom: 2px solid #8b6914;
+}
+
+/* ── Sheet-injected buttons (Level Up + Generate Image) ──── */
 .npc-builder-levelup-btn {
   display: inline-flex;
   align-items: center;
@@ -1537,7 +1022,6 @@
   transition: filter 0.12s;
 }
 .npc-builder-sheet-image-btn:hover { filter: brightness(1.15); }
-
 .npc-builder-sheet-image-btn .btn-cost-badge {
   display: inline-block;
   padding: 0.1em 0.35em;
