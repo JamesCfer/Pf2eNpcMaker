@@ -40,7 +40,8 @@ export class BuilderApp extends HandlebarsApplicationMixin(ApplicationV2) {
    * @param {object}        options  ApplicationV2 options (merged with adapter defaults).
    */
   constructor(adapter, options = {}) {
-    super(options);
+    const { initialTab, ...appOptions } = options;
+    super(appOptions);
     this.adapter        = adapter;
     this.moduleFolder   = adapter.moduleFolder;
     this.storage        = new Storage(this.moduleFolder);
@@ -48,7 +49,8 @@ export class BuilderApp extends HandlebarsApplicationMixin(ApplicationV2) {
     this.authenticated  = !!this.accessKey;
     this.lastDocument   = null;
     this.lastExportData = null;     // adapter-defined: { content, filename, mimeType }
-    this.activeTab      = 'home';   // 'home' or 'builder'
+    // Default to the builder form — users reach the Home tab by clicking it.
+    this.activeTab      = (initialTab === 'home' || initialTab === 'builder') ? initialTab : 'builder';
     this.selectedHistoryId = null;
     this.patreonTier    = null;
 
@@ -71,6 +73,7 @@ export class BuilderApp extends HandlebarsApplicationMixin(ApplicationV2) {
     return {
       authenticated: this.authenticated,
       module:        this.adapter.module,
+      documentNoun:  this.adapter.formConfig?.documentNoun || 'document',
       patreonUrl:    PATREON_URL,
       homeModules:   ALL_MODULES.map(m => ({ ...m, isCurrent: m.id === currentId })),
     };
@@ -621,13 +624,18 @@ function getAppClass(adapter) {
   return cls;
 }
 
-export function openBuilder(adapter) {
+export function openBuilder(adapter, options = {}) {
+  const { initialTab } = options;
   const AppClass = getAppClass(adapter);
   let app = _appInstances.get(adapter.moduleFolder);
   if (app?.rendered && app?.element?.isConnected) {
+    if (initialTab === 'home' || initialTab === 'builder') {
+      app.activeTab = initialTab;
+      app._applyTabUI?.();
+    }
     app.bringToTop?.();
   } else {
-    app = new AppClass(adapter);
+    app = new AppClass(adapter, { initialTab });
     _appInstances.set(adapter.moduleFolder, app);
     app.render({ force: true }).catch(err => {
       console.error('[NPC Builder] Failed to open:', err);

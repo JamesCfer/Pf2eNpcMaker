@@ -74,25 +74,15 @@ Hooks.once('ready', () => {
   if (game.user.isGM && !game.settings.get(MODULE_ID, 'welcomeMessageShown')) {
     const welcomeContent = `
 <h3>Welcome to the PF2e NPC Auto-Builder!</h3>
-<p>Here's how to get started:</p>
-<ol>
-  <li><strong>Open the Builder</strong> — Click the <em>NPC Builder</em> button in the <strong>Actors</strong> or <strong>Compendium</strong> sidebar header.</li>
-  <li><strong>Sign In</strong> — Click <em>Sign in with Patreon</em> to authenticate.</li>
-  <li><strong>Describe Your NPC</strong> — Fill in a name, level, and description.</li>
-  <li><strong>Generate!</strong> — Click <em>Generate NPC</em> and a fully-statted actor is added to your world.</li>
-</ol>
-<p><strong>Extra Features:</strong></p>
-<ul>
-  <li><strong>Generate Image</strong> — Create AI art for any NPC (costs 4 uses).</li>
-  <li><strong>Level Up</strong> — Level-up and image buttons appear directly on NPC sheets.</li>
-  <li><strong>History</strong> — Revisit past generations in the right-hand panel.</li>
-  <li><strong>Home Tab</strong> — Discover the other CferNpcMaker modules (D&amp;D 5e, Hero 6e, PF2e Items).</li>
-</ul>`.trim();
+<p>The builder has opened automatically. The <strong>Home</strong> tab inside it walks you through how to get started.</p>
+<p>You can reopen the builder any time from the <em>NPC Builder</em> button in the <strong>Actors</strong> or <strong>Compendium</strong> sidebar header.</p>`.trim();
 
     ChatMessage.create({
       content: welcomeContent,
       whisper: game.users.filter(u => u.isGM).map(u => u.id),
     });
     game.settings.set(MODULE_ID, 'welcomeMessageShown', true);
+    openBuilder(adapter, { initialTab: 'home' });
+    checkForModuleUpdate(MODULE_ID, adapter.module.githubUrl).catch(() => {});
   }
 });

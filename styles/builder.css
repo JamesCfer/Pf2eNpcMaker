@@ -572,6 +572,66 @@
   line-height: 1.55;
 }
 
+/* ── Home: Getting Started / instructions ───────────────── */
+.application.npc-builder .home-instructions {
+  background: #fff;
+  border: 1px solid rgba(124, 92, 191, 0.28);
+  border-radius: 7px;
+  padding: 0.85em 1em;
+  display: flex;
+  flex-direction: column;
+  gap: 0.5em;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.04);
+}
+
+.application.npc-builder .home-instructions-header {
+  display: flex;
+  align-items: center;
+  gap: 0.5em;
+  color: #5a3ea0;
+}
+
+.application.npc-builder .home-instructions-header i { font-size: 1.15em; }
+
+.application.npc-builder .home-instructions-header h3 {
+  margin: 0;
+  font-size: 1.02em;
+  font-weight: 700;
+  color: #333;
+  border: none;
+}
+
+.application.npc-builder .home-instructions-steps {
+  margin: 0;
+  padding-left: 1.25em;
+  display: flex;
+  flex-direction: column;
+  gap: 0.35em;
+  font-size: 0.88em;
+  color: #444;
+  line-height: 1.5;
+}
+
+.application.npc-builder .home-instructions-steps li { padding-left: 0.15em; }
+.application.npc-builder .home-instructions-steps strong { color: #333; }
+.application.npc-builder .home-instructions-steps em { color: #5a3ea0; font-style: normal; font-weight: 600; }
+
+.application.npc-builder .home-instructions-tip {
+  margin: 0.15em 0 0 0;
+  padding: 0.5em 0.7em;
+  background: rgba(255, 193, 7, 0.10);
+  border-left: 3px solid #f0b429;
+  border-radius: 3px;
+  font-size: 0.82em;
+  color: #5a4b1a;
+  line-height: 1.45;
+}
+
+.application.npc-builder .home-instructions-tip i {
+  color: #e0a300;
+  margin-right: 0.3em;
+}
+
 /* ── Home: 4 module cards (linking to GitHub releases) ──── */
 .application.npc-builder .home-modules-grid {
   display: grid;
