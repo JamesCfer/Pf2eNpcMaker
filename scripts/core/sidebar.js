@@ -3,7 +3,7 @@
  *
  * Each module calls `registerSidebar(moduleId, openFn, options)` once at init.
  * The button label, icon, and which directories to inject into are configurable
- * so an Item Maker can hook into the Items directory instead of Actors.
+ * so an Item Generator can hook into the Items directory instead of Actors.
  */
 
 const DIR_HOOKS = {

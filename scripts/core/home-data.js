@@ -34,7 +34,7 @@ export const ALL_MODULES = [
     install:     'https://github.com/JamesCfer/Hero6eNpcMaker/releases/latest',
   },
   {
-    id:          'Pf2eItemMaker',
+    id:          'Pf2eItemGenerator',
     label:       'Pathfinder 2e Item',
     icon:        'fa-solid fa-flask',
     accentClass: 'card--pf2eitem',
