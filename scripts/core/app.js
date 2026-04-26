@@ -69,13 +69,22 @@ export class BuilderApp extends HandlebarsApplicationMixin(ApplicationV2) {
   /* ── ApplicationV2 wiring ──────────────────────────────── */
 
   async _prepareContext() {
-    const currentId = this.adapter.module.id;
+    const currentId     = this.adapter.module.id;
+    const currentSystem = ALL_MODULES.find(m => m.id === currentId)?.system;
     return {
       authenticated: this.authenticated,
       module:        this.adapter.module,
       documentNoun:  this.adapter.formConfig?.documentNoun || 'document',
       patreonUrl:    PATREON_URL,
-      homeModules:   ALL_MODULES.map(m => ({ ...m, isCurrent: m.id === currentId })),
+      homeModules:   ALL_MODULES
+        .filter(m => {
+          if (m.id === currentId) return true;
+          // Only advertise siblings that target the same Foundry system…
+          if (m.system !== currentSystem) return false;
+          // …and only if the user doesn't already have them installed.
+          return !game.modules?.get(m.id);
+        })
+        .map(m => ({ ...m, isCurrent: m.id === currentId })),
     };
   }
 

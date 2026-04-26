@@ -8,6 +8,7 @@
 export const ALL_MODULES = [
   {
     id:          'Pf2eNpcMaker',
+    system:      'pf2e',
     label:       'Pathfinder 2e NPC',
     icon:        'fa-solid fa-dragon',
     accentClass: 'card--pf2e',
@@ -17,6 +18,7 @@ export const ALL_MODULES = [
   },
   {
     id:          'DnD5eNpcMaker',
+    system:      'dnd5e',
     label:       'D&D 5e NPC',
     icon:        'fa-solid fa-shield-halved',
     accentClass: 'card--dnd5e',
@@ -26,6 +28,7 @@ export const ALL_MODULES = [
   },
   {
     id:          'Hero6eNpcMaker',
+    system:      'hero6e',
     label:       'HERO System 6e',
     icon:        'fa-solid fa-bolt',
     accentClass: 'card--hero6e',
@@ -35,6 +38,7 @@ export const ALL_MODULES = [
   },
   {
     id:          'Pf2eItemGenerator',
+    system:      'pf2e',
     label:       'Pathfinder 2e Item',
     icon:        'fa-solid fa-flask',
     accentClass: 'card--pf2eitem',
