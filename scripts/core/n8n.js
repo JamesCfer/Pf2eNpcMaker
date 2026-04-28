@@ -10,6 +10,7 @@ export const N8N_ENDPOINTS = {
   authPoll:   `${N8N_BASE}/webhook/oauth/patreon/poll`,
   feedback:   `${N8N_BASE}/webhook/feedback`,
   image:      `${N8N_BASE}/webhook/npc-image`,
+  heartbeat:  `${N8N_BASE}/webhook/heartbeat`,
 };
 
 export const PATREON_URL = 'https://www.patreon.com/cw/CelestiaTools';
