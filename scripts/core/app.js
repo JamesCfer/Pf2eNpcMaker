@@ -503,39 +503,24 @@ export class BuilderApp extends HandlebarsApplicationMixin(ApplicationV2) {
   }
 
   async _confirmImageGeneration(name, artStyle) {
-    return new Promise(resolve => {
-      const DialogV2 = foundry.applications?.api?.DialogV2;
-      const content  = `
-        <div style="display:flex;flex-direction:column;gap:0.6em;padding:0.25em 0;">
-          <p style="margin:0;">Generate an image for <strong>${escapeHtml(name)}</strong>?</p>
-          <p style="margin:0;padding:0.5em 0.7em;background:rgba(46,125,50,0.1);border:1px solid rgba(46,125,50,0.3);border-radius:4px;font-size:0.92em;">
-            <i class="fa-solid fa-coins" style="color:#2e7d32;"></i>
-            This will use <strong>${IMAGE_COST} NPC uses</strong> from your monthly allowance.
-          </p>
-          ${artStyle ? `<p style="margin:0;font-size:0.88em;color:#555;"><i class="fa-solid fa-palette"></i> Art style: <em>${escapeHtml(artStyle)}</em></p>` : ''}
-        </div>`;
+    const content = `
+      <div style="display:flex;flex-direction:column;gap:0.6em;padding:0.25em 0;">
+        <p style="margin:0;">Generate an image for <strong>${escapeHtml(name)}</strong>?</p>
+        <p style="margin:0;padding:0.5em 0.7em;background:rgba(46,125,50,0.1);border:1px solid rgba(46,125,50,0.3);border-radius:4px;font-size:0.92em;">
+          <i class="fa-solid fa-coins" style="color:#2e7d32;"></i>
+          This will use <strong>${IMAGE_COST} NPC uses</strong> from your monthly allowance.
+        </p>
+        ${artStyle ? `<p style="margin:0;font-size:0.88em;color:#555;"><i class="fa-solid fa-palette"></i> Art style: <em>${escapeHtml(artStyle)}</em></p>` : ''}
+      </div>`;
 
-      if (DialogV2) {
-        DialogV2.confirm({
-          window:  { title: 'Generate NPC Image' },
-          content,
-          yes: { label: 'Generate Image', icon: 'fa-solid fa-image' },
-          no:  { label: 'Cancel' },
-          rejectClose: false,
-        }).then(r => resolve(r === true)).catch(() => resolve(false));
-      } else {
-        new Dialog({
-          title:   'Generate NPC Image',
-          content,
-          buttons: {
-            yes:    { label: '<i class="fa-solid fa-image"></i> Generate Image', callback: () => resolve(true) },
-            cancel: { label: 'Cancel', callback: () => resolve(false) },
-          },
-          default: 'cancel',
-          close:   () => resolve(false),
-        }).render(true);
-      }
-    });
+    const result = await foundry.applications.api.DialogV2.confirm({
+      window:      { title: 'Generate NPC Image' },
+      content,
+      yes:         { label: 'Generate Image', icon: 'fa-solid fa-image' },
+      no:          { label: 'Cancel' },
+      rejectClose: false,
+    }).catch(() => false);
+    return result === true;
   }
 
   /* ── Feedback ───────────────────────────────────────────── */
