@@ -46,6 +46,16 @@ export const ALL_MODULES = [
     github:      'https://github.com/JamesCfer/Pf2eItemMaker',
     install:     'https://github.com/JamesCfer/Pf2eItemMaker/releases/latest',
   },
+  {
+    id:          'Dnd5eItemGenerator',
+    system:      'dnd5e',
+    label:       'D&D 5e Item',
+    icon:        'fa-solid fa-hat-wizard',
+    accentClass: 'card--dnd5eitem',
+    description: 'Generate D&D 5e magic items (weapons, armor, wondrous items, consumables) from a description.',
+    github:      'https://github.com/JamesCfer/D-Ditemmaker',
+    install:     'https://github.com/JamesCfer/D-Ditemmaker/releases/latest',
+  },
 ];
 
 export function getModuleMeta(id) {
