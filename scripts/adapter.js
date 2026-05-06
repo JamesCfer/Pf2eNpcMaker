@@ -1,5 +1,11 @@
 /**
  * PF2e NPC SystemAdapter — implements the BuilderApp contract for Pathfinder 2e NPCs.
+ *
+ * @typedef {object} Pf2eNpcFormData
+ * @property {string}  name          NPC name.
+ * @property {number}  level         Creature level (-1–25).
+ * @property {string}  description   Free-text description for the AI.
+ * @property {boolean} includeSpells Whether to resolve spells from the compendium.
  */
 
 import { SystemAdapter, postToN8n } from './core/adapter.js';
@@ -36,6 +42,7 @@ export class Pf2eNpcAdapter extends SystemAdapter {
 
   /* ── Form handling ──────────────────────────────────────── */
 
+  /** @returns {Pf2eNpcFormData} */
   gatherFormData(form) {
     const fd = new FormData(form);
     const name          = (fd.get('name')?.toString()?.trim()) || 'Generated NPC';
@@ -71,6 +78,10 @@ export class Pf2eNpcAdapter extends SystemAdapter {
 
   /* ── Generation ─────────────────────────────────────────── */
 
+  /**
+   * @param {import('./core/adapter.js').GenerateOptions & { formData: Pf2eNpcFormData }} opts
+   * @returns {Promise<import('./core/adapter.js').AdapterResult>}
+   */
   async generate({ formData, key, devMode, builderApp }) {
     const endpoint = devUrl(NPC_ENDPOINT, devMode);
     const payload  = {

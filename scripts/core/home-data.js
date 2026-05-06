@@ -5,6 +5,19 @@
  * release pages so users can install them too.
  */
 
+/**
+ * @typedef {object} ModuleMetadata
+ * @property {string} id           Foundry module id.
+ * @property {string} system       Foundry game system id ('pf2e', 'dnd5e', 'hero6e').
+ * @property {string} label        Short display name for the home card.
+ * @property {string} icon         FontAwesome class string.
+ * @property {string} accentClass  CSS class applied to the home card for system colour.
+ * @property {string} description  One-sentence summary shown on the home card.
+ * @property {string} github       Repository URL.
+ * @property {string} install      Latest-release URL used as the install link.
+ */
+
+/** @type {ModuleMetadata[]} */
 export const ALL_MODULES = [
   {
     id:          'Pf2eNpcMaker',
@@ -58,6 +71,10 @@ export const ALL_MODULES = [
   },
 ];
 
+/**
+ * @param {string} id
+ * @returns {ModuleMetadata|null}
+ */
 export function getModuleMeta(id) {
   return ALL_MODULES.find(m => m.id === id) || null;
 }

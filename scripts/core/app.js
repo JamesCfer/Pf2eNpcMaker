@@ -19,6 +19,8 @@
  */
 
 import { Storage }                from './storage.js';
+import { AuthError,
+         RateLimitError }         from './adapter.js';
 import { startPatreonSignIn,
          PATREON_URL }            from './auth.js';
 import { sendFeedback }           from './feedback.js';
@@ -388,10 +390,7 @@ export class BuilderApp extends HandlebarsApplicationMixin(ApplicationV2) {
 
     } catch (err) {
       console.error('[NPC Builder] generation error:', err);
-      const isAuth      = err?.code === 'AUTH_FAILED'      || /Unauthorized/i.test(err?.message || '');
-      const isRateLimit = err?.code === 'RATE_LIMIT'        || /rate limit/i.test(err?.message || '');
-
-      if (isAuth) {
+      if (err instanceof AuthError) {
         this.storage.setKey('');
         this.accessKey     = '';
         this.authenticated = false;
@@ -399,9 +398,9 @@ export class BuilderApp extends HandlebarsApplicationMixin(ApplicationV2) {
         this._updateHistoryEntry(historyEntry.id, { status: 'error', error: 'Authentication failed' });
         ui.notifications.error(err.message || 'Authentication failed.', { permanent: true });
         setTimeout(() => window.open(PATREON_URL, '_blank'), 800);
-      } else if (isRateLimit) {
+      } else if (err instanceof RateLimitError) {
         this._updateHistoryEntry(historyEntry.id, { status: 'error', error: 'Rate limit exceeded' });
-        if (err?.tier) this.patreonTier = err.tier;
+        if (err.tier) this.patreonTier = err.tier;
         ui.notifications.error(err.message || 'Monthly limit reached.', { permanent: true });
         setTimeout(() => window.open(PATREON_URL, '_blank'), 1200);
       } else {
