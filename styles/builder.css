@@ -17,30 +17,34 @@
   display: flex;
   flex-direction: row;
   flex-shrink: 0;
-  background: #2c2c3a;
+  background: linear-gradient(180deg, #363648 0%, #242434 100%);
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.25);
+  position: relative;
+  z-index: 1;
 }
 
 .application.npc-builder .builder-tab {
   flex: 1;
-  padding: 0.55em 0.75em;
+  padding: 0.65em 0.85em;
   font-size: 0.85em;
   font-weight: 600;
   border: none;
   border-radius: 0;
   background: transparent;
-  color: rgba(255, 255, 255, 0.55);
+  color: rgba(255, 255, 255, 0.5);
   cursor: pointer;
   border-bottom: 3px solid transparent;
   transition: background 0.15s, color 0.15s, border-color 0.15s;
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  gap: 0.4em;
+  gap: 0.45em;
+  letter-spacing: 0.01em;
 }
 
 .application.npc-builder .builder-tab:hover {
-  background: rgba(255, 255, 255, 0.08);
-  color: rgba(255, 255, 255, 0.85);
+  background: rgba(255, 255, 255, 0.1);
+  color: rgba(255, 255, 255, 0.92);
 }
 
 .application.npc-builder .builder-tab-group {
@@ -79,12 +83,13 @@
 
 .application.npc-builder .builder-tab[data-tab="home"].is-active {
   color: #fff;
-  background: rgba(255, 255, 255, 0.06);
+  background: rgba(255, 255, 255, 0.08);
   border-bottom-color: #e8a020;
+  text-shadow: 0 0 12px rgba(232, 160, 32, 0.4);
 }
 .application.npc-builder .builder-tab[data-tab="builder"].is-active {
   color: #fff;
-  background: rgba(255, 255, 255, 0.06);
+  background: rgba(255, 255, 255, 0.08);
   /* per-module accents.css sets border-bottom-color */
 }
 
@@ -111,22 +116,23 @@
   flex-shrink: 0;
   display: flex;
   flex-direction: column;
-  background: #f7f7f9;
+  background: linear-gradient(180deg, #f5f5f8 0%, #f0f0f4 100%);
   overflow: hidden;
+  box-shadow: inset 2px 0 5px rgba(0, 0, 0, 0.04);
 }
 
 .application.npc-builder .history-header {
   display: flex;
   align-items: center;
   gap: 0.5em;
-  padding: 0.6em 0.8em;
+  padding: 0.65em 0.85em;
   font-size: 0.78em;
   font-weight: 700;
   text-transform: uppercase;
-  letter-spacing: 0.07em;
-  color: #555;
-  background: #ebebed;
-  border-bottom: 1px solid rgba(0, 0, 0, 0.1);
+  letter-spacing: 0.08em;
+  color: #505060;
+  background: linear-gradient(180deg, #e8e8ec 0%, #e0e0e6 100%);
+  border-bottom: 1px solid rgba(0, 0, 0, 0.12);
   flex-shrink: 0;
 }
 
@@ -137,31 +143,58 @@
   flex-direction: column;
 }
 
+/* ── Custom scrollbars (WebKit) ──────────────────────────── */
+.application.npc-builder .npc-panel-form::-webkit-scrollbar,
+.application.npc-builder .history-list::-webkit-scrollbar,
+.application.npc-builder .home-panel::-webkit-scrollbar {
+  width: 5px;
+}
+.application.npc-builder .npc-panel-form::-webkit-scrollbar-track,
+.application.npc-builder .history-list::-webkit-scrollbar-track,
+.application.npc-builder .home-panel::-webkit-scrollbar-track {
+  background: transparent;
+}
+.application.npc-builder .npc-panel-form::-webkit-scrollbar-thumb,
+.application.npc-builder .history-list::-webkit-scrollbar-thumb,
+.application.npc-builder .home-panel::-webkit-scrollbar-thumb {
+  background: rgba(124, 92, 191, 0.3);
+  border-radius: 3px;
+}
+.application.npc-builder .npc-panel-form::-webkit-scrollbar-thumb:hover,
+.application.npc-builder .history-list::-webkit-scrollbar-thumb:hover,
+.application.npc-builder .home-panel::-webkit-scrollbar-thumb:hover {
+  background: rgba(124, 92, 191, 0.55);
+}
+
 .application.npc-builder .history-empty {
-  padding: 2em 1em;
+  padding: 2.5em 1em;
   text-align: center;
   color: #aaa;
   font-size: 0.82em;
   font-style: italic;
-  line-height: 1.5;
+  line-height: 1.6;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.5em;
 }
 
 /* ── History entry ───────────────────────────────────────── */
 .application.npc-builder .history-entry {
-  padding: 0.5em 0.75em;
-  border-bottom: 1px solid rgba(0, 0, 0, 0.07);
+  padding: 0.55em 0.8em;
+  border-bottom: 1px solid rgba(0, 0, 0, 0.06);
   cursor: pointer;
-  transition: background 0.1s;
+  transition: background 0.12s, border-left-color 0.12s;
   position: relative;
   overflow: hidden;
   border-left: 3px solid transparent;
 }
 
 .application.npc-builder .history-entry:hover {
-  background: rgba(124, 92, 191, 0.07);
+  background: rgba(124, 92, 191, 0.09);
 }
 .application.npc-builder .history-entry.is-selected {
-  background: rgba(124, 92, 191, 0.11);
+  background: rgba(124, 92, 191, 0.13);
   border-left-color: #7c5cbf;
 }
 
@@ -264,9 +297,9 @@
   display: flex;
   flex-direction: column;
   gap: 0.6em;
-  padding: 0.85em 1em;
-  background: #fdf6e3;
-  border-bottom: 2px solid #e8c97a;
+  padding: 0.9em 1em;
+  background: linear-gradient(180deg, #fef9ee 0%, #fdf3d8 100%);
+  border-bottom: 2px solid #e0be60;
 }
 .application.npc-builder .auth-unsigned-text {
   display: flex;
@@ -289,8 +322,8 @@
   align-items: center;
   justify-content: space-between;
   padding: 0.6em 1em;
-  background: #edfbf0;
-  border-bottom: 2px solid #5cb87a;
+  background: linear-gradient(180deg, #f0fdf3 0%, #e4f7ea 100%);
+  border-bottom: 2px solid #4caf68;
 }
 .application.npc-builder .auth-signed-status {
   display: flex;
@@ -438,20 +471,30 @@
 }
 
 .application.npc-builder button.btn-primary {
-  background: #7c5cbf;
+  background: linear-gradient(180deg, #9068d0 0%, #6a48aa 100%);
   color: #fff;
-  border: none;
-  box-shadow: 0 1px 3px rgba(0,0,0,0.2);
+  border: 1px solid rgba(80, 50, 130, 0.6);
+  box-shadow: 0 2px 6px rgba(108, 72, 171, 0.35), inset 0 1px 0 rgba(255, 255, 255, 0.15);
 }
-.application.npc-builder button.btn-primary:hover:not(:disabled) { filter: brightness(1.1); }
-.application.npc-builder button.btn-primary:active:not(:disabled) { transform: translateY(1px); }
+.application.npc-builder button.btn-primary:hover:not(:disabled) {
+  filter: brightness(1.1);
+  box-shadow: 0 3px 10px rgba(108, 72, 171, 0.45), inset 0 1px 0 rgba(255, 255, 255, 0.15);
+}
+.application.npc-builder button.btn-primary:active:not(:disabled) {
+  transform: translateY(1px);
+  box-shadow: 0 1px 3px rgba(108, 72, 171, 0.3);
+}
 
 .application.npc-builder button.btn-secondary {
-  background: #f5f5f5;
+  background: linear-gradient(180deg, #fafafa 0%, #efefef 100%);
   color: #444;
-  border: 1px solid #bbb;
+  border: 1px solid #c0c0c0;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.08), inset 0 1px 0 rgba(255, 255, 255, 0.8);
 }
-.application.npc-builder button.btn-secondary:hover:not(:disabled) { background: #e8e8e8; }
+.application.npc-builder button.btn-secondary:hover:not(:disabled) {
+  background: linear-gradient(180deg, #f0f0f0 0%, #e4e4e4 100%);
+  border-color: #aaa;
+}
 
 .application.npc-builder button:disabled {
   opacity: 0.45;
@@ -506,17 +549,23 @@
   font-size: 0.88em;
   font-weight: 600;
   cursor: pointer;
-  transition: filter 0.12s, opacity 0.12s, transform 0.08s;
+  transition: filter 0.12s, opacity 0.12s, transform 0.08s, box-shadow 0.12s;
   white-space: nowrap;
   line-height: 1;
-  background: #2e7d32;
+  background: linear-gradient(180deg, #3d9142 0%, #236228 100%);
   color: #fff;
-  border: none;
-  box-shadow: 0 1px 3px rgba(0,0,0,0.2);
+  border: 1px solid rgba(20, 70, 25, 0.6);
+  box-shadow: 0 2px 6px rgba(46, 125, 50, 0.3), inset 0 1px 0 rgba(255, 255, 255, 0.15);
 }
 
-.application.npc-builder button.btn-image:hover:not(:disabled) { filter: brightness(1.1); }
-.application.npc-builder button.btn-image:active:not(:disabled) { transform: translateY(1px); }
+.application.npc-builder button.btn-image:hover:not(:disabled) {
+  filter: brightness(1.08);
+  box-shadow: 0 3px 10px rgba(46, 125, 50, 0.4), inset 0 1px 0 rgba(255, 255, 255, 0.15);
+}
+.application.npc-builder button.btn-image:active:not(:disabled) {
+  transform: translateY(1px);
+  box-shadow: 0 1px 3px rgba(46, 125, 50, 0.25);
+}
 .application.npc-builder button.btn-image:disabled { opacity: 0.45; cursor: not-allowed; }
 
 .application.npc-builder .btn-cost-badge {
@@ -537,7 +586,7 @@
   align-items: flex-start;
   justify-content: center;
   padding: 1.5em 1em;
-  background: #fafafa;
+  background: linear-gradient(160deg, #f0ecfa 0%, #f7f5fd 30%, #fafafa 70%);
 }
 
 .application.npc-builder .home-content {
@@ -551,18 +600,22 @@
 .application.npc-builder .home-logo {
   display: flex;
   align-items: center;
-  gap: 0.55em;
+  gap: 0.6em;
   color: #7c5cbf;
 }
 
-.application.npc-builder .home-logo i { font-size: 1.6em; }
+.application.npc-builder .home-logo i {
+  font-size: 1.7em;
+  filter: drop-shadow(0 2px 4px rgba(124, 92, 191, 0.3));
+}
 
 .application.npc-builder .home-logo h2 {
   margin: 0;
-  font-size: 1.25em;
+  font-size: 1.28em;
   font-weight: 700;
-  color: #333;
+  color: #2a2a3a;
   border: none;
+  letter-spacing: -0.01em;
 }
 
 .application.npc-builder .home-intro {
@@ -643,21 +696,24 @@
   display: flex;
   flex-direction: column;
   gap: 0.5em;
-  padding: 0.75em 0.85em;
-  border-radius: 7px;
-  border: 1px solid rgba(0, 0, 0, 0.15);
+  padding: 0.8em 0.9em;
+  border-radius: 8px;
+  border: 1px solid rgba(0, 0, 0, 0.12);
   background: #fff;
-  transition: transform 0.1s, box-shadow 0.1s;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+  transition: transform 0.15s, box-shadow 0.15s, border-color 0.15s;
 }
 
 .application.npc-builder .home-module-card:hover {
-  transform: translateY(-1px);
-  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.08);
+  transform: translateY(-2px);
+  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.1);
+  border-color: rgba(0, 0, 0, 0.18);
 }
 
 .application.npc-builder .home-module-card--current {
   border-width: 2px;
-  background: linear-gradient(180deg, #f7f3ff 0%, #fff 100%);
+  background: linear-gradient(160deg, #f5f0ff 0%, #fefcff 100%);
+  box-shadow: 0 2px 8px rgba(124, 92, 191, 0.12);
 }
 
 .application.npc-builder .home-module-icon {
@@ -799,18 +855,30 @@
 }
 
 .application.npc-builder .btn-discord {
-  background: #5865f2;
+  background: linear-gradient(180deg, #6876f5 0%, #4752c4 100%);
   color: #fff;
-  border: none;
+  border: 1px solid rgba(50, 60, 170, 0.5);
+  box-shadow: 0 2px 6px rgba(88, 101, 242, 0.3);
 }
-.application.npc-builder .btn-discord:hover { filter: brightness(1.1); }
+.application.npc-builder .btn-discord:hover {
+  filter: brightness(1.08);
+  box-shadow: 0 3px 10px rgba(88, 101, 242, 0.4);
+  text-decoration: none;
+  color: #fff;
+}
 
 .application.npc-builder .btn-patreon-link {
   background: transparent;
   color: #cc2030;
-  border: 1px solid #ff424d;
+  border: 1.5px solid rgba(255, 66, 77, 0.7);
+  box-shadow: 0 1px 3px rgba(255, 66, 77, 0.08);
 }
-.application.npc-builder .btn-patreon-link:hover { background: rgba(255, 66, 77, 0.06); }
+.application.npc-builder .btn-patreon-link:hover {
+  background: rgba(255, 66, 77, 0.06);
+  border-color: #ff424d;
+  text-decoration: none;
+  color: #cc2030;
+}
 
 /* ── Sidebar injection button ────────────────────────────── */
 .directory .npc-builder-button {
@@ -834,9 +902,9 @@
 /* ── Feedback section ────────────────────────────────────── */
 .application.npc-builder .feedback-section {
   flex-shrink: 0;
-  border-top: 1px solid rgba(0, 0, 0, 0.12);
-  background: #f2f2f5;
-  padding: 0.55em 0.9em 0.6em;
+  border-top: 1px solid rgba(0, 0, 0, 0.1);
+  background: linear-gradient(180deg, #f4f4f7 0%, #efeff2 100%);
+  padding: 0.55em 0.9em 0.65em;
 }
 
 .application.npc-builder .feedback-header {
@@ -886,15 +954,19 @@
   padding: 0.38em 0.8em;
   font-size: 0.82em;
   font-weight: 600;
-  border: none;
+  border: 1px solid rgba(80, 50, 130, 0.5);
   border-radius: 4px;
-  background: #7c5cbf;
+  background: linear-gradient(180deg, #9068d0 0%, #6a48aa 100%);
   color: #fff;
   cursor: pointer;
-  transition: background 0.15s, opacity 0.15s;
+  transition: filter 0.15s, opacity 0.15s, box-shadow 0.15s;
   line-height: 1.4;
+  box-shadow: 0 1px 4px rgba(108, 72, 171, 0.25);
 }
-.application.npc-builder .feedback-send-btn:hover { background: #6a4aad; }
+.application.npc-builder .feedback-send-btn:hover {
+  filter: brightness(1.1);
+  box-shadow: 0 2px 7px rgba(108, 72, 171, 0.35);
+}
 .application.npc-builder .feedback-send-btn:disabled { opacity: 0.55; cursor: default; }
 
 .application.npc-builder .feedback-status {
