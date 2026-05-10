@@ -242,7 +242,14 @@ export class BuilderApp extends HandlebarsApplicationMixin(ApplicationV2) {
     const el = document.createElement('div');
     el.className = `history-entry history-entry--${entry.status}`;
     el.dataset.entryId = entry.id;
-    if (this.selectedHistoryId === entry.id) el.classList.add('is-selected');
+    el.tabIndex = 0;
+    el.setAttribute('role', 'button');
+    el.setAttribute('aria-label', `${entry.name} — ${entry.status}`);
+    if (entry.status === 'generating') el.setAttribute('aria-busy', 'true');
+    if (this.selectedHistoryId === entry.id) {
+      el.classList.add('is-selected');
+      el.setAttribute('aria-current', 'true');
+    }
 
     const statusIcon = {
       generating: '<i class="fa-solid fa-circle-notch fa-spin"></i>',
@@ -271,6 +278,12 @@ export class BuilderApp extends HandlebarsApplicationMixin(ApplicationV2) {
     `;
 
     el.addEventListener('click', () => this._selectHistoryEntry(entry));
+    el.addEventListener('keydown', (ev) => {
+      if (ev.key === 'Enter' || ev.key === ' ') {
+        ev.preventDefault();
+        this._selectHistoryEntry(entry);
+      }
+    });
     return el;
   }
 
@@ -357,7 +370,9 @@ export class BuilderApp extends HandlebarsApplicationMixin(ApplicationV2) {
     if (list) {
       const emptyEl = list.querySelector('.history-empty');
       if (emptyEl) emptyEl.remove();
-      list.insertBefore(this._createHistoryEntryElement(historyEntry), list.firstChild);
+      const newEntry = this._createHistoryEntryElement(historyEntry);
+      newEntry.classList.add('is-new');
+      list.insertBefore(newEntry, list.firstChild);
     }
     this.element?.classList.add('is-generating');
 

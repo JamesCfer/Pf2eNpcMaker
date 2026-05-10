@@ -93,6 +93,13 @@
   /* per-module accents.css sets border-bottom-color */
 }
 
+.application.npc-builder .builder-tab:focus-visible,
+.application.npc-builder .builder-tab-github:focus-visible {
+  outline: 2px solid rgba(232, 160, 32, 0.85);
+  outline-offset: -3px;
+  color: #fff;
+}
+
 /* ── Two-panel wrapper ───────────────────────────────────── */
 .application.npc-builder .builder-inner {
   display: flex;
@@ -193,9 +200,23 @@
 .application.npc-builder .history-entry:hover {
   background: rgba(124, 92, 191, 0.09);
 }
+.application.npc-builder .history-entry:focus-visible {
+  outline: none;
+  background: rgba(124, 92, 191, 0.12);
+  box-shadow: inset 0 0 0 2px rgba(124, 92, 191, 0.65);
+}
 .application.npc-builder .history-entry.is-selected {
   background: rgba(124, 92, 191, 0.13);
   border-left-color: #7c5cbf;
+}
+
+.application.npc-builder .history-entry.is-new {
+  animation: npc-history-slide-in 0.32s cubic-bezier(0.2, 0.7, 0.3, 1);
+}
+
+@keyframes npc-history-slide-in {
+  from { opacity: 0; transform: translateX(-12px); }
+  to   { opacity: 1; transform: translateX(0); }
 }
 
 .application.npc-builder .history-entry-main {
@@ -475,10 +496,24 @@
   color: #fff;
   border: 1px solid rgba(80, 50, 130, 0.6);
   box-shadow: 0 2px 6px rgba(108, 72, 171, 0.35), inset 0 1px 0 rgba(255, 255, 255, 0.15);
+  position: relative;
+  overflow: hidden;
+}
+.application.npc-builder button.btn-primary::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(110deg, transparent 35%, rgba(255, 255, 255, 0.28) 50%, transparent 65%);
+  transform: translateX(-110%);
+  transition: transform 0.55s ease;
+  pointer-events: none;
 }
 .application.npc-builder button.btn-primary:hover:not(:disabled) {
   filter: brightness(1.1);
   box-shadow: 0 3px 10px rgba(108, 72, 171, 0.45), inset 0 1px 0 rgba(255, 255, 255, 0.15);
+}
+.application.npc-builder button.btn-primary:hover:not(:disabled)::before {
+  transform: translateX(110%);
 }
 .application.npc-builder button.btn-primary:active:not(:disabled) {
   transform: translateY(1px);
@@ -499,6 +534,20 @@
 .application.npc-builder button:disabled {
   opacity: 0.45;
   cursor: not-allowed;
+}
+
+.application.npc-builder button.btn-primary:focus-visible,
+.application.npc-builder button.btn-secondary:focus-visible,
+.application.npc-builder button.btn-image:focus-visible,
+.application.npc-builder button.btn-patreon:focus-visible,
+.application.npc-builder button.btn-join:focus-visible,
+.application.npc-builder button.btn-signout:focus-visible,
+.application.npc-builder .feedback-send-btn:focus-visible,
+.application.npc-builder .home-module-install:focus-visible,
+.application.npc-builder .btn-discord:focus-visible,
+.application.npc-builder .btn-patreon-link:focus-visible {
+  outline: 2px solid #7c5cbf;
+  outline-offset: 2px;
 }
 
 .application.npc-builder.is-generating button.btn-primary {
@@ -975,6 +1024,20 @@
 }
 .application.npc-builder .feedback-status--success { color: #2e7d32; }
 .application.npc-builder .feedback-status--error   { color: #c0392b; }
+
+/* ── Reduced motion: respect user preference ─────────────── */
+@media (prefers-reduced-motion: reduce) {
+  .application.npc-builder *,
+  .application.npc-builder *::before,
+  .application.npc-builder *::after {
+    animation-duration: 0.001ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.001ms !important;
+  }
+  .application.npc-builder .home-module-card:hover { transform: none; }
+  .application.npc-builder button.btn-primary:active:not(:disabled),
+  .application.npc-builder button.btn-image:active:not(:disabled) { transform: none; }
+}
 /* ============================================================
    PF2e NPC Maker — Arcane Grimoire accents
    Aged parchment, deep violet ink, gold leaf, serif script.
