@@ -77,7 +77,7 @@ Hooks.once('ready', () => {
   if (game.user.isGM && !game.settings.get(MODULE_ID, 'welcomeMessageShown')) {
     const welcomeContent = `
 <h3>Welcome to the PF2e NPC Auto-Builder!</h3>
-<p>The builder has opened automatically. The <strong>Home</strong> tab inside it walks you through how to get started.</p>
+<p>The builder has opened automatically — you're ready to start generating NPCs right away.</p>
 <p>You can reopen the builder any time from the <em>NPC Builder</em> button in the <strong>Actors</strong> or <strong>Compendium</strong> sidebar header.</p>`.trim();
 
     ChatMessage.create({
@@ -85,7 +85,7 @@ Hooks.once('ready', () => {
       whisper: game.users.filter(u => u.isGM).map(u => u.id),
     });
     game.settings.set(MODULE_ID, 'welcomeMessageShown', true);
-    openBuilder(adapter, { initialTab: 'home' });
+    openBuilder(adapter);
     checkForModuleUpdate(MODULE_ID, adapter.module.githubUrl).catch(() => {});
   }
 });
