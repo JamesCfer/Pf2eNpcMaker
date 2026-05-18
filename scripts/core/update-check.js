@@ -5,7 +5,15 @@
 
 import { isNewerVersion } from './utils.js';
 
-export async function checkForModuleUpdate(moduleId, githubReleaseUrl) {
+/**
+ * Fetches the live module manifest, compares versions, and shows a one-shot
+ * update prompt when a newer version is available.
+ *
+ * @param {string} moduleId       Foundry module id (e.g. 'Pf2eNpcMaker').
+ * @param {string} githubRepoUrl  GitHub repository root URL (e.g. 'https://github.com/Foo/Bar').
+ *                                The function appends '/releases/latest' for the update link.
+ */
+export async function checkForModuleUpdate(moduleId, githubRepoUrl) {
   try {
     const mod            = game.modules?.get(moduleId);
     const manifestUrl    = mod?.manifest;
@@ -31,7 +39,7 @@ export async function checkForModuleUpdate(moduleId, githubReleaseUrl) {
       </div>`;
 
     const DialogV2 = foundry.applications?.api?.DialogV2;
-    const releasesUrl = `${githubReleaseUrl}/releases/latest`;
+    const releasesUrl = `${githubRepoUrl}/releases/latest`;
 
     if (DialogV2) {
       DialogV2.prompt({

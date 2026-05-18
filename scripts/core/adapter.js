@@ -112,16 +112,16 @@ export class SystemAdapter {
   }
 
   /** @returns {string} */
-  get moduleFolder() { throw new Error('moduleFolder not implemented'); }
+  get moduleFolder() { throw new Error(`${this.constructor.name} must implement get moduleFolder()`); }
 
   /** @returns {ModuleInfo} */
-  get module() { throw new Error('module not implemented'); }
+  get module() { throw new Error(`${this.constructor.name} must implement get module()`); }
 
   /** @returns {string} Foundry game system id. */
-  get systemId() { throw new Error('systemId not implemented'); }
+  get systemId() { throw new Error(`${this.constructor.name} must implement get systemId()`); }
 
   /** @returns {FormConfig} */
-  get formConfig() { throw new Error('formConfig not implemented'); }
+  get formConfig() { throw new Error(`${this.constructor.name} must implement get formConfig()`); }
 
   /** @returns {boolean} */
   get supportsImageGeneration() { return false; }
@@ -133,7 +133,7 @@ export class SystemAdapter {
    * @returns {object} Gathered form values (shape is adapter-specific).
    */
   gatherFormData(_form) {
-    throw new Error('gatherFormData not implemented');
+    throw new Error(`${this.constructor.name} must implement gatherFormData(form)`);
   }
 
   /**
@@ -141,7 +141,7 @@ export class SystemAdapter {
    * @returns {Partial<HistoryEntry>} Fields to merge into the new history entry.
    */
   historyEntryFromForm(_formData) {
-    throw new Error('historyEntryFromForm not implemented');
+    throw new Error(`${this.constructor.name} must implement historyEntryFromForm(formData)`);
   }
 
   /**
@@ -166,7 +166,7 @@ export class SystemAdapter {
    * @returns {Promise<AdapterResult>}
    */
   async generate(_opts) {
-    throw new Error('generate not implemented');
+    throw new Error(`${this.constructor.name} must implement generate(opts)`);
   }
 
   /**

@@ -272,10 +272,21 @@ export class BuilderApp extends HandlebarsApplicationMixin(ApplicationV2) {
       ${entry.status === 'generating'
         ? '<div class="history-progress"><div class="history-progress-bar"></div></div>'
         : ''}
-      ${entry.status === 'error' && escapedError
-        ? `<div class="history-entry-error">${escapedError}</div>`
+      ${entry.status === 'error'
+        ? `<div class="history-entry-footer">
+            ${escapedError ? `<div class="history-entry-error">${escapedError}</div>` : ''}
+            <button type="button" class="history-entry-retry"><i class="fa-solid fa-rotate-right"></i> Retry</button>
+          </div>`
         : ''}
     `;
+
+    const retryBtn = el.querySelector('.history-entry-retry');
+    if (retryBtn) {
+      retryBtn.addEventListener('click', (ev) => {
+        ev.stopPropagation();
+        this._resubmit(entry);
+      });
+    }
 
     el.addEventListener('click', () => this._selectHistoryEntry(entry));
     el.addEventListener('keydown', (ev) => {
@@ -423,6 +434,44 @@ export class BuilderApp extends HandlebarsApplicationMixin(ApplicationV2) {
         ui.notifications.error(`Failed to generate "${formData.name || 'document'}": ${err.message}`);
       }
     }
+  }
+
+  _resubmit(sourceEntry) {
+    if (!this.authenticated) {
+      ui.notifications.warn('Please sign in with Patreon before generating.');
+      return;
+    }
+
+    const key = this.accessKey || this.storage.getKey() || '';
+    if (!key) {
+      this.authenticated = false;
+      this._applyAuthStateUI();
+      ui.notifications.error('Session missing. Please sign in again.');
+      return;
+    }
+
+    const historyEntry = {
+      id:        foundry.utils.randomID(16),
+      ...this.adapter.historyEntryFromForm(sourceEntry),
+      status:    'generating',
+      createdAt: Date.now(),
+      error:     null,
+    };
+
+    this.history.push(historyEntry);
+    this.storage.saveHistory(this.history, MAX_HISTORY);
+
+    const list = this.element?.querySelector('.history-list');
+    if (list) {
+      const emptyEl = list.querySelector('.history-empty');
+      if (emptyEl) emptyEl.remove();
+      const newEntry = this._createHistoryEntryElement(historyEntry);
+      newEntry.classList.add('is-new');
+      list.insertBefore(newEntry, list.firstChild);
+    }
+    this.element?.classList.add('is-generating');
+
+    this._runGeneration(historyEntry, key, sourceEntry);
   }
 
   /* ── Export ─────────────────────────────────────────────── */

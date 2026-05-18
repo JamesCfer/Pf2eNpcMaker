@@ -6,8 +6,22 @@
 
 import { N8N_ENDPOINTS, PATREON_URL, devUrl } from './n8n.js';
 
+/** Number of monthly NPC uses charged per image generation. */
 export const IMAGE_COST = 4;
 
+/**
+ * Generate an AI portrait for an NPC, then upload it to Foundry's user-data directory.
+ *
+ * @param {object}   opts
+ * @param {object}   opts.npcData         The actor's plain data object (e.g. `actor.toObject()`).
+ * @param {string}   opts.system          Foundry game system id ('pf2e', 'dnd5e', …).
+ * @param {string}   [opts.artStyle='']   Optional free-text art style override.
+ * @param {string}   opts.key             Patreon session key.
+ * @param {boolean}  [opts.devMode=false] Route requests to the -dev endpoints.
+ * @param {() => void}      [opts.onAuthFailed]   Called when the server returns 401/403.
+ * @param {(data: object) => void} [opts.onRateLimited] Called when the server returns 429.
+ * @returns {Promise<{ savedPath: string|null, message: string }>}
+ */
 export async function generateImage({
   npcData,
   system,

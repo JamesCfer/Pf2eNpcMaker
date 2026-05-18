@@ -1,14 +1,17 @@
 /**
  * Patreon OAuth sign-in flow — popup + polling fallback for Electron / external browser.
  *
- * Returns a Promise that resolves with the session key on success.
+ * @param {object}  [options]
+ * @param {boolean} [options.devMode=false]  Route requests to the -dev endpoints.
+ * @returns {Promise<string>} Resolves with the Patreon session key on success.
+ * @throws {Error} If sign-in times out, is rejected, or the server is unreachable.
  */
 
 import { N8N_ENDPOINTS, PATREON_URL, devUrl } from './n8n.js';
 
 export async function startPatreonSignIn({ devMode = false } = {}) {
   const N8N_ORIGIN = new URL(devUrl(N8N_ENDPOINTS.authLogin, devMode)).origin;
-  const POLL_URL   = N8N_ORIGIN + devUrl('/webhook/oauth/patreon/poll', devMode);
+  const POLL_URL   = devUrl(N8N_ENDPOINTS.authPoll, devMode);
   const POLL_MS    = 2500;
   const TIMEOUT_MS = 5 * 60 * 1000;
 

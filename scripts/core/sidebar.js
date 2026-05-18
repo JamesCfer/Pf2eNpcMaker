@@ -4,6 +4,12 @@
  * Each module calls `registerSidebar(moduleId, openFn, options)` once at init.
  * The button label, icon, and which directories to inject into are configurable
  * so an Item Generator can hook into the Items directory instead of Actors.
+ *
+ * @typedef {object} SidebarOptions
+ * @property {string}   [buttonLabel='NPC Builder']           Text label for the button.
+ * @property {string}   [buttonIcon='fa-solid fa-star']       FontAwesome class string (e.g. 'fa-solid fa-dragon').
+ * @property {Array<'actors'|'compendium'|'items'>} [directories=['actors','compendium']]
+ *   Which Foundry directory sidebars to inject the button into.
  */
 
 const DIR_HOOKS = {
@@ -42,9 +48,14 @@ const DIR_HOOKS = {
   },
 };
 
+/**
+ * @param {string}        moduleId  Foundry module id, used to namespace the button.
+ * @param {() => void}    openFn    Callback invoked when the button is clicked.
+ * @param {SidebarOptions} [options]
+ */
 export function registerSidebar(moduleId, openFn, {
   buttonLabel = 'NPC Builder',
-  buttonIcon  = '★',
+  buttonIcon  = 'fa-solid fa-star',
   directories = ['actors', 'compendium'],
 } = {}) {
 
@@ -54,7 +65,7 @@ export function registerSidebar(moduleId, openFn, {
     if (exists) return;
     controls.push({
       action:  `${moduleId}-control`,
-      icon:    'fa-solid fa-star',
+      icon:    buttonIcon,
       label:   buttonLabel,
       onClick: openFn,
       onclick: openFn,
@@ -73,7 +84,7 @@ export function registerSidebar(moduleId, openFn, {
     button.type  = 'button';
     button.classList.add('npc-builder-button', cls);
     button.style.marginLeft = '4px';
-    button.innerHTML = `${buttonIcon} ${buttonLabel} ${buttonIcon}`;
+    button.innerHTML = `<i class="${buttonIcon}"></i> ${buttonLabel}`;
     button.addEventListener('click', openFn);
 
     const header = root.querySelector('header') || root.querySelector('.directory-header');

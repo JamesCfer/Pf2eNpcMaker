@@ -1,9 +1,13 @@
 /**
  * localStorage helpers, namespaced per module folder.
  * Keys are pure data — no JSON nesting per slot.
+ * All methods silently swallow storage errors (e.g. private browsing quota limits).
  */
 
 export class Storage {
+  /**
+   * @param {string} moduleFolder  The module's folder name, used to namespace all storage keys.
+   */
   constructor(moduleFolder) {
     this.folder      = moduleFolder;
     this.keyPrimary  = `${moduleFolder}.key`;
@@ -15,6 +19,7 @@ export class Storage {
 
   /* ── Patreon session key ────────────────────────────────── */
 
+  /** @returns {string} The stored session key, or an empty string if absent. */
   getKey() {
     for (const k of [this.keyPrimary, this.keyLegacy]) {
       try { const v = localStorage.getItem(k); if (v) return v; } catch (_) {}
@@ -22,6 +27,10 @@ export class Storage {
     return '';
   }
 
+  /**
+   * Persist a session key. Pass an empty string (or falsy) to clear it.
+   * @param {string} value
+   */
   setKey(value) {
     try {
       if (value) {
@@ -36,6 +45,10 @@ export class Storage {
 
   /* ── History ────────────────────────────────────────────── */
 
+  /**
+   * @param {number} [maxEntries=50]  Maximum number of entries to return.
+   * @returns {import('./adapter.js').HistoryEntry[]}
+   */
   loadHistory(maxEntries = 50) {
     try {
       const raw = localStorage.getItem(this.historyKey);
@@ -44,6 +57,10 @@ export class Storage {
     return [];
   }
 
+  /**
+   * @param {import('./adapter.js').HistoryEntry[]} history
+   * @param {number} [maxEntries=50]
+   */
   saveHistory(history, maxEntries = 50) {
     try {
       localStorage.setItem(this.historyKey, JSON.stringify(history.slice(-maxEntries)));
@@ -52,20 +69,24 @@ export class Storage {
 
   /* ── Module version (used to invalidate sessions on update) ── */
 
+  /** @returns {string} The last-seen module version, or empty string if unset. */
   getVersion() {
     try { return localStorage.getItem(this.versionKey) || ''; } catch (_) { return ''; }
   }
 
+  /** @param {string} version */
   setVersion(version) {
     try { localStorage.setItem(this.versionKey, version); } catch (_) {}
   }
 
   /* ── Custom art style ───────────────────────────────────── */
 
+  /** @returns {string} The user's custom art-style prompt, or empty string if unset. */
   getArtStyle() {
     try { return localStorage.getItem(this.artStyleKey) || ''; } catch (_) { return ''; }
   }
 
+  /** @param {string} style */
   setArtStyle(style) {
     try { localStorage.setItem(this.artStyleKey, style); } catch (_) {}
   }
