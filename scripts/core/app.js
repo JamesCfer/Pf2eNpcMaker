@@ -24,6 +24,8 @@ import { AuthError,
 import { startPatreonSignIn,
          PATREON_URL }            from './auth.js';
 import { sendFeedback }           from './feedback.js';
+import { initConsoleCapture,
+         getConsoleLog }          from './console-capture.js';
 import { generateImage,
          IMAGE_COST }             from './image-gen.js';
 import { isDevMode }              from './n8n.js';
@@ -91,6 +93,8 @@ export class BuilderApp extends HandlebarsApplicationMixin(ApplicationV2) {
   }
 
   _onRender(context, options) {
+    initConsoleCapture();
+
     // Bind tab clicks (Home + Builder) — bypasses ApplicationV2 action delegation
     // which can be intercepted by system-level CSS/JS overrides.
     this.element.querySelectorAll('.builder-tab[data-tab]').forEach(btn => {
@@ -433,7 +437,27 @@ export class BuilderApp extends HandlebarsApplicationMixin(ApplicationV2) {
         this._updateHistoryEntry(historyEntry.id, { status: 'error', error: err.message });
         ui.notifications.error(`Failed to generate "${formData.name || 'document'}": ${err.message}`);
       }
+      this._autoReportError(err, formData).catch(() => {});
     }
+  }
+
+  async _autoReportError(err, formData) {
+    const context = JSON.stringify({
+      name:   formData?.name,
+      level:  formData?.level,
+    });
+    const message = `[Auto-Error] ${err.name || 'Error'}: ${err.message}\n\nForm context: ${context}`;
+    const tier = this.patreonTier || (this.authenticated ? 'Supporter (tier unknown)' : 'Free');
+    await sendFeedback({
+      message,
+      moduleLabel: this.adapter.module.label,
+      email:       game.user?.email || '',
+      tier,
+      sessionKey:  this.accessKey || '',
+      devMode:     isDevMode(this.moduleFolder),
+      type:        'auto-error',
+      consoleLog:  getConsoleLog(),
+    });
   }
 
   _resubmit(sourceEntry) {

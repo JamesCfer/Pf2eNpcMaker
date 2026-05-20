@@ -12,6 +12,8 @@ import { N8N_ENDPOINTS, devUrl } from './n8n.js';
  * @param {string}  opts.tier         Patreon tier label (e.g. 'Free', 'Champion').
  * @param {string}  opts.sessionKey   Patreon session key (may be empty).
  * @param {boolean} [opts.devMode=false]
+ * @param {string}  [opts.type='manual']     'manual' for user-submitted, 'auto-error' for automatic reports.
+ * @param {string}  [opts.consoleLog='']     Captured console output to attach to the report.
  * @returns {Promise<void>}
  * @throws {Error} If the server returns a non-OK status.
  */
@@ -22,6 +24,8 @@ export async function sendFeedback({
   tier,
   sessionKey,
   devMode = false,
+  type = 'manual',
+  consoleLog = '',
 }) {
   const response = await fetch(devUrl(N8N_ENDPOINTS.feedback, devMode), {
     method:  'POST',
@@ -32,6 +36,8 @@ export async function sendFeedback({
       email:      email || '',
       tier:       tier || 'unknown',
       sessionKey: sessionKey || '',
+      type,
+      consoleLog: consoleLog || '',
     }),
   });
   if (!response.ok) throw new Error(`Server returned ${response.status}`);
