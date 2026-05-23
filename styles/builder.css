@@ -305,6 +305,16 @@
   outline-offset: 1px;
 }
 
+/* ── Generation step label ───────────────────────────────── */
+.application.npc-builder .history-step-label {
+  display: block;
+  font-size: 0.74em;
+  color: #7c5cbf;
+  font-style: italic;
+  margin-top: 0.3em;
+  opacity: 0.9;
+}
+
 /* ── Loading progress bar ────────────────────────────────── */
 .application.npc-builder .history-progress {
   height: 2px;

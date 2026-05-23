@@ -58,6 +58,8 @@ export class BuilderApp extends HandlebarsApplicationMixin(ApplicationV2) {
     this.selectedHistoryId = null;
     this.patreonTier    = null;
 
+    this._stepTimers = new Map();
+
     this.history = this.storage.loadHistory(MAX_HISTORY);
     let hadStale = false;
     for (const entry of this.history) {
@@ -274,7 +276,8 @@ export class BuilderApp extends HandlebarsApplicationMixin(ApplicationV2) {
         <div class="history-entry-icon">${statusIcon}</div>
       </div>
       ${entry.status === 'generating'
-        ? '<div class="history-progress"><div class="history-progress-bar"></div></div>'
+        ? `<span class="history-step-label">${escapeHtml(this.adapter.progressSteps[0])}</span>
+      <div class="history-progress"><div class="history-progress-bar"></div></div>`
         : ''}
       ${entry.status === 'error'
         ? `<div class="history-entry-footer">
@@ -324,6 +327,10 @@ export class BuilderApp extends HandlebarsApplicationMixin(ApplicationV2) {
     const entry = this.history.find(e => e.id === id);
     if (!entry) return;
 
+    if (changes.status && changes.status !== 'generating') {
+      this._clearStepTimer(id);
+    }
+
     Object.assign(entry, changes);
     this.storage.saveHistory(this.history, MAX_HISTORY);
 
@@ -335,6 +342,37 @@ export class BuilderApp extends HandlebarsApplicationMixin(ApplicationV2) {
 
     const anyGenerating = this.history.some(e => e.status === 'generating');
     this.element?.classList.toggle('is-generating', anyGenerating);
+  }
+
+  /* ── Generation progress steps ──────────────────────────── */
+
+  _startStepProgression(entryId, steps) {
+    if (steps.length <= 1) return;
+    let stepIndex = 0;
+    const scheduleNext = () => {
+      stepIndex++;
+      if (stepIndex >= steps.length) {
+        this._stepTimers.delete(entryId);
+        return;
+      }
+      const timer = setTimeout(() => {
+        const el = this.element?.querySelector(
+          `.history-entry[data-entry-id="${entryId}"] .history-step-label`
+        );
+        if (el) el.textContent = steps[stepIndex];
+        scheduleNext();
+      }, 4000);
+      this._stepTimers.set(entryId, timer);
+    };
+    scheduleNext();
+  }
+
+  _clearStepTimer(entryId) {
+    const timer = this._stepTimers.get(entryId);
+    if (timer != null) {
+      clearTimeout(timer);
+      this._stepTimers.delete(entryId);
+    }
   }
 
   /* ── Generate (delegates to adapter) ────────────────────── */
@@ -390,6 +428,7 @@ export class BuilderApp extends HandlebarsApplicationMixin(ApplicationV2) {
       list.insertBefore(newEntry, list.firstChild);
     }
     this.element?.classList.add('is-generating');
+    this._startStepProgression(historyEntry.id, this.adapter.progressSteps);
 
     const banner = this.element?.querySelector('.history-selected-banner');
     if (banner) banner.style.display = 'none';
@@ -494,6 +533,7 @@ export class BuilderApp extends HandlebarsApplicationMixin(ApplicationV2) {
       list.insertBefore(newEntry, list.firstChild);
     }
     this.element?.classList.add('is-generating');
+    this._startStepProgression(historyEntry.id, this.adapter.progressSteps);
 
     this._runGeneration(historyEntry, key, sourceEntry);
   }

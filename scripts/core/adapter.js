@@ -126,6 +126,9 @@ export class SystemAdapter {
   /** @returns {boolean} */
   get supportsImageGeneration() { return false; }
 
+  /** @returns {string[]} Ordered step labels shown during generation. */
+  get progressSteps() { return ['Sending request…', 'Creating document…']; }
+
   /* ── Methods to override ────────────────────────────────── */
 
   /**

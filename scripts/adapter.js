@@ -40,6 +40,8 @@ export class Pf2eNpcAdapter extends SystemAdapter {
 
   get formConfig() { return { documentNoun: 'NPC' }; }
 
+  get progressSteps() { return ['Sending request…', 'Building spell mapping…', 'Creating actor…']; }
+
   /* ── Form handling ──────────────────────────────────────── */
 
   /** @returns {Pf2eNpcFormData} */
