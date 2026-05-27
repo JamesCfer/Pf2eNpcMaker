@@ -8,7 +8,7 @@
  * @typedef {object} SidebarOptions
  * @property {string}   [buttonLabel='NPC Builder']           Text label for the button.
  * @property {string}   [buttonIcon='fa-solid fa-star']       FontAwesome class string (e.g. 'fa-solid fa-dragon').
- * @property {Array<'actors'|'compendium'|'items'>} [directories=['actors','compendium']]
+ * @property {Array<'actors'|'compendium'|'items'|'journal'>} [directories=['actors','compendium']]
  *   Which Foundry directory sidebars to inject the button into.
  */
 
@@ -45,6 +45,17 @@ const DIR_HOOKS = {
       'renderItemDirectoryPF2e',
     ],
     appNames: ['ItemDirectory', 'ItemDirectoryPF2e'],
+  },
+  journal: {
+    headerHooks: [
+      'getHeaderControlsJournalDirectory',
+      'getHeaderControlsJournalDirectoryPF2e',
+    ],
+    renderHooks: [
+      'renderJournalDirectory',
+      'renderJournalDirectoryPF2e',
+    ],
+    appNames: ['JournalDirectory', 'JournalDirectoryPF2e'],
   },
 };
 

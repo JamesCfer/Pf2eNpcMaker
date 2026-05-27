@@ -197,6 +197,12 @@
       <div class="history-header">
         <i class="fa-solid fa-clock-rotate-left"></i>
         <span class="history-header-label">{{module.historyLabel}}</span>
+        <button type="button" class="history-clear-btn" data-action="clearhistory" title="Clear all history entries">
+          <i class="fa-solid fa-trash-can"></i>
+        </button>
+      </div>
+      <div class="history-search">
+        <input type="text" class="history-search-input" placeholder="Filter by name…" aria-label="Filter history by name">
       </div>
       <div class="history-list"></div>
     </div>

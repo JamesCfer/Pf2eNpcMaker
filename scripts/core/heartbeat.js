@@ -1,12 +1,12 @@
 /**
- * Heartbeat — pings the relay every minute so the server knows this client
- * is live. Reports the sending module, the Foundry/system versions, and the
- * full list of installed modules (ours and otherwise).
+ * Heartbeat — pings the relay once on startup and once per hour so the server
+ * knows this client is live. Reports the sending module, the Foundry/system
+ * versions, and the full list of installed modules (ours and otherwise).
  */
 
 import { N8N_ENDPOINTS, devUrl, isDevMode } from './n8n.js';
 
-const HEARTBEAT_INTERVAL_MS = 60 * 1000;
+const HEARTBEAT_INTERVAL_MS = 60 * 60 * 1000;
 const startedModules = new Set();
 
 function collectInstalledModules() {

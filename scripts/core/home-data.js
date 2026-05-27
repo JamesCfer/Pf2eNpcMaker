@@ -69,6 +69,26 @@ export const ALL_MODULES = [
     github:      'https://github.com/JamesCfer/D-Ditemmaker',
     install:     'https://github.com/JamesCfer/D-Ditemmaker/releases/latest',
   },
+  {
+    id:          'Pf2eNationsAndCitiesMaker',
+    system:      'pf2e',
+    label:       'PF2e Settlements',
+    icon:        'fa-solid fa-city',
+    accentClass: 'card--pf2esettle',
+    description: 'Generate PF2e cities, towns and nations with stores, guards, leadership, and economy.',
+    github:      'https://github.com/JamesCfer/Pf2eNationsAndCitiesMaker',
+    install:     'https://github.com/JamesCfer/Pf2eNationsAndCitiesMaker/releases/latest',
+  },
+  {
+    id:          'Pf2eCalendarTimeline',
+    system:      'pf2e',
+    label:       'PF2e Calendar',
+    icon:        'fa-solid fa-calendar-days',
+    accentClass: 'card--pf2ecal',
+    description: 'Customisable in-world calendar with scheduled events (taxes, paydays, festivals).',
+    github:      'https://github.com/JamesCfer/Pf2eCalendarTimeline',
+    install:     'https://github.com/JamesCfer/Pf2eCalendarTimeline/releases/latest',
+  },
 ];
 
 /**

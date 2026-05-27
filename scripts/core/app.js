@@ -59,6 +59,7 @@ export class BuilderApp extends HandlebarsApplicationMixin(ApplicationV2) {
     this.patreonTier    = null;
 
     this._stepTimers = new Map();
+    this._historyFilter = '';
 
     this.history = this.storage.loadHistory(MAX_HISTORY);
     let hadStale = false;
@@ -114,6 +115,15 @@ export class BuilderApp extends HandlebarsApplicationMixin(ApplicationV2) {
     this._applyTabUI();
     this._renderHistory();
 
+    const filterInput = this.element.querySelector('.history-search-input');
+    if (filterInput) {
+      filterInput.value = this._historyFilter;
+      filterInput.addEventListener('input', () => {
+        this._historyFilter = filterInput.value.trim().toLowerCase();
+        this._renderHistory();
+      });
+    }
+
     const artStyleInput = this.element.querySelector('#npc-art-style');
     if (artStyleInput) {
       artStyleInput.value = this.storage.getArtStyle();
@@ -121,6 +131,22 @@ export class BuilderApp extends HandlebarsApplicationMixin(ApplicationV2) {
         this.storage.setArtStyle(artStyleInput.value.trim());
       });
     }
+
+    this.element.addEventListener('keydown', (ev) => {
+      if (ev.key === 'Enter' && (ev.ctrlKey || ev.metaKey)) {
+        ev.preventDefault();
+        if (this.activeTab === 'builder') this._generate(ev);
+      } else if (ev.key === 'Escape') {
+        const form = this.element.querySelector('.npc-form');
+        if (form?.contains(document.activeElement)) {
+          ev.preventDefault();
+          ev.stopPropagation();
+          form.querySelectorAll('input[type="text"], input[type="number"], textarea').forEach(el => { el.value = ''; });
+          form.querySelectorAll('input[type="checkbox"]').forEach(el => { el.checked = false; });
+          form.querySelectorAll('select').forEach(el => { el.selectedIndex = 0; });
+        }
+      }
+    }, true);
   }
 
   /* ── Tab UI (Home vs Builder) ──────────────────────────── */
@@ -186,6 +212,7 @@ export class BuilderApp extends HandlebarsApplicationMixin(ApplicationV2) {
       patreon:       function()      { window.open(PATREON_URL, '_blank'); },
       sendfeedback:  function(event) { this._sendFeedback(event); },
       generateimage: function(event) { this._generateImage(event); },
+      clearhistory:  function(event) { this._clearHistory(event); },
     },
   };
 
@@ -231,15 +258,23 @@ export class BuilderApp extends HandlebarsApplicationMixin(ApplicationV2) {
     if (!list) return;
     list.innerHTML = '';
 
-    if (this.history.length === 0) {
+    const query    = this._historyFilter || '';
+    const reversed = [...this.history].reverse();
+    const filtered = query
+      ? reversed.filter(e => e.name?.toLowerCase().includes(query))
+      : reversed;
+
+    if (filtered.length === 0) {
       const empty = document.createElement('div');
       empty.className = 'history-empty';
-      empty.textContent = `No ${this.adapter.formConfig.documentNoun || 'documents'} created yet.\nGenerate one to see it here.`;
+      empty.textContent = query
+        ? `No ${this.adapter.formConfig.documentNoun || 'documents'} match "${query}".`
+        : `No ${this.adapter.formConfig.documentNoun || 'documents'} created yet.\nGenerate one to see it here.`;
       list.appendChild(empty);
       return;
     }
 
-    for (const entry of [...this.history].reverse()) {
+    for (const entry of filtered) {
       list.appendChild(this._createHistoryEntryElement(entry));
     }
   }
@@ -273,7 +308,12 @@ export class BuilderApp extends HandlebarsApplicationMixin(ApplicationV2) {
           <span class="history-entry-name">${escapedName}</span>
           <span class="history-entry-meta">${metaLabel}</span>
         </div>
-        <div class="history-entry-icon">${statusIcon}</div>
+        <div class="history-entry-actions">
+          <div class="history-entry-icon">${statusIcon}</div>
+          ${entry.status !== 'generating'
+            ? `<button type="button" class="history-entry-delete" title="Delete this entry" aria-label="Delete ${escapedName}"><i class="fa-solid fa-xmark"></i></button>`
+            : ''}
+        </div>
       </div>
       ${entry.status === 'generating'
         ? `<span class="history-step-label">${escapeHtml(this.adapter.progressSteps[0])}</span>
@@ -292,6 +332,14 @@ export class BuilderApp extends HandlebarsApplicationMixin(ApplicationV2) {
       retryBtn.addEventListener('click', (ev) => {
         ev.stopPropagation();
         this._resubmit(entry);
+      });
+    }
+
+    const deleteBtn = el.querySelector('.history-entry-delete');
+    if (deleteBtn) {
+      deleteBtn.addEventListener('click', (ev) => {
+        ev.stopPropagation();
+        this._deleteHistoryEntry(entry.id);
       });
     }
 
@@ -342,6 +390,38 @@ export class BuilderApp extends HandlebarsApplicationMixin(ApplicationV2) {
 
     const anyGenerating = this.history.some(e => e.status === 'generating');
     this.element?.classList.toggle('is-generating', anyGenerating);
+  }
+
+  _deleteHistoryEntry(id) {
+    const idx = this.history.findIndex(e => e.id === id);
+    if (idx === -1) return;
+    this.history.splice(idx, 1);
+    this.storage.saveHistory(this.history, MAX_HISTORY);
+    if (this.selectedHistoryId === id) {
+      this.selectedHistoryId = null;
+      const banner = this.element?.querySelector('.history-selected-banner');
+      if (banner) banner.style.display = 'none';
+    }
+    this._renderHistory();
+  }
+
+  async _clearHistory(event) {
+    event?.preventDefault?.();
+    if (this.history.length === 0) return;
+    const confirmed = await foundry.applications.api.DialogV2.confirm({
+      window:      { title: 'Clear History' },
+      content:     '<p>Delete all history entries? This cannot be undone.</p>',
+      yes:         { label: 'Clear All', icon: 'fa-solid fa-trash-can' },
+      no:          { label: 'Cancel' },
+      rejectClose: false,
+    }).catch(() => false);
+    if (!confirmed) return;
+    this.history.length = 0;
+    this.storage.saveHistory(this.history, MAX_HISTORY);
+    this.selectedHistoryId = null;
+    const banner = this.element?.querySelector('.history-selected-banner');
+    if (banner) banner.style.display = 'none';
+    this._renderHistory();
   }
 
   /* ── Generation progress steps ──────────────────────────── */

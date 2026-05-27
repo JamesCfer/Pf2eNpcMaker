@@ -150,6 +150,56 @@
   flex-direction: column;
 }
 
+/* ── Clear-history button (in header) ────────────────────── */
+.application.npc-builder .history-clear-btn {
+  margin-left: auto;
+  display: inline-flex;
+  align-items: center;
+  padding: 0.2em 0.4em;
+  border: 1px solid rgba(0, 0, 0, 0.18);
+  border-radius: 3px;
+  background: transparent;
+  color: #888;
+  cursor: pointer;
+  font-size: 0.8em;
+  line-height: 1;
+  transition: background 0.12s, color 0.12s, border-color 0.12s;
+}
+.application.npc-builder .history-clear-btn:hover {
+  background: rgba(204, 51, 51, 0.1);
+  color: #cc3333;
+  border-color: rgba(204, 51, 51, 0.3);
+}
+.application.npc-builder .history-clear-btn:focus-visible {
+  outline: 2px solid rgba(204, 51, 51, 0.6);
+  outline-offset: 1px;
+}
+
+/* ── History search input ─────────────────────────────────── */
+.application.npc-builder .history-search {
+  padding: 0.4em 0.6em;
+  border-bottom: 1px solid rgba(0, 0, 0, 0.08);
+  background: #ebebef;
+  flex-shrink: 0;
+}
+.application.npc-builder .history-search-input {
+  width: 100%;
+  padding: 0.3em 0.5em;
+  border: 1px solid rgba(0, 0, 0, 0.2);
+  border-radius: 4px;
+  background: #fff;
+  color: #333;
+  font-family: inherit;
+  font-size: 0.82em;
+  box-sizing: border-box;
+  transition: border-color 0.15s, box-shadow 0.15s;
+}
+.application.npc-builder .history-search-input:focus {
+  outline: none;
+  border-color: #7c5cbf;
+  box-shadow: 0 0 0 2px rgba(124, 92, 191, 0.18);
+}
+
 /* ── Custom scrollbars (WebKit) ──────────────────────────── */
 .application.npc-builder .npc-panel-form::-webkit-scrollbar,
 .application.npc-builder .history-list::-webkit-scrollbar,
@@ -248,11 +298,49 @@
   color: #999;
 }
 
+.application.npc-builder .history-entry-actions {
+  display: flex;
+  align-items: center;
+  gap: 0.2em;
+  flex-shrink: 0;
+}
+
 .application.npc-builder .history-entry-icon {
   font-size: 0.88em;
   flex-shrink: 0;
   width: 1.1em;
   text-align: center;
+}
+
+/* ── Per-entry delete button ─────────────────────────────── */
+.application.npc-builder .history-entry-delete {
+  display: none;
+  align-items: center;
+  justify-content: center;
+  width: 1.35em;
+  height: 1.35em;
+  padding: 0;
+  border: none;
+  border-radius: 3px;
+  background: transparent;
+  color: #bbb;
+  cursor: pointer;
+  font-size: 0.82em;
+  line-height: 1;
+  transition: background 0.12s, color 0.12s;
+}
+.application.npc-builder .history-entry:hover .history-entry-delete,
+.application.npc-builder .history-entry:focus-within .history-entry-delete {
+  display: inline-flex;
+}
+.application.npc-builder .history-entry-delete:hover {
+  background: rgba(204, 51, 51, 0.12);
+  color: #cc3333;
+}
+.application.npc-builder .history-entry-delete:focus-visible {
+  outline: 2px solid rgba(204, 51, 51, 0.6);
+  outline-offset: 1px;
+  display: inline-flex;
 }
 
 .application.npc-builder .history-entry--success .history-entry-icon { color: #38a85a; }
@@ -879,6 +967,12 @@
 .application.npc-builder .home-module-card.card--hero6e .home-module-icon i { color: #2980b9; }
 .application.npc-builder .home-module-card.card--pf2eitem { border-color: rgba(46, 125, 50, 0.45); }
 .application.npc-builder .home-module-card.card--pf2eitem .home-module-icon i { color: #2e7d32; }
+.application.npc-builder .home-module-card.card--dnd5eitem { border-color: rgba(170, 0, 60, 0.45); }
+.application.npc-builder .home-module-card.card--dnd5eitem .home-module-icon i { color: #aa003c; }
+.application.npc-builder .home-module-card.card--pf2esettle { border-color: rgba(155, 105, 35, 0.5); }
+.application.npc-builder .home-module-card.card--pf2esettle .home-module-icon i { color: #9b6923; }
+.application.npc-builder .home-module-card.card--pf2ecal    { border-color: rgba(120, 80, 60, 0.5); }
+.application.npc-builder .home-module-card.card--pf2ecal .home-module-icon i    { color: #785038; }
 
 /* ── Home: art style + external links ───────────────────── */
 .application.npc-builder .home-art-style {
