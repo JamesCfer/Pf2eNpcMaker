@@ -20,7 +20,8 @@
 
 import { Storage }                from './storage.js';
 import { AuthError,
-         RateLimitError }         from './adapter.js';
+         RateLimitError,
+         SystemAdapter }          from './adapter.js';
 import { startPatreonSignIn,
          PATREON_URL }            from './auth.js';
 import { sendFeedback }           from './feedback.js';
@@ -32,7 +33,8 @@ import { isDevMode }              from './n8n.js';
 import { ALL_MODULES,
          getModuleMeta }          from './home-data.js';
 import { escapeHtml,
-         detectModuleFolder }     from './utils.js';
+         detectModuleFolder,
+         generateThematicName }   from './utils.js';
 
 const { HandlebarsApplicationMixin, ApplicationV2 } = foundry.applications.api;
 
@@ -46,6 +48,7 @@ export class BuilderApp extends HandlebarsApplicationMixin(ApplicationV2) {
   constructor(adapter, options = {}) {
     const { initialTab, ...appOptions } = options;
     super(appOptions);
+    SystemAdapter.validate(adapter);
     this.adapter        = adapter;
     this.moduleFolder   = adapter.moduleFolder;
     this.storage        = new Storage(this.moduleFolder);
@@ -53,6 +56,7 @@ export class BuilderApp extends HandlebarsApplicationMixin(ApplicationV2) {
     this.authenticated  = !!this.accessKey;
     this.lastDocument   = null;
     this.lastExportData = null;     // adapter-defined: { content, filename, mimeType }
+    this._isOffline     = !navigator.onLine;
     // Default to the builder form — users reach the Home tab by clicking it.
     this.activeTab      = (initialTab === 'home' || initialTab === 'builder') ? initialTab : 'builder';
     this.selectedHistoryId = null;
@@ -152,6 +156,21 @@ export class BuilderApp extends HandlebarsApplicationMixin(ApplicationV2) {
       });
     }
 
+    const nameField = this.element.querySelector('.field--name');
+    const nameLabel = nameField?.querySelector('label');
+    if (nameLabel && !nameField.querySelector('.suggest-name-btn, .btn-roll-name')) {
+      const suggestBtn = document.createElement('button');
+      suggestBtn.type = 'button';
+      suggestBtn.className = 'suggest-name-btn';
+      suggestBtn.title = 'Suggest a thematic name based on the description';
+      suggestBtn.setAttribute('aria-label', 'Suggest a name');
+      suggestBtn.innerHTML = '<i class="fa-solid fa-dice-d20"></i> Suggest';
+      suggestBtn.addEventListener('click', () => this._suggestName());
+      nameLabel.appendChild(suggestBtn);
+    }
+
+    this._initOfflineDetection();
+
     this.element.addEventListener('keydown', (ev) => {
       if (ev.key === 'Enter' && (ev.ctrlKey || ev.metaKey)) {
         ev.preventDefault();
@@ -201,8 +220,11 @@ export class BuilderApp extends HandlebarsApplicationMixin(ApplicationV2) {
 
     for (const action of ['generate', 'export', 'generateimage']) {
       const btn = root.querySelector(`button[data-action="${action}"]`);
-      if (btn) btn.disabled = !this.authenticated;
+      if (btn) btn.disabled = !this.authenticated || (action === 'generate' && this._isOffline);
     }
+
+    const undoBtn = root.querySelector('button[data-action="undolast"]');
+    if (undoBtn) undoBtn.disabled = !this.lastDocument;
   }
 
   /* ── Action wiring ──────────────────────────────────────── */
@@ -233,6 +255,7 @@ export class BuilderApp extends HandlebarsApplicationMixin(ApplicationV2) {
       sendfeedback:  function(event) { this._sendFeedback(event); },
       generateimage: function(event) { this._generateImage(event); },
       clearhistory:  function(event) { this._clearHistory(event); },
+      undolast:      function(event) { this._undoLastGeneration(event); },
     },
   };
 
@@ -578,6 +601,7 @@ export class BuilderApp extends HandlebarsApplicationMixin(ApplicationV2) {
       this.lastExportData = result.exportData || null;
 
       this._updateHistoryEntry(historyEntry.id, { status: 'success' });
+      this._applyAuthStateUI();
 
       const docName = result.document?.name || formData.name || 'document';
       ui.notifications.success(result.message || `"${docName}" created successfully!`);
@@ -662,6 +686,65 @@ export class BuilderApp extends HandlebarsApplicationMixin(ApplicationV2) {
     this._startStepProgression(historyEntry.id, this.adapter.progressSteps);
 
     this._runGeneration(historyEntry, key, sourceEntry);
+  }
+
+  /* ── Undo last generation ───────────────────────────────── */
+
+  async _undoLastGeneration(event) {
+    event?.preventDefault?.();
+    if (!this.lastDocument) {
+      ui.notifications.warn('No recent generation to undo.');
+      return;
+    }
+    const name = this.lastDocument.name || 'document';
+    try {
+      await this.lastDocument.delete();
+    } catch (err) {
+      ui.notifications.error(`Failed to delete "${name}": ${err.message}`);
+      return;
+    }
+    this.lastDocument   = null;
+    this.lastExportData = null;
+
+    let lastSuccessIdx = -1;
+    for (let i = this.history.length - 1; i >= 0; i--) {
+      if (this.history[i].status === 'success') { lastSuccessIdx = i; break; }
+    }
+    if (lastSuccessIdx !== -1) {
+      this.history.splice(lastSuccessIdx, 1);
+      this.storage.saveHistory(this.history, MAX_HISTORY);
+      this._renderHistory();
+    }
+    this._applyAuthStateUI();
+    ui.notifications.info(`"${name}" deleted.`);
+  }
+
+  /* ── Name suggestions ───────────────────────────────────── */
+
+  _suggestName() {
+    const desc      = this.element?.querySelector('[name="description"]')?.value || '';
+    const nameInput = this.element?.querySelector('[name="name"]');
+    if (!nameInput) return;
+    nameInput.value = generateThematicName(desc);
+    nameInput.dispatchEvent(new Event('input', { bubbles: true }));
+  }
+
+  /* ── Offline detection ──────────────────────────────────── */
+
+  _initOfflineDetection() {
+    const update = () => {
+      this._isOffline = !navigator.onLine;
+      this._updateOfflineBanner(this._isOffline);
+    };
+    window.addEventListener('online',  update);
+    window.addEventListener('offline', update);
+    this._updateOfflineBanner(this._isOffline);
+  }
+
+  _updateOfflineBanner(offline) {
+    const banner = this.element?.querySelector('.offline-banner');
+    if (banner) banner.style.display = offline ? 'flex' : 'none';
+    this._applyAuthStateUI();
   }
 
   /* ── Export ─────────────────────────────────────────────── */

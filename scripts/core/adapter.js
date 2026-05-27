@@ -111,6 +111,30 @@ export class SystemAdapter {
     }
   }
 
+  /**
+   * Checks all required getters on a concrete adapter instance and throws a
+   * descriptive error for the first one that returns empty or throws.
+   * @param {SystemAdapter} adapter
+   */
+  static validate(adapter) {
+    const checks = [
+      ['moduleFolder',            () => adapter.moduleFolder],
+      ['module.id',               () => adapter.module?.id],
+      ['module.label',            () => adapter.module?.label],
+      ['systemId',                () => adapter.systemId],
+      ['formConfig.documentNoun', () => adapter.formConfig?.documentNoun],
+    ];
+    for (const [name, get] of checks) {
+      let value;
+      try { value = get(); } catch (err) {
+        throw new Error(`${adapter.constructor.name}: getter "${name}" threw — ${err.message}`);
+      }
+      if (!value) {
+        throw new Error(`${adapter.constructor.name}: "${name}" must return a non-empty value`);
+      }
+    }
+  }
+
   /** @returns {string} */
   get moduleFolder() { throw new Error(`${this.constructor.name} must implement get moduleFolder()`); }
 

@@ -103,6 +103,12 @@
     </div>
   </div>
 
+  <!-- ── Offline detection banner ────────────────────────────────────── -->
+  <div class="offline-banner" style="display:none;" role="status" aria-live="polite">
+    <i class="fa-solid fa-wifi" aria-hidden="true"></i>
+    <span>No network connection — generation is unavailable until you're back online.</span>
+  </div>
+
   <!-- ── Main builder content ─────────────────────────────────────────── -->
   <div class="builder-inner">
 
@@ -200,6 +206,13 @@
         </div>
 
       </form>
+
+      <div class="post-gen-actions">
+        <button type="button" data-action="undolast" class="btn-undo" disabled>
+          <i class="fa-solid fa-rotate-left" aria-hidden="true"></i>
+          <span>Undo Last Generation</span>
+        </button>
+      </div>
     </div>
 
     <!-- Right: history panel -->
