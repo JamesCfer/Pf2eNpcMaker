@@ -60,6 +60,7 @@ export class BuilderApp extends HandlebarsApplicationMixin(ApplicationV2) {
 
     this._stepTimers = new Map();
     this._historyFilter = '';
+    this._historyCompact = false;
 
     this.history = this.storage.loadHistory(MAX_HISTORY);
     let hadStale = false;
@@ -129,6 +130,25 @@ export class BuilderApp extends HandlebarsApplicationMixin(ApplicationV2) {
       artStyleInput.value = this.storage.getArtStyle();
       artStyleInput.addEventListener('input', () => {
         this.storage.setArtStyle(artStyleInput.value.trim());
+      });
+    }
+
+    const compactBtn = this.element.querySelector('.history-compact-btn');
+    if (compactBtn) {
+      compactBtn.addEventListener('click', () => this._toggleCompactHistory());
+      if (this._historyCompact) {
+        this.element.querySelector('.npc-panel-history')?.classList.add('is-compact');
+        compactBtn.setAttribute('aria-pressed', 'true');
+      }
+    }
+
+    const tmplSelect = this.element.querySelector('.desc-template-select');
+    if (tmplSelect) {
+      tmplSelect.addEventListener('change', () => {
+        if (!tmplSelect.value) return;
+        const desc = this.element.querySelector('[name="description"]');
+        if (desc) desc.value = tmplSelect.value;
+        tmplSelect.selectedIndex = 0;
       });
     }
 
@@ -311,7 +331,8 @@ export class BuilderApp extends HandlebarsApplicationMixin(ApplicationV2) {
         <div class="history-entry-actions">
           <div class="history-entry-icon">${statusIcon}</div>
           ${entry.status !== 'generating'
-            ? `<button type="button" class="history-entry-delete" title="Delete this entry" aria-label="Delete ${escapedName}"><i class="fa-solid fa-xmark"></i></button>`
+            ? `<button type="button" class="history-entry-duplicate" title="Pre-fill form with this entry" aria-label="Duplicate ${escapedName}"><i class="fa-solid fa-copy"></i></button>
+               <button type="button" class="history-entry-delete" title="Delete this entry" aria-label="Delete ${escapedName}"><i class="fa-solid fa-xmark"></i></button>`
             : ''}
         </div>
       </div>
@@ -332,6 +353,14 @@ export class BuilderApp extends HandlebarsApplicationMixin(ApplicationV2) {
       retryBtn.addEventListener('click', (ev) => {
         ev.stopPropagation();
         this._resubmit(entry);
+      });
+    }
+
+    const dupBtn = el.querySelector('.history-entry-duplicate');
+    if (dupBtn) {
+      dupBtn.addEventListener('click', (ev) => {
+        ev.stopPropagation();
+        this._duplicateFromHistory(entry);
       });
     }
 
@@ -403,6 +432,23 @@ export class BuilderApp extends HandlebarsApplicationMixin(ApplicationV2) {
       if (banner) banner.style.display = 'none';
     }
     this._renderHistory();
+  }
+
+  _duplicateFromHistory(entry) {
+    const form = this.element?.querySelector('.npc-form');
+    if (form) this.adapter.populateForm(form, entry);
+    this.selectedHistoryId = null;
+    const banner = this.element?.querySelector('.history-selected-banner');
+    if (banner) banner.style.display = 'none';
+    this.element?.querySelectorAll('.history-entry.is-selected').forEach(el => el.classList.remove('is-selected'));
+  }
+
+  _toggleCompactHistory() {
+    this._historyCompact = !this._historyCompact;
+    const panel = this.element?.querySelector('.npc-panel-history');
+    if (panel) panel.classList.toggle('is-compact', this._historyCompact);
+    const btn = this.element?.querySelector('.history-compact-btn');
+    if (btn) btn.setAttribute('aria-pressed', String(this._historyCompact));
   }
 
   async _clearHistory(event) {

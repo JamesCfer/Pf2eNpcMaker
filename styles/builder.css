@@ -150,9 +150,57 @@
   flex-direction: column;
 }
 
+/* ── Compact-history toggle button (in header) ───────────── */
+.application.npc-builder .history-compact-btn {
+  margin-left: auto;
+  display: inline-flex;
+  align-items: center;
+  padding: 0.2em 0.4em;
+  border: 1px solid rgba(0, 0, 0, 0.18);
+  border-radius: 3px;
+  background: transparent;
+  color: #888;
+  cursor: pointer;
+  font-size: 0.8em;
+  line-height: 1;
+  transition: background 0.12s, color 0.12s, border-color 0.12s;
+}
+.application.npc-builder .history-compact-btn:hover {
+  background: rgba(80, 60, 150, 0.1);
+  color: #5a3ea0;
+  border-color: rgba(80, 60, 150, 0.3);
+}
+.application.npc-builder .history-compact-btn:focus-visible {
+  outline: 2px solid rgba(124, 92, 191, 0.6);
+  outline-offset: 1px;
+}
+
+/* ── Compact history panel ───────────────────────────────── */
+.application.npc-builder .npc-panel-history {
+  transition: width 0.18s ease;
+}
+.application.npc-builder .npc-panel-history.is-compact {
+  width: 44px;
+}
+.application.npc-builder .npc-panel-history.is-compact .history-search,
+.application.npc-builder .npc-panel-history.is-compact .history-list,
+.application.npc-builder .npc-panel-history.is-compact .history-header > :not(.history-compact-btn) {
+  display: none;
+}
+.application.npc-builder .npc-panel-history.is-compact .history-header {
+  padding: 0.5em 0.4em;
+  justify-content: center;
+}
+.application.npc-builder .npc-panel-history.is-compact .history-compact-btn {
+  margin-left: 0;
+}
+.application.npc-builder .npc-panel-history.is-compact .history-compact-btn i {
+  transform: rotate(180deg);
+}
+
 /* ── Clear-history button (in header) ────────────────────── */
 .application.npc-builder .history-clear-btn {
-  margin-left: auto;
+  margin-left: 0;
   display: inline-flex;
   align-items: center;
   padding: 0.2em 0.4em;
@@ -393,6 +441,37 @@
   outline-offset: 1px;
 }
 
+/* ── Per-entry duplicate button ──────────────────────────── */
+.application.npc-builder .history-entry-duplicate {
+  display: none;
+  align-items: center;
+  justify-content: center;
+  width: 1.35em;
+  height: 1.35em;
+  padding: 0;
+  border: none;
+  border-radius: 3px;
+  background: transparent;
+  color: #bbb;
+  cursor: pointer;
+  font-size: 0.82em;
+  line-height: 1;
+  transition: background 0.12s, color 0.12s;
+}
+.application.npc-builder .history-entry:hover .history-entry-duplicate,
+.application.npc-builder .history-entry:focus-within .history-entry-duplicate {
+  display: inline-flex;
+}
+.application.npc-builder .history-entry-duplicate:hover {
+  background: rgba(30, 100, 200, 0.12);
+  color: #1e64c8;
+}
+.application.npc-builder .history-entry-duplicate:focus-visible {
+  outline: 2px solid rgba(30, 100, 200, 0.6);
+  outline-offset: 1px;
+  display: inline-flex;
+}
+
 /* ── Generation step label ───────────────────────────────── */
 .application.npc-builder .history-step-label {
   display: block;
@@ -554,6 +633,26 @@
   color: #777;
   font-style: italic;
   line-height: 1.35;
+}
+
+/* ── Description template dropdown ──────────────────────── */
+.application.npc-builder .desc-template-select {
+  width: 100%;
+  padding: 0.3em 0.5em;
+  border: 1px dashed rgba(0, 0, 0, 0.2);
+  border-radius: 4px;
+  background: #f8f6fc;
+  color: #555;
+  font-family: inherit;
+  font-size: 0.82em;
+  box-sizing: border-box;
+  cursor: pointer;
+  transition: border-color 0.15s, box-shadow 0.15s;
+}
+.application.npc-builder .desc-template-select:focus {
+  outline: none;
+  border-color: #7c5cbf;
+  box-shadow: 0 0 0 2px rgba(124, 92, 191, 0.18);
 }
 
 .application.npc-builder .field-row {

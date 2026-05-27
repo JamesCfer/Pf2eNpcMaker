@@ -90,4 +90,20 @@ export class Storage {
   setArtStyle(style) {
     try { localStorage.setItem(this.artStyleKey, style); } catch (_) {}
   }
+
+  /* ── Clear all module storage ───────────────────────────── */
+
+  /** Removes every key stored under this module's namespace. */
+  clear() {
+    const keys = [
+      this.keyPrimary,
+      this.keyLegacy,
+      this.historyKey,
+      this.versionKey,
+      this.artStyleKey,
+    ];
+    for (const k of keys) {
+      try { localStorage.removeItem(k); } catch (_) {}
+    }
+  }
 }
