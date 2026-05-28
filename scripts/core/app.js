@@ -21,8 +21,10 @@
 import { Storage }                from './storage.js';
 import { AuthError,
          RateLimitError,
+         ActorCreationError,
          SystemAdapter }          from './adapter.js';
 import { startPatreonSignIn,
+         validateSessionKey,
          PATREON_URL }            from './auth.js';
 import { sendFeedback }           from './feedback.js';
 import { initConsoleCapture,
@@ -170,6 +172,7 @@ export class BuilderApp extends HandlebarsApplicationMixin(ApplicationV2) {
     }
 
     this._initOfflineDetection();
+    this._validateSessionOnOpen();
 
     this.element.addEventListener('keydown', (ev) => {
       if (ev.key === 'Enter' && (ev.ctrlKey || ev.metaKey)) {
@@ -220,7 +223,9 @@ export class BuilderApp extends HandlebarsApplicationMixin(ApplicationV2) {
 
     for (const action of ['generate', 'export', 'generateimage']) {
       const btn = root.querySelector(`button[data-action="${action}"]`);
-      if (btn) btn.disabled = !this.authenticated || (action === 'generate' && this._isOffline);
+      if (btn) btn.disabled = !this.authenticated
+        || (action === 'generate' && this._isOffline)
+        || (action === 'generate' && anyGenerating);
     }
 
     const undoBtn = root.querySelector('button[data-action="undolast"]');
@@ -534,6 +539,10 @@ export class BuilderApp extends HandlebarsApplicationMixin(ApplicationV2) {
       return;
     }
     if (this.activeTab === 'home') return;
+    if (this.history.some(e => e.status === 'generating')) {
+      ui.notifications.warn('A generation is already in progress.');
+      return;
+    }
 
     const form = this.element?.querySelector?.('.npc-form');
     if (!form) {
@@ -620,13 +629,33 @@ export class BuilderApp extends HandlebarsApplicationMixin(ApplicationV2) {
       } else if (err instanceof RateLimitError) {
         this._updateHistoryEntry(historyEntry.id, { status: 'error', error: 'Rate limit exceeded' });
         if (err.tier) this.patreonTier = err.tier;
-        ui.notifications.error(err.message || 'Monthly limit reached.', { permanent: true });
+        let msg = err.message || 'Monthly limit reached.';
+        if (err.resetAt) {
+          const daysLeft = Math.max(1, Math.ceil((err.resetAt - Date.now()) / 86400000));
+          msg += ` Resets in ${daysLeft} day${daysLeft !== 1 ? 's' : ''}.`;
+        }
+        ui.notifications.error(msg, { permanent: true });
         setTimeout(() => window.open(PATREON_URL, '_blank'), 1200);
+      } else if (err instanceof ActorCreationError) {
+        this._updateHistoryEntry(historyEntry.id, { status: 'error', error: err.message });
+        ui.notifications.error(`Failed to create "${formData.name || 'document'}": ${err.message}`);
+        if (err.rawData) {
+          foundry.applications.api.DialogV2.confirm({
+            window:      { title: 'Download Raw Data' },
+            content:     '<p>The AI generated data but Foundry rejected the document. Download the raw JSON to keep it?</p>',
+            yes:         { label: 'Download JSON', icon: 'fa-solid fa-download' },
+            no:          { label: 'Dismiss' },
+            rejectClose: false,
+          }).then(confirmed => {
+            if (confirmed) this._triggerJsonDownload(err.rawData, formData.name || 'document');
+          }).catch(() => {});
+        }
+        this._autoReportError(err, formData).catch(() => {});
       } else {
         this._updateHistoryEntry(historyEntry.id, { status: 'error', error: err.message });
         ui.notifications.error(`Failed to generate "${formData.name || 'document'}": ${err.message}`);
+        this._autoReportError(err, formData).catch(() => {});
       }
-      this._autoReportError(err, formData).catch(() => {});
     }
   }
 
@@ -747,7 +776,31 @@ export class BuilderApp extends HandlebarsApplicationMixin(ApplicationV2) {
     this._applyAuthStateUI();
   }
 
+  /* ── Session pre-validation ─────────────────────────────── */
+
+  async _validateSessionOnOpen() {
+    if (!this.authenticated || !this.accessKey) return;
+    const valid = await validateSessionKey(this.accessKey, isDevMode(this.moduleFolder));
+    if (!valid && this.element?.isConnected) {
+      this.storage.setKey('');
+      this.accessKey     = '';
+      this.authenticated = false;
+      this._applyAuthStateUI();
+      ui.notifications?.warn?.('Your session has expired — please sign in again.', { permanent: true });
+    }
+  }
+
   /* ── Export ─────────────────────────────────────────────── */
+
+  _triggerJsonDownload(data, name) {
+    const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
+    const url  = URL.createObjectURL(blob);
+    const a    = document.createElement('a');
+    a.href     = url;
+    a.download = `${String(name).replace(/[^a-z0-9_-]/gi, '_')}.json`;
+    a.click();
+    URL.revokeObjectURL(url);
+  }
 
   async _export(event) {
     event?.preventDefault?.();

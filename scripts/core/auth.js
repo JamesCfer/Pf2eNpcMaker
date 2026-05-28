@@ -9,6 +9,31 @@
 
 import { N8N_ENDPOINTS, PATREON_URL, devUrl } from './n8n.js';
 
+/**
+ * Silently probes the validate endpoint with the stored key.
+ * Returns false only on a definitive 401/403; network failures return true
+ * to avoid logging the user out on a transient connectivity blip.
+ *
+ * @param {string}  key
+ * @param {boolean} [devMode=false]
+ * @returns {Promise<boolean>}
+ */
+export async function validateSessionKey(key, devMode = false) {
+  if (!key) return false;
+  try {
+    const url  = devUrl(N8N_ENDPOINTS.authValidate, devMode);
+    const resp = await fetch(url, {
+      method:  'POST',
+      headers: { 'Content-Type': 'application/json', 'X-Builder-Key': key },
+      body:    JSON.stringify({ validate: true }),
+    });
+    if (resp.status === 401 || resp.status === 403) return false;
+    return true;
+  } catch (_) {
+    return true;
+  }
+}
+
 export async function startPatreonSignIn({ devMode = false } = {}) {
   const N8N_ORIGIN = new URL(devUrl(N8N_ENDPOINTS.authLogin, devMode)).origin;
   const POLL_URL   = devUrl(N8N_ENDPOINTS.authPoll, devMode);

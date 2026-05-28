@@ -8,7 +8,7 @@
  * @property {boolean} includeSpells Whether to resolve spells from the compendium.
  */
 
-import { SystemAdapter, postToN8n } from './core/adapter.js';
+import { SystemAdapter, postToN8n, ActorCreationError } from './core/adapter.js';
 import { N8N_BASE, devUrl,
          isDevMode }                 from './core/n8n.js';
 import { detectModuleFolder,
@@ -127,10 +127,10 @@ export class Pf2eNpcAdapter extends SystemAdapter {
       } catch (error) {
         const errorText = error.toString ? error.toString() : String(error.message || error);
         if (tryFixValidationError(actorData, errorText)) continue;
-        throw error;
+        throw new ActorCreationError(`Foundry rejected the actor: ${error.message}`, actorData);
       }
     }
-    if (!actor) throw new Error('Failed to create actor after maximum retry attempts');
+    if (!actor) throw new ActorCreationError('Actor creation returned null after maximum retries', actorData);
 
     return {
       document:   actor,
@@ -264,16 +264,13 @@ export class Pf2eNpcAdapter extends SystemAdapter {
         } catch (error) {
           const errorText = error.toString ? error.toString() : String(error.message || error);
           if (tryFixValidationError(newActorData, errorText)) continue;
-          throw error;
+          throw new ActorCreationError(`Foundry rejected the leveled actor: ${error.message}`, newActorData);
         }
       }
+      if (!newActor) throw new ActorCreationError('Leveled actor creation returned null after maximum retries', newActorData);
 
-      if (newActor) {
-        ui.notifications.success(`"${newActor.name}" leveled to ${targetLevel}!`);
-        newActor.sheet.render(true);
-      } else {
-        throw new Error('Failed to create leveled actor after maximum retry attempts');
-      }
+      ui.notifications.success(`"${newActor.name}" leveled to ${targetLevel}!`);
+      newActor.sheet.render(true);
     } catch (err) {
       console.error('[NPC Builder] Level-up error:', err);
       ui.notifications.error(`Level-up failed: ${err.message}`);

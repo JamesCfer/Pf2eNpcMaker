@@ -92,13 +92,33 @@ export class AuthError extends Error {
 export class RateLimitError extends Error {
   /**
    * @param {string} [message]
-   * @param {string} [tier]  Patreon tier label used for the upgrade prompt.
+   * @param {string} [tier]     Patreon tier label used for the upgrade prompt.
+   * @param {number} [resetAt]  Unix timestamp (ms) when the limit resets, or null.
    */
-  constructor(message, tier) {
+  constructor(message, tier, resetAt) {
     super(message || 'Monthly limit reached.');
     this.name = 'RateLimitError';
     /** @type {string|undefined} */
     this.tier = tier;
+    /** @type {number|null} */
+    this.resetAt = resetAt || null;
+  }
+}
+
+/**
+ * Thrown when Foundry document creation fails after all auto-fix retries.
+ * Carries the raw server-returned data so the user can download it.
+ */
+export class ActorCreationError extends Error {
+  /**
+   * @param {string} [message]
+   * @param {object} [rawData]  The raw actor/item data from the server.
+   */
+  constructor(message, rawData) {
+    super(message || 'Document creation failed.');
+    this.name = 'ActorCreationError';
+    /** @type {object|null} */
+    this.rawData = rawData || null;
   }
 }
 
@@ -239,7 +259,19 @@ export async function postToN8n(endpoint, payload, key) {
     const limit = data?.limit || 0;
     const tierMap = { 3: 'Free', 15: 'Local Adventurer', 50: 'Standard', 80: 'Champion' };
     const tier = limit && tierMap[limit] ? tierMap[limit] : null;
-    throw new RateLimitError(data?.message || 'Monthly limit reached.', tier);
+
+    let resetAt = null;
+    if (data?.reset)        resetAt = Number(data.reset) * 1000;
+    else if (data?.resetAt) resetAt = new Date(data.resetAt).getTime();
+    if (!resetAt || isNaN(resetAt)) {
+      const retryAfter = response.headers.get('Retry-After');
+      if (retryAfter) {
+        const secs = parseInt(retryAfter, 10);
+        if (!isNaN(secs)) resetAt = Date.now() + secs * 1000;
+      }
+    }
+
+    throw new RateLimitError(data?.message || 'Monthly limit reached.', tier, resetAt);
   }
 
   return { response, responseText };
