@@ -84,12 +84,20 @@ export class Pf2eNpcAdapter extends SystemAdapter {
    * @param {import('./core/adapter.js').GenerateOptions & { formData: Pf2eNpcFormData }} opts
    * @returns {Promise<import('./core/adapter.js').AdapterResult>}
    */
-  async generate({ formData, key, devMode, builderApp }) {
+  quickEditFields(document) {
+    return [
+      { key: 'name',                        label: 'Name',  value: document.name,                                      type: 'text' },
+      { key: 'system.details.level.value',  label: 'Level', value: document.system?.details?.level?.value ?? 0,        type: 'number', min: -1, max: 25, step: 1 },
+    ];
+  }
+
+  async generate({ formData, key, devMode, creativity = 0.5, builderApp }) {
     const endpoint = devUrl(NPC_ENDPOINT, devMode);
     const payload  = {
       name:        formData.name,
       level:       formData.level,
       description: formData.description,
+      creativity,
     };
 
     if (formData.includeSpells) {
@@ -144,12 +152,21 @@ export class Pf2eNpcAdapter extends SystemAdapter {
   }
 
   async _buildSpellMapping() {
-    const spellMapping = [];
-    const spellPacks   = game.packs.filter(pack =>
+    const spellPacks = game.packs.filter(pack =>
       pack.documentName === 'Item' &&
       (pack.metadata.id?.includes('spell') || pack.metadata.label?.toLowerCase().includes('spell'))
     );
 
+    const packKey  = spellPacks.map(p => p.collection).sort().join('|');
+    const hash     = packKey.split('').reduce((h, c) => ((h * 31 + c.charCodeAt(0)) | 0), 0);
+    const cacheKey = `cfernpc-spellmap-${hash}`;
+
+    const cached = sessionStorage.getItem(cacheKey);
+    if (cached) {
+      try { return JSON.parse(cached); } catch (_) {}
+    }
+
+    const spellMapping = [];
     for (const pack of spellPacks) {
       const index = await pack.getIndex({ fields: ['name', 'system.level.value', 'type'] });
       for (const entry of index) {
@@ -163,6 +180,8 @@ export class Pf2eNpcAdapter extends SystemAdapter {
         }
       }
     }
+
+    try { sessionStorage.setItem(cacheKey, JSON.stringify(spellMapping)); } catch (_) {}
     return spellMapping;
   }
 

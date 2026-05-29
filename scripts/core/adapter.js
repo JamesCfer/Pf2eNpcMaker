@@ -55,6 +55,7 @@
  * @property {object}  formData    Gathered form values (shape varies per adapter).
  * @property {string}  key         Patreon session key.
  * @property {boolean} devMode     Whether to hit the '-dev' n8n endpoints.
+ * @property {number}  [creativity] 0–1 creativity/temperature slider value (default 0.5).
  * @property {object}  [builderApp] The calling BuilderApp instance.
  */
 
@@ -169,6 +170,20 @@ export class SystemAdapter {
 
   /** @returns {boolean} */
   get supportsImageGeneration() { return false; }
+
+  /**
+   * Returns an array of fields to show in the post-generation quick-edit dialog,
+   * or null to skip the dialog and open the sheet directly.
+   *
+   * Each field: { key: string, label: string, value: any, type: 'text'|'number',
+   *               min?: number, max?: number, step?: number }
+   *
+   * `key` is a Foundry dot-path accepted by document.update().
+   *
+   * @param {object} _document  The freshly created Foundry document.
+   * @returns {Array<object>|null}
+   */
+  quickEditFields(_document) { return null; }
 
   /** @returns {string[]} Ordered step labels shown during generation. */
   get progressSteps() { return ['Sending request…', 'Creating document…']; }

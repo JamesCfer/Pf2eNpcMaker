@@ -139,6 +139,14 @@ export class BuilderApp extends HandlebarsApplicationMixin(ApplicationV2) {
       });
     }
 
+    const creativityInput   = this.element.querySelector('[name="creativity"]');
+    const creativityDisplay = this.element.querySelector('.creativity-value-display');
+    if (creativityInput && creativityDisplay) {
+      creativityInput.addEventListener('input', () => {
+        creativityDisplay.textContent = parseFloat(creativityInput.value).toFixed(2);
+      });
+    }
+
     const compactBtn = this.element.querySelector('.history-compact-btn');
     if (compactBtn) {
       compactBtn.addEventListener('click', () => this._toggleCompactHistory());
@@ -558,6 +566,11 @@ export class BuilderApp extends HandlebarsApplicationMixin(ApplicationV2) {
       return;
     }
 
+    const creativityEl = form.querySelector('[name="creativity"]');
+    const creativity    = creativityEl
+      ? Math.max(0, Math.min(1, parseFloat(creativityEl.value) || 0.5))
+      : 0.5;
+
     const key = this.accessKey || this.storage.getKey() || '';
     if (!key) {
       this.authenticated = false;
@@ -584,6 +597,7 @@ export class BuilderApp extends HandlebarsApplicationMixin(ApplicationV2) {
       const newEntry = this._createHistoryEntryElement(historyEntry);
       newEntry.classList.add('is-new');
       list.insertBefore(newEntry, list.firstChild);
+      newEntry.focus();
     }
     this.element?.classList.add('is-generating');
     this._startStepProgression(historyEntry.id, this.adapter.progressSteps);
@@ -593,15 +607,16 @@ export class BuilderApp extends HandlebarsApplicationMixin(ApplicationV2) {
     this.selectedHistoryId = null;
     this.element?.querySelectorAll('.history-entry.is-selected').forEach(el => el.classList.remove('is-selected'));
 
-    this._runGeneration(historyEntry, key, formData);
+    this._runGeneration(historyEntry, key, formData, creativity);
   }
 
-  async _runGeneration(historyEntry, key, formData) {
+  async _runGeneration(historyEntry, key, formData, creativity = 0.5) {
     try {
       const result = await this.adapter.generate({
         formData,
         key,
         devMode: isDevMode(this.moduleFolder),
+        creativity,
         builderApp: this,
       });
 
@@ -614,7 +629,13 @@ export class BuilderApp extends HandlebarsApplicationMixin(ApplicationV2) {
 
       const docName = result.document?.name || formData.name || 'document';
       ui.notifications.success(result.message || `"${docName}" created successfully!`);
-      try { result.document?.sheet?.render(true); } catch (_) {}
+
+      const quickFields = result.document ? this.adapter.quickEditFields(result.document) : null;
+      if (quickFields?.length) {
+        await this._showQuickEditDialog(result.document, quickFields);
+      } else {
+        try { result.document?.sheet?.render(true); } catch (_) {}
+      }
 
     } catch (err) {
       console.error('[NPC Builder] generation error:', err);
@@ -657,6 +678,55 @@ export class BuilderApp extends HandlebarsApplicationMixin(ApplicationV2) {
         this._autoReportError(err, formData).catch(() => {});
       }
     }
+  }
+
+  async _showQuickEditDialog(document, fields) {
+    const inputs = fields.map(f => {
+      const val = f.type === 'number' ? (f.value ?? 0) : escapeHtml(String(f.value ?? ''));
+      const numAttrs = f.type === 'number'
+        ? ` min="${f.min ?? ''}" max="${f.max ?? ''}" step="${f.step ?? 'any'}"`
+        : '';
+      return `
+        <div class="quick-edit-field">
+          <label for="qe-${escapeHtml(f.key)}" style="font-weight:600;font-size:0.88em;">${escapeHtml(f.label)}</label>
+          <input id="qe-${escapeHtml(f.key)}" data-key="${escapeHtml(f.key)}"
+            type="${f.type || 'text'}" value="${val}"${numAttrs}
+            style="width:100%;padding:0.35em 0.45em;border:1px solid #999;border-radius:4px;box-sizing:border-box;" />
+        </div>`;
+    }).join('');
+
+    const content = `
+      <div style="display:flex;flex-direction:column;gap:0.5em;padding:0.25em 0;">
+        <p style="margin:0 0 0.3em;font-size:0.9em;color:#666;">Fix any details before the sheet opens:</p>
+        ${inputs}
+      </div>`;
+
+    const updates = await foundry.applications.api.DialogV2.prompt({
+      window:      { title: `Quick-Edit: ${escapeHtml(document.name)}` },
+      content,
+      ok: {
+        label:    'Apply & Open Sheet',
+        icon:     'fa-solid fa-check',
+        callback: (_event, _button, dialog) => {
+          const result = {};
+          dialog.element.querySelectorAll('[data-key]').forEach(el => {
+            result[el.dataset.key] = el.type === 'number' ? Number(el.value) : el.value;
+          });
+          return result;
+        },
+      },
+      rejectClose: false,
+    }).catch(() => null);
+
+    if (updates) {
+      const hasChange = fields.some(f => updates[f.key] !== f.value);
+      if (hasChange) {
+        try { await document.update(updates); } catch (err) {
+          console.error('[NPC Builder] Quick-edit update failed:', err);
+        }
+      }
+    }
+    try { document.sheet?.render(true); } catch (_) {}
   }
 
   async _autoReportError(err, formData) {
@@ -710,6 +780,7 @@ export class BuilderApp extends HandlebarsApplicationMixin(ApplicationV2) {
       const newEntry = this._createHistoryEntryElement(historyEntry);
       newEntry.classList.add('is-new');
       list.insertBefore(newEntry, list.firstChild);
+      newEntry.focus();
     }
     this.element?.classList.add('is-generating');
     this._startStepProgression(historyEntry.id, this.adapter.progressSteps);
