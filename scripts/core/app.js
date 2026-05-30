@@ -283,17 +283,17 @@ export class BuilderApp extends HandlebarsApplicationMixin(ApplicationV2) {
 
   async _signIn(event) {
     event?.preventDefault?.();
-    ui.notifications?.info?.('Opening Patreon sign-in…');
+    ui.notifications?.info?.(game.i18n.localize('NpcBuilder.SignIn.Opening'));
     try {
       const key = await startPatreonSignIn({ devMode: isDevMode(this.moduleFolder) });
       this.accessKey = key;
       this.storage.setKey(key);
       this.authenticated = true;
       this._applyAuthStateUI();
-      ui.notifications?.info?.('Patreon sign-in complete.');
+      ui.notifications?.info?.(game.i18n.localize('NpcBuilder.SignIn.Complete'));
     } catch (err) {
       console.error('[NPC Builder] sign-in failed:', err);
-      ui.notifications?.error?.(err.message || 'Sign-in failed.', { permanent: true });
+      ui.notifications?.error?.(err.message || game.i18n.localize('NpcBuilder.SignIn.Failed'), { permanent: true });
       setTimeout(() => window.open(PATREON_URL, '_blank'), 800);
     }
   }
@@ -304,7 +304,7 @@ export class BuilderApp extends HandlebarsApplicationMixin(ApplicationV2) {
     this.accessKey = '';
     this.authenticated = false;
     this._applyAuthStateUI();
-    ui.notifications?.info?.('Signed out.');
+    ui.notifications?.info?.(game.i18n.localize('NpcBuilder.SignOut.Success'));
   }
 
   /* ── History rendering ──────────────────────────────────── */
@@ -491,10 +491,10 @@ export class BuilderApp extends HandlebarsApplicationMixin(ApplicationV2) {
     event?.preventDefault?.();
     if (this.history.length === 0) return;
     const confirmed = await foundry.applications.api.DialogV2.confirm({
-      window:      { title: 'Clear History' },
-      content:     '<p>Delete all history entries? This cannot be undone.</p>',
-      yes:         { label: 'Clear All', icon: 'fa-solid fa-trash-can' },
-      no:          { label: 'Cancel' },
+      window:      { title: game.i18n.localize('NpcBuilder.ClearHistory.Title') },
+      content:     game.i18n.localize('NpcBuilder.ClearHistory.Content'),
+      yes:         { label: game.i18n.localize('NpcBuilder.ClearHistory.Confirm'), icon: 'fa-solid fa-trash-can' },
+      no:          { label: game.i18n.localize('NpcBuilder.ClearHistory.Cancel') },
       rejectClose: false,
     }).catch(() => false);
     if (!confirmed) return;
@@ -543,18 +543,18 @@ export class BuilderApp extends HandlebarsApplicationMixin(ApplicationV2) {
     event?.preventDefault?.();
 
     if (!this.authenticated) {
-      ui.notifications.warn('Please sign in with Patreon before generating.');
+      ui.notifications.warn(game.i18n.localize('NpcBuilder.Generate.NotSignedIn'));
       return;
     }
     if (this.activeTab === 'home') return;
     if (this.history.some(e => e.status === 'generating')) {
-      ui.notifications.warn('A generation is already in progress.');
+      ui.notifications.warn(game.i18n.localize('NpcBuilder.Generate.AlreadyInProgress'));
       return;
     }
 
     const form = this.element?.querySelector?.('.npc-form');
     if (!form) {
-      ui.notifications.error('Builder form not found.');
+      ui.notifications.error(game.i18n.localize('NpcBuilder.Generate.FormNotFound'));
       return;
     }
 
@@ -575,7 +575,7 @@ export class BuilderApp extends HandlebarsApplicationMixin(ApplicationV2) {
     if (!key) {
       this.authenticated = false;
       this._applyAuthStateUI();
-      ui.notifications.error('Session missing. Please sign in again.');
+      ui.notifications.error(game.i18n.localize('NpcBuilder.Session.Missing'));
       return;
     }
 
@@ -628,7 +628,7 @@ export class BuilderApp extends HandlebarsApplicationMixin(ApplicationV2) {
       this._applyAuthStateUI();
 
       const docName = result.document?.name || formData.name || 'document';
-      ui.notifications.success(result.message || `"${docName}" created successfully!`);
+      ui.notifications.success(result.message || game.i18n.format('NpcBuilder.Generate.Success', { name: docName }));
 
       const quickFields = result.document ? this.adapter.quickEditFields(result.document) : null;
       if (quickFields?.length) {
@@ -644,8 +644,8 @@ export class BuilderApp extends HandlebarsApplicationMixin(ApplicationV2) {
         this.accessKey     = '';
         this.authenticated = false;
         this._applyAuthStateUI();
-        this._updateHistoryEntry(historyEntry.id, { status: 'error', error: 'Authentication failed' });
-        ui.notifications.error(err.message || 'Authentication failed.', { permanent: true });
+        this._updateHistoryEntry(historyEntry.id, { status: 'error', error: game.i18n.localize('NpcBuilder.Auth.Failed') });
+        ui.notifications.error(err.message || game.i18n.localize('NpcBuilder.Auth.Failed'), { permanent: true });
         setTimeout(() => window.open(PATREON_URL, '_blank'), 800);
       } else if (err instanceof RateLimitError) {
         this._updateHistoryEntry(historyEntry.id, { status: 'error', error: 'Rate limit exceeded' });
@@ -659,13 +659,13 @@ export class BuilderApp extends HandlebarsApplicationMixin(ApplicationV2) {
         setTimeout(() => window.open(PATREON_URL, '_blank'), 1200);
       } else if (err instanceof ActorCreationError) {
         this._updateHistoryEntry(historyEntry.id, { status: 'error', error: err.message });
-        ui.notifications.error(`Failed to create "${formData.name || 'document'}": ${err.message}`);
+        ui.notifications.error(game.i18n.format('NpcBuilder.Create.Failed', { name: formData.name || 'document', error: err.message }));
         if (err.rawData) {
           foundry.applications.api.DialogV2.confirm({
-            window:      { title: 'Download Raw Data' },
-            content:     '<p>The AI generated data but Foundry rejected the document. Download the raw JSON to keep it?</p>',
-            yes:         { label: 'Download JSON', icon: 'fa-solid fa-download' },
-            no:          { label: 'Dismiss' },
+            window:      { title: game.i18n.localize('NpcBuilder.RawData.Title') },
+            content:     game.i18n.localize('NpcBuilder.RawData.Content'),
+            yes:         { label: game.i18n.localize('NpcBuilder.RawData.Confirm'), icon: 'fa-solid fa-download' },
+            no:          { label: game.i18n.localize('NpcBuilder.RawData.Cancel') },
             rejectClose: false,
           }).then(confirmed => {
             if (confirmed) this._triggerJsonDownload(err.rawData, formData.name || 'document');
@@ -674,7 +674,7 @@ export class BuilderApp extends HandlebarsApplicationMixin(ApplicationV2) {
         this._autoReportError(err, formData).catch(() => {});
       } else {
         this._updateHistoryEntry(historyEntry.id, { status: 'error', error: err.message });
-        ui.notifications.error(`Failed to generate "${formData.name || 'document'}": ${err.message}`);
+        ui.notifications.error(game.i18n.format('NpcBuilder.Create.Failed', { name: formData.name || 'document', error: err.message }));
         this._autoReportError(err, formData).catch(() => {});
       }
     }
@@ -687,25 +687,25 @@ export class BuilderApp extends HandlebarsApplicationMixin(ApplicationV2) {
         ? ` min="${f.min ?? ''}" max="${f.max ?? ''}" step="${f.step ?? 'any'}"`
         : '';
       return `
-        <div class="quick-edit-field">
-          <label for="qe-${escapeHtml(f.key)}" style="font-weight:600;font-size:0.88em;">${escapeHtml(f.label)}</label>
+        <div class="npc-quick-edit-field">
+          <label for="qe-${escapeHtml(f.key)}" class="npc-quick-edit-label">${escapeHtml(f.label)}</label>
           <input id="qe-${escapeHtml(f.key)}" data-key="${escapeHtml(f.key)}"
             type="${f.type || 'text'}" value="${val}"${numAttrs}
-            style="width:100%;padding:0.35em 0.45em;border:1px solid #999;border-radius:4px;box-sizing:border-box;" />
+            class="npc-quick-edit-input" />
         </div>`;
     }).join('');
 
     const content = `
-      <div style="display:flex;flex-direction:column;gap:0.5em;padding:0.25em 0;">
-        <p style="margin:0 0 0.3em;font-size:0.9em;color:#666;">Fix any details before the sheet opens:</p>
+      <div class="npc-builder-dialog-body">
+        <p class="npc-builder-dialog-hint">${game.i18n.localize('NpcBuilder.QuickEdit.Hint')}</p>
         ${inputs}
       </div>`;
 
     const updates = await foundry.applications.api.DialogV2.prompt({
-      window:      { title: `Quick-Edit: ${escapeHtml(document.name)}` },
+      window:      { title: game.i18n.format('NpcBuilder.QuickEdit.Title', { name: escapeHtml(document.name) }) },
       content,
       ok: {
-        label:    'Apply & Open Sheet',
+        label:    game.i18n.localize('NpcBuilder.QuickEdit.Confirm'),
         icon:     'fa-solid fa-check',
         callback: (_event, _button, dialog) => {
           const result = {};
@@ -750,7 +750,7 @@ export class BuilderApp extends HandlebarsApplicationMixin(ApplicationV2) {
 
   _resubmit(sourceEntry) {
     if (!this.authenticated) {
-      ui.notifications.warn('Please sign in with Patreon before generating.');
+      ui.notifications.warn(game.i18n.localize('NpcBuilder.Generate.NotSignedIn'));
       return;
     }
 
@@ -758,7 +758,7 @@ export class BuilderApp extends HandlebarsApplicationMixin(ApplicationV2) {
     if (!key) {
       this.authenticated = false;
       this._applyAuthStateUI();
-      ui.notifications.error('Session missing. Please sign in again.');
+      ui.notifications.error(game.i18n.localize('NpcBuilder.Session.Missing'));
       return;
     }
 
@@ -793,14 +793,14 @@ export class BuilderApp extends HandlebarsApplicationMixin(ApplicationV2) {
   async _undoLastGeneration(event) {
     event?.preventDefault?.();
     if (!this.lastDocument) {
-      ui.notifications.warn('No recent generation to undo.');
+      ui.notifications.warn(game.i18n.localize('NpcBuilder.Undo.None'));
       return;
     }
     const name = this.lastDocument.name || 'document';
     try {
       await this.lastDocument.delete();
     } catch (err) {
-      ui.notifications.error(`Failed to delete "${name}": ${err.message}`);
+      ui.notifications.error(game.i18n.format('NpcBuilder.Undo.Failed', { name, error: err.message }));
       return;
     }
     this.lastDocument   = null;
@@ -816,7 +816,7 @@ export class BuilderApp extends HandlebarsApplicationMixin(ApplicationV2) {
       this._renderHistory();
     }
     this._applyAuthStateUI();
-    ui.notifications.info(`"${name}" deleted.`);
+    ui.notifications.info(game.i18n.format('NpcBuilder.Undo.Deleted', { name }));
   }
 
   /* ── Name suggestions ───────────────────────────────────── */
@@ -857,7 +857,7 @@ export class BuilderApp extends HandlebarsApplicationMixin(ApplicationV2) {
       this.accessKey     = '';
       this.authenticated = false;
       this._applyAuthStateUI();
-      ui.notifications?.warn?.('Your session has expired — please sign in again.', { permanent: true });
+      ui.notifications?.warn?.(game.i18n.localize('NpcBuilder.Session.Expired'), { permanent: true });
     }
   }
 
@@ -876,7 +876,7 @@ export class BuilderApp extends HandlebarsApplicationMixin(ApplicationV2) {
   async _export(event) {
     event?.preventDefault?.();
     if (!this.lastExportData) {
-      ui.notifications.warn(`No ${this.adapter.formConfig.documentNoun || 'document'} has been generated yet.`);
+      ui.notifications.warn(game.i18n.format('NpcBuilder.Export.None', { noun: this.adapter.formConfig.documentNoun || 'document' }));
       return;
     }
     const { content, filename, mimeType } = this.lastExportData;
@@ -887,7 +887,7 @@ export class BuilderApp extends HandlebarsApplicationMixin(ApplicationV2) {
     a.download = filename || 'export';
     a.click();
     URL.revokeObjectURL(url);
-    ui.notifications.info(`Exported ${filename}.`);
+    ui.notifications.info(game.i18n.format('NpcBuilder.Export.Done', { filename }));
   }
 
   /* ── Image generation ───────────────────────────────────── */
@@ -896,18 +896,18 @@ export class BuilderApp extends HandlebarsApplicationMixin(ApplicationV2) {
     event?.preventDefault?.();
 
     if (!this.authenticated) {
-      ui.notifications.warn('Please sign in with Patreon before generating an image.');
+      ui.notifications.warn(game.i18n.localize('NpcBuilder.ImageGen.NotSignedIn'));
       return;
     }
 
     const npcData = npcDataOverride || this.lastDocument?.toObject?.() || this.lastDocument;
     if (!npcData) {
-      ui.notifications.warn('No NPC available. Generate or open an NPC first.');
+      ui.notifications.warn(game.i18n.localize('NpcBuilder.ImageGen.NoNpc'));
       return;
     }
 
     if (!this.adapter.supportsImageGeneration) {
-      ui.notifications.warn('Image generation is not supported in this module.');
+      ui.notifications.warn(game.i18n.localize('NpcBuilder.ImageGen.NotSupported'));
       return;
     }
 
@@ -921,11 +921,11 @@ export class BuilderApp extends HandlebarsApplicationMixin(ApplicationV2) {
     if (!key) {
       this.authenticated = false;
       this._applyAuthStateUI();
-      ui.notifications.error('Session missing. Please sign in again.');
+      ui.notifications.error(game.i18n.localize('NpcBuilder.Session.Missing'));
       return;
     }
 
-    ui.notifications.info('Generating NPC image… this may take a moment.');
+    ui.notifications.info(game.i18n.localize('NpcBuilder.ImageGen.Generating'));
 
     try {
       const { savedPath } = await generateImage({
@@ -950,34 +950,34 @@ export class BuilderApp extends HandlebarsApplicationMixin(ApplicationV2) {
           'img': savedPath,
           'prototypeToken.texture.src': savedPath,
         });
-        ui.notifications.success(`Image set for "${actor.name}"!`);
+        ui.notifications.success(game.i18n.format('NpcBuilder.ImageGen.SetSuccess', { name: actor.name }));
       } else if (savedPath) {
-        ui.notifications.success('NPC image saved: ' + savedPath);
+        ui.notifications.success(game.i18n.format('NpcBuilder.ImageGen.SavedSuccess', { path: savedPath }));
       } else {
-        ui.notifications.success('Image generation request sent successfully.');
+        ui.notifications.success(game.i18n.localize('NpcBuilder.ImageGen.SentSuccess'));
       }
     } catch (err) {
       console.error('[NPC Builder] image generation error:', err);
-      ui.notifications.error(`Image generation failed: ${err.message}`);
+      ui.notifications.error(game.i18n.format('NpcBuilder.ImageGen.Failed', { error: err.message }));
     }
   }
 
   async _confirmImageGeneration(name, artStyle) {
     const content = `
-      <div style="display:flex;flex-direction:column;gap:0.6em;padding:0.25em 0;">
-        <p style="margin:0;">Generate an image for <strong>${escapeHtml(name)}</strong>?</p>
-        <p style="margin:0;padding:0.5em 0.7em;background:rgba(46,125,50,0.1);border:1px solid rgba(46,125,50,0.3);border-radius:4px;font-size:0.92em;">
-          <i class="fa-solid fa-coins" style="color:#2e7d32;"></i>
-          This will use <strong>${IMAGE_COST} NPC uses</strong> from your monthly allowance.
+      <div class="npc-builder-dialog-body">
+        <p>${game.i18n.format('NpcBuilder.ImageConfirm.ForName', { name: escapeHtml(name) })}</p>
+        <p class="npc-builder-cost-note">
+          <i class="fa-solid fa-coins npc-builder-cost-icon"></i>
+          ${game.i18n.format('NpcBuilder.ImageConfirm.CostNote', { cost: IMAGE_COST })}
         </p>
-        ${artStyle ? `<p style="margin:0;font-size:0.88em;color:#555;"><i class="fa-solid fa-palette"></i> Art style: <em>${escapeHtml(artStyle)}</em></p>` : ''}
+        ${artStyle ? `<p class="npc-builder-art-note"><i class="fa-solid fa-palette"></i> ${game.i18n.format('NpcBuilder.ImageConfirm.ArtStyle', { style: escapeHtml(artStyle) })}</p>` : ''}
       </div>`;
 
     const result = await foundry.applications.api.DialogV2.confirm({
-      window:      { title: 'Generate NPC Image' },
+      window:      { title: game.i18n.localize('NpcBuilder.ImageGen.Title') },
       content,
-      yes:         { label: 'Generate Image', icon: 'fa-solid fa-image' },
-      no:          { label: 'Cancel' },
+      yes:         { label: game.i18n.localize('NpcBuilder.ImageGen.Confirm'), icon: 'fa-solid fa-image' },
+      no:          { label: game.i18n.localize('NpcBuilder.ImageGen.Cancel') },
       rejectClose: false,
     }).catch(() => false);
     return result === true;
@@ -996,7 +996,7 @@ export class BuilderApp extends HandlebarsApplicationMixin(ApplicationV2) {
 
     const message = textarea?.value?.trim() || '';
     if (!message) {
-      ui.notifications?.warn?.('Please enter a feedback message before sending.');
+      ui.notifications?.warn?.(game.i18n.localize('NpcBuilder.Feedback.MissingMessage'));
       return;
     }
 
@@ -1015,7 +1015,7 @@ export class BuilderApp extends HandlebarsApplicationMixin(ApplicationV2) {
 
       if (textarea) textarea.value = '';
       if (status) {
-        status.textContent   = 'Feedback sent! Thank you.';
+        status.textContent   = game.i18n.localize('NpcBuilder.Feedback.Success');
         status.className     = 'feedback-status feedback-status--success';
         status.style.display = '';
         setTimeout(() => { status.style.display = 'none'; }, 4000);
@@ -1023,7 +1023,7 @@ export class BuilderApp extends HandlebarsApplicationMixin(ApplicationV2) {
     } catch (err) {
       console.error('[NPC Builder] feedback send error:', err);
       if (status) {
-        status.textContent   = 'Failed to send feedback. Please try again.';
+        status.textContent   = game.i18n.localize('NpcBuilder.Feedback.Failed');
         status.className     = 'feedback-status feedback-status--error';
         status.style.display = '';
         setTimeout(() => { status.style.display = 'none'; }, 5000);

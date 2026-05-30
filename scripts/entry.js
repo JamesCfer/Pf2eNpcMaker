@@ -30,6 +30,42 @@ registerSidebar(MODULE_ID, openFn, {
   directories: ['actors', 'compendium'],
 });
 
+class ResetWelcomeMessageMenu {
+  render() {
+    foundry.applications.api.DialogV2.confirm({
+      window:      { title: game.i18n.localize('NpcBuilder.Settings.ResetWelcome.Name') },
+      content:     `<p>${game.i18n.localize('NpcBuilder.Settings.ResetWelcome.ConfirmContent')}</p>`,
+      yes:         { label: game.i18n.localize('NpcBuilder.Settings.ResetWelcome.ConfirmLabel'), icon: 'fa-solid fa-rotate-left' },
+      no:          { label: 'Cancel' },
+      rejectClose: false,
+    }).then(ok => {
+      if (ok) {
+        game.settings.set(MODULE_ID, 'welcomeMessageShown', false);
+        ui.notifications.info(game.i18n.localize('NpcBuilder.Settings.ResetWelcome.Success'));
+      }
+    }).catch(() => {});
+    return this;
+  }
+}
+
+class ClearSessionMenu {
+  render() {
+    foundry.applications.api.DialogV2.confirm({
+      window:      { title: game.i18n.localize('NpcBuilder.Settings.ClearSession.Name') },
+      content:     `<p>${game.i18n.localize('NpcBuilder.Settings.ClearSession.ConfirmContent')}</p>`,
+      yes:         { label: game.i18n.localize('NpcBuilder.Settings.ClearSession.ConfirmLabel'), icon: 'fa-solid fa-right-from-bracket' },
+      no:          { label: 'Cancel' },
+      rejectClose: false,
+    }).then(ok => {
+      if (ok) {
+        new Storage(MODULE_ID).setKey('');
+        ui.notifications.info(game.i18n.localize('NpcBuilder.Settings.ClearSession.Success'));
+      }
+    }).catch(() => {});
+    return this;
+  }
+}
+
 Hooks.once('init', () => {
   game.settings.register(MODULE_ID, 'devMode', {
     name:   'Developer Mode',
@@ -45,6 +81,24 @@ Hooks.once('init', () => {
     config: false,
     type:   Boolean,
     default: false,
+  });
+
+  game.settings.registerMenu(MODULE_ID, 'resetWelcome', {
+    name:       'NpcBuilder.Settings.ResetWelcome.Name',
+    label:      'NpcBuilder.Settings.ResetWelcome.Label',
+    hint:       'NpcBuilder.Settings.ResetWelcome.Hint',
+    icon:       'fa-solid fa-rotate-left',
+    type:       ResetWelcomeMessageMenu,
+    restricted: true,
+  });
+
+  game.settings.registerMenu(MODULE_ID, 'clearSession', {
+    name:       'NpcBuilder.Settings.ClearSession.Name',
+    label:      'NpcBuilder.Settings.ClearSession.Label',
+    hint:       'NpcBuilder.Settings.ClearSession.Hint',
+    icon:       'fa-solid fa-right-from-bracket',
+    type:       ClearSessionMenu,
+    restricted: true,
   });
 });
 
