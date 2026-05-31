@@ -579,35 +579,44 @@ export class BuilderApp extends HandlebarsApplicationMixin(ApplicationV2) {
       return;
     }
 
-    const historyEntry = {
-      id:        foundry.utils.randomID(16),
-      ...this.adapter.historyEntryFromForm(formData),
-      status:    'generating',
-      createdAt: Date.now(),
-      error:     null,
-    };
+    const bulkCount = Math.min(5, Math.max(1, parseInt(form.querySelector('[name="bulkCount"]')?.value) || 1));
 
-    this.history.push(historyEntry);
-    this.storage.saveHistory(this.history, MAX_HISTORY);
-
-    const list = this.element?.querySelector('.history-list');
-    if (list) {
-      const emptyEl = list.querySelector('.history-empty');
-      if (emptyEl) emptyEl.remove();
-      const newEntry = this._createHistoryEntryElement(historyEntry);
-      newEntry.classList.add('is-new');
-      list.insertBefore(newEntry, list.firstChild);
-      newEntry.focus();
-    }
-    this.element?.classList.add('is-generating');
-    this._startStepProgression(historyEntry.id, this.adapter.progressSteps);
+    const list    = this.element?.querySelector('.history-list');
+    const emptyEl = list?.querySelector('.history-empty');
+    if (emptyEl) emptyEl.remove();
 
     const banner = this.element?.querySelector('.history-selected-banner');
     if (banner) banner.style.display = 'none';
     this.selectedHistoryId = null;
     this.element?.querySelectorAll('.history-entry.is-selected').forEach(el => el.classList.remove('is-selected'));
 
-    this._runGeneration(historyEntry, key, formData, creativity);
+    const batchEntries = [];
+    for (let i = 0; i < bulkCount; i++) {
+      const historyEntry = {
+        id:        foundry.utils.randomID(16),
+        ...this.adapter.historyEntryFromForm(formData),
+        status:    'generating',
+        createdAt: Date.now(),
+        error:     null,
+      };
+      this.history.push(historyEntry);
+      batchEntries.push(historyEntry);
+
+      if (list) {
+        const newEl = this._createHistoryEntryElement(historyEntry);
+        newEl.classList.add('is-new');
+        list.insertBefore(newEl, list.firstChild);
+        if (i === 0) newEl.focus();
+      }
+      this._startStepProgression(historyEntry.id, this.adapter.progressSteps);
+    }
+
+    this.storage.saveHistory(this.history, MAX_HISTORY);
+    this.element?.classList.add('is-generating');
+
+    for (const entry of batchEntries) {
+      this._runGeneration(entry, key, formData, creativity);
+    }
   }
 
   async _runGeneration(historyEntry, key, formData, creativity = 0.5) {
@@ -902,7 +911,7 @@ export class BuilderApp extends HandlebarsApplicationMixin(ApplicationV2) {
 
     const npcData = npcDataOverride || this.lastDocument?.toObject?.() || this.lastDocument;
     if (!npcData) {
-      ui.notifications.warn(game.i18n.localize('NpcBuilder.ImageGen.NoNpc'));
+      ui.notifications.warn(game.i18n.format('NpcBuilder.ImageGen.NoNpc', { noun: this.adapter.formConfig?.documentNoun || 'document' }));
       return;
     }
 
@@ -942,15 +951,14 @@ export class BuilderApp extends HandlebarsApplicationMixin(ApplicationV2) {
         },
       });
 
-      const actorId = npcData._id;
-      const actor   = actorId ? game.actors?.get(actorId) : null;
+      const docId = npcData._id;
+      const doc   = docId ? (game.actors?.get(docId) ?? game.items?.get(docId)) : null;
 
-      if (savedPath && actor) {
-        await actor.update({
-          'img': savedPath,
-          'prototypeToken.texture.src': savedPath,
-        });
-        ui.notifications.success(game.i18n.format('NpcBuilder.ImageGen.SetSuccess', { name: actor.name }));
+      if (savedPath && doc) {
+        const update = { img: savedPath };
+        if (doc.documentName === 'Actor') update['prototypeToken.texture.src'] = savedPath;
+        await doc.update(update);
+        ui.notifications.success(game.i18n.format('NpcBuilder.ImageGen.SetSuccess', { name: doc.name }));
       } else if (savedPath) {
         ui.notifications.success(game.i18n.format('NpcBuilder.ImageGen.SavedSuccess', { path: savedPath }));
       } else {

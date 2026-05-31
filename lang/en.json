@@ -36,7 +36,7 @@
     "ImageGen": {
       "Title": "Generate NPC Image",
       "NotSignedIn": "Please sign in with Patreon before generating an image.",
-      "NoNpc": "No NPC available. Generate or open an NPC first.",
+      "NoNpc": "No {noun} available — generate or open one first.",
       "NotSupported": "Image generation is not supported in this module.",
       "Generating": "Generating NPC image… this may take a moment.",
       "Confirm": "Generate Image",
