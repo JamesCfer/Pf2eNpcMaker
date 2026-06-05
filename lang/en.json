@@ -91,5 +91,38 @@
         "Success": "Session key cleared. Please sign in again."
       }
     }
+  },
+  "SettlementBuilder": {
+    "Settings": {
+      "IncomeJitter": {
+        "Name": "Income Variance (%)",
+        "Hint": "How much random variance to apply to each store's daily income. 0 = fixed, 15 = ±15% (default), 50 = ±50%."
+      },
+      "ResetWelcome": {
+        "Name": "Reset Welcome Message",
+        "Label": "Reset",
+        "Hint": "Show the settlement builder welcome message again on the next world reload.",
+        "ConfirmContent": "Reset the welcome message so it appears again on the next reload?",
+        "ConfirmLabel": "Reset",
+        "Success": "Welcome message will show again on the next reload."
+      },
+      "ClearSettlements": {
+        "Name": "Clear Stored Session",
+        "Label": "Clear Session",
+        "Hint": "Remove the stored Patreon session key for the Settlement Builder.",
+        "ConfirmContent": "Remove the stored session key? You will need to sign in again.",
+        "ConfirmLabel": "Clear Session",
+        "Success": "Session key cleared. Please sign in again."
+      },
+      "ResetCalendar": {
+        "Name": "Reset Calendar to Default",
+        "Label": "Reset Calendar",
+        "Hint": "Reset the Pf2eCalendarTimeline to the default Golarion calendar and clear all scheduled events.",
+        "ConfirmContent": "Reset the calendar to the default Golarion settings? This will clear all scheduled events and cannot be undone.",
+        "ConfirmLabel": "Reset Calendar",
+        "NotActive": "Pf2eCalendarTimeline is not installed or active.",
+        "Success": "Calendar reset to default Golarion settings."
+      }
+    }
   }
 }
