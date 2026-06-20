@@ -186,20 +186,11 @@
           <span class="field-hint">Indexes your spell compendiums before generating (~10 s extra, enables correct spell links).</span>
         </div>
 
-        <div class="field field--creativity">
-          <label for="npc-creativity">Creativity <output class="creativity-value-display" for="npc-creativity">0.50</output></label>
-          <input type="range" id="npc-creativity" name="creativity" min="0" max="1" step="0.05" value="0.5" />
-          <div class="creativity-labels" aria-hidden="true"><span>Precise</span><span>Creative</span></div>
-        </div>
-
         <div class="form-actions">
           <button type="button" data-action="generate" class="btn-primary" disabled>
             <i class="fa-solid fa-wand-magic-sparkles"></i>
             <span class="btn-label">Generate NPC</span>
           </button>
-          <label class="bulk-count-label" title="Generate this many NPCs at once (1–5)">
-            ×<input type="number" name="bulkCount" class="bulk-count-input" value="1" min="1" max="5" step="1" aria-label="Bulk count" />
-          </label>
           <button type="button" data-action="export" class="btn-secondary" disabled>
             <i class="fa-solid fa-file-arrow-down"></i>
             <span>Export JSON</span>

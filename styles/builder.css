@@ -1406,36 +1406,6 @@
   cursor: default;
 }
 
-/* ── Creativity slider ────────────────────────────────────── */
-.application.npc-builder .field--creativity label {
-  display: flex;
-  align-items: center;
-  gap: 0.4em;
-}
-
-.application.npc-builder .creativity-value-display {
-  font-variant-numeric: tabular-nums;
-  font-size: 0.82em;
-  color: #888;
-  min-width: 2.6em;
-  text-align: right;
-}
-
-.application.npc-builder [name="creativity"] {
-  width: 100%;
-  margin: 0.2em 0 0.12em;
-  accent-color: var(--module-accent, #6a8fd8);
-  cursor: pointer;
-}
-
-.application.npc-builder .creativity-labels {
-  display: flex;
-  justify-content: space-between;
-  font-size: 0.73em;
-  color: #999;
-  line-height: 1;
-}
-
 /* ── Quick-edit dialog field spacing (global — lives inside DialogV2) ── */
 /* .npc-quick-edit-field is declared at the top of this file under :root */
 

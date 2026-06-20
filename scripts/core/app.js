@@ -139,14 +139,6 @@ export class BuilderApp extends HandlebarsApplicationMixin(ApplicationV2) {
       });
     }
 
-    const creativityInput   = this.element.querySelector('[name="creativity"]');
-    const creativityDisplay = this.element.querySelector('.creativity-value-display');
-    if (creativityInput && creativityDisplay) {
-      creativityInput.addEventListener('input', () => {
-        creativityDisplay.textContent = parseFloat(creativityInput.value).toFixed(2);
-      });
-    }
-
     const compactBtn = this.element.querySelector('.history-compact-btn');
     if (compactBtn) {
       compactBtn.addEventListener('click', () => this._toggleCompactHistory());
@@ -566,11 +558,6 @@ export class BuilderApp extends HandlebarsApplicationMixin(ApplicationV2) {
       return;
     }
 
-    const creativityEl = form.querySelector('[name="creativity"]');
-    const creativity    = creativityEl
-      ? Math.max(0, Math.min(1, parseFloat(creativityEl.value) || 0.5))
-      : 0.5;
-
     const key = this.accessKey || this.storage.getKey() || '';
     if (!key) {
       this.authenticated = false;
@@ -578,8 +565,6 @@ export class BuilderApp extends HandlebarsApplicationMixin(ApplicationV2) {
       ui.notifications.error(game.i18n.localize('NpcBuilder.Session.Missing'));
       return;
     }
-
-    const bulkCount = Math.min(5, Math.max(1, parseInt(form.querySelector('[name="bulkCount"]')?.value) || 1));
 
     const list    = this.element?.querySelector('.history-list');
     const emptyEl = list?.querySelector('.history-empty');
@@ -590,42 +575,35 @@ export class BuilderApp extends HandlebarsApplicationMixin(ApplicationV2) {
     this.selectedHistoryId = null;
     this.element?.querySelectorAll('.history-entry.is-selected').forEach(el => el.classList.remove('is-selected'));
 
-    const batchEntries = [];
-    for (let i = 0; i < bulkCount; i++) {
-      const historyEntry = {
-        id:        foundry.utils.randomID(16),
-        ...this.adapter.historyEntryFromForm(formData),
-        status:    'generating',
-        createdAt: Date.now(),
-        error:     null,
-      };
-      this.history.push(historyEntry);
-      batchEntries.push(historyEntry);
+    const historyEntry = {
+      id:        foundry.utils.randomID(16),
+      ...this.adapter.historyEntryFromForm(formData),
+      status:    'generating',
+      createdAt: Date.now(),
+      error:     null,
+    };
+    this.history.push(historyEntry);
 
-      if (list) {
-        const newEl = this._createHistoryEntryElement(historyEntry);
-        newEl.classList.add('is-new');
-        list.insertBefore(newEl, list.firstChild);
-        if (i === 0) newEl.focus();
-      }
-      this._startStepProgression(historyEntry.id, this.adapter.progressSteps);
+    if (list) {
+      const newEl = this._createHistoryEntryElement(historyEntry);
+      newEl.classList.add('is-new');
+      list.insertBefore(newEl, list.firstChild);
+      newEl.focus();
     }
+    this._startStepProgression(historyEntry.id, this.adapter.progressSteps);
 
     this.storage.saveHistory(this.history, MAX_HISTORY);
     this.element?.classList.add('is-generating');
 
-    for (const entry of batchEntries) {
-      this._runGeneration(entry, key, formData, creativity);
-    }
+    this._runGeneration(historyEntry, key, formData);
   }
 
-  async _runGeneration(historyEntry, key, formData, creativity = 0.5) {
+  async _runGeneration(historyEntry, key, formData) {
     try {
       const result = await this.adapter.generate({
         formData,
         key,
         devMode: isDevMode(this.moduleFolder),
-        creativity,
         builderApp: this,
       });
 
@@ -1091,10 +1069,10 @@ export function openBuilder(adapter, options = {}) {
   const AppClass = getAppClass(adapter);
   let app = _appInstances.get(adapter.moduleFolder);
   if (app?.rendered && app?.element?.isConnected) {
-    if (initialTab === 'home' || initialTab === 'builder') {
-      app.activeTab = initialTab;
-      app._applyTabUI?.();
-    }
+    // Reopening always lands on the builder form (unless Home is explicitly
+    // requested) so the builder never re-opens stuck on the Home tab.
+    app.activeTab = initialTab === 'home' ? 'home' : 'builder';
+    app._applyTabUI?.();
     app.bringToTop?.();
   } else {
     app = new AppClass(adapter, { initialTab });

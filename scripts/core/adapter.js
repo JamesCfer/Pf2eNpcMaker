@@ -55,7 +55,6 @@
  * @property {object}  formData    Gathered form values (shape varies per adapter).
  * @property {string}  key         Patreon session key.
  * @property {boolean} devMode     Whether to hit the '-dev' n8n endpoints.
- * @property {number}  [creativity] 0–1 creativity/temperature slider value (default 0.5).
  * @property {object}  [builderApp] The calling BuilderApp instance.
  */
 

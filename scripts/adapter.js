@@ -91,13 +91,12 @@ export class Pf2eNpcAdapter extends SystemAdapter {
     ];
   }
 
-  async generate({ formData, key, devMode, creativity = 0.5, builderApp }) {
+  async generate({ formData, key, devMode, builderApp }) {
     const endpoint = devUrl(NPC_ENDPOINT, devMode);
     const payload  = {
       name:        formData.name,
       level:       formData.level,
       description: formData.description,
-      creativity,
     };
 
     if (formData.includeSpells) {
