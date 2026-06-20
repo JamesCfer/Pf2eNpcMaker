@@ -122,6 +122,11 @@
         "ConfirmLabel": "Reset Calendar",
         "NotActive": "Pf2eCalendarTimeline is not installed or active.",
         "Success": "Calendar reset to default Golarion settings."
+      },
+      "FixtureSheet": {
+        "Name": "Open Fixture Settlement (QA)",
+        "Label": "Open Fixture Sheet",
+        "Hint": "GM only — opens a temporary pre-filled settlement sheet for QA testing. The journal is deleted automatically when the sheet is closed."
       }
     }
   }
