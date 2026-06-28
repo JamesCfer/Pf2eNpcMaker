@@ -237,6 +237,18 @@ export class SystemAdapter {
   registerSheetHooks(_getApp) {
     /* no-op default */
   }
+
+  /**
+   * Called once after the builder form is mounted in the DOM, giving the
+   * adapter a chance to wire up form-specific event listeners (e.g. a live
+   * cost-estimate hint).
+   *
+   * @param {HTMLElement} _form  The `.npc-form` element.
+   * @returns {void}
+   */
+  onFormMount(_form) {
+    /* no-op default */
+  }
 }
 
 /* ── Shared network helper ───────────────────────────────── */

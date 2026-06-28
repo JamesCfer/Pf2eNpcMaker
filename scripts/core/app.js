@@ -174,6 +174,11 @@ export class BuilderApp extends HandlebarsApplicationMixin(ApplicationV2) {
     this._initOfflineDetection();
     this._validateSessionOnOpen();
 
+    const mountForm = this.element.querySelector('.npc-form');
+    if (mountForm && typeof this.adapter.onFormMount === 'function') {
+      this.adapter.onFormMount(mountForm);
+    }
+
     this.element.addEventListener('keydown', (ev) => {
       if (ev.key === 'Enter' && (ev.ctrlKey || ev.metaKey)) {
         ev.preventDefault();
