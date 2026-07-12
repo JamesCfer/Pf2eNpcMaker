@@ -1,12 +1,14 @@
 <div class="npc-builder-layout">
 
   <!-- ── Tab strip (Home + this module's builder) ──────────────────────── -->
-  <div class="builder-tabs">
-    <button type="button" class="builder-tab builder-tab--home" data-tab="home">
+  <div class="builder-tabs" role="tablist">
+    <button type="button" class="builder-tab builder-tab--home" data-tab="home"
+            role="tab" id="builder-tab-home" aria-selected="false" aria-controls="builder-tabpanel-home">
       <i class="fa-solid fa-house"></i> Home
     </button>
     <div class="builder-tab-group">
-      <button type="button" class="builder-tab builder-tab--builder" data-tab="builder">
+      <button type="button" class="builder-tab builder-tab--builder" data-tab="builder"
+              role="tab" id="builder-tab-builder" aria-selected="false" aria-controls="builder-tabpanel-builder">
         <i class="{{module.icon}}"></i> {{module.label}}
       </button>
       <a href="{{module.githubUrl}}" target="_blank" rel="noopener noreferrer" class="builder-tab-github" title="View on GitHub" aria-label="View module on GitHub">
@@ -16,7 +18,7 @@
   </div>
 
   <!-- ── Home panel (links to all 4 modules) ──────────────────────────── -->
-  <div class="home-panel" style="display:none;">
+  <div class="home-panel" style="display:none;" role="tabpanel" id="builder-tabpanel-home" aria-labelledby="builder-tab-home">
     <div class="home-content">
       <div class="home-logo">
         <i class="fa-solid fa-wand-magic-sparkles"></i>
@@ -110,7 +112,7 @@
   </div>
 
   <!-- ── Main builder content ─────────────────────────────────────────── -->
-  <div class="builder-inner">
+  <div class="builder-inner" role="tabpanel" id="builder-tabpanel-builder" aria-labelledby="builder-tab-builder">
 
     <!-- Left: form panel -->
     <div class="npc-panel-form">

@@ -203,7 +203,9 @@ export class BuilderApp extends HandlebarsApplicationMixin(ApplicationV2) {
     if (!root) return;
 
     root.querySelectorAll('.builder-tab').forEach(btn => {
-      btn.classList.toggle('is-active', btn.dataset.tab === this.activeTab);
+      const isActive = btn.dataset.tab === this.activeTab;
+      btn.classList.toggle('is-active', isActive);
+      btn.setAttribute('aria-selected', String(isActive));
     });
 
     const homePanel    = root.querySelector('.home-panel');
@@ -228,9 +230,12 @@ export class BuilderApp extends HandlebarsApplicationMixin(ApplicationV2) {
 
     for (const action of ['generate', 'export', 'generateimage']) {
       const btn = root.querySelector(`button[data-action="${action}"]`);
-      if (btn) btn.disabled = !this.authenticated
-        || (action === 'generate' && this._isOffline)
-        || (action === 'generate' && anyGenerating);
+      if (btn) {
+        btn.disabled = !this.authenticated
+          || (action === 'generate' && this._isOffline)
+          || (action === 'generate' && anyGenerating);
+        btn.setAttribute('aria-busy', String(action === 'generate' && anyGenerating));
+      }
     }
 
     const undoBtn = root.querySelector('button[data-action="undolast"]');
