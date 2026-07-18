@@ -98,6 +98,10 @@
         "Name": "Income Variance (%)",
         "Hint": "How much random variance to apply to each store's daily income. 0 = fixed, 15 = ±15% (default), 50 = ±50%."
       },
+      "HighContrast": {
+        "Name": "High-Contrast Theme",
+        "Hint": "Replace the parchment palette on settlement and nation sheets with a strong-contrast dark theme for improved readability."
+      },
       "ResetWelcome": {
         "Name": "Reset Welcome Message",
         "Label": "Reset",
