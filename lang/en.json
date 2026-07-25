@@ -131,6 +131,25 @@
         "Name": "Open Fixture Settlement (QA)",
         "Label": "Open Fixture Sheet",
         "Hint": "GM only — opens a temporary pre-filled settlement sheet for QA testing. The journal is deleted automatically when the sheet is closed."
+      },
+      "CreateArmy": {
+        "Name": "Create Army",
+        "Label": "New Army",
+        "Hint": "Name the new army"
+      },
+      "ImportPrebuilt": {
+        "Hint": "Choose a preset",
+        "ConfirmLabel": "Import"
+      },
+      "ImportPrebuiltSettlement": {
+        "Name": "Import Prebuilt Settlement",
+        "Label": "Import Settlement",
+        "Hint": "Drop in one of 10 ready-made settlements without spending AI credits."
+      },
+      "ImportPrebuiltNation": {
+        "Name": "Import Prebuilt Nation",
+        "Label": "Import Nation",
+        "Hint": "Drop in one of 5 ready-made nations without spending AI credits."
       }
     }
   }
