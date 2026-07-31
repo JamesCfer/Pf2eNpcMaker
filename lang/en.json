@@ -102,6 +102,10 @@
         "Name": "High-Contrast Theme",
         "Hint": "Replace the parchment palette on settlement and nation sheets with a strong-contrast dark theme for improved readability."
       },
+      "ArmyTravelDays": {
+        "Name": "Army Travel Days",
+        "Hint": "Days a field army takes to march between any two settlements (#75)."
+      },
       "ResetWelcome": {
         "Name": "Reset Welcome Message",
         "Label": "Reset",
