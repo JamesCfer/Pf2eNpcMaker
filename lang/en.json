@@ -141,6 +141,14 @@
         "Label": "New Army",
         "Hint": "Name the new army"
       },
+      "HireMercenaries": {
+        "Name": "Hire Mercenary Company",
+        "Label": "Hire Mercenaries",
+        "Hint": "Pay a settlement's treasury to hire a preset mercenary company for a fixed contract length (#81).",
+        "NotActive": "Pf2eCalendarTimeline is not installed or active — it's needed to track the contract length.",
+        "NoSettlements": "No settlements available to pay for the contract.",
+        "ConfirmLabel": "Hire"
+      },
       "ImportPrebuilt": {
         "Hint": "Choose a preset",
         "ConfirmLabel": "Import"
