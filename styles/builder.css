@@ -632,6 +632,28 @@
 }
 .application.npc-builder .auth-signed-status i { color: #38a85a; font-size: 1.05em; }
 
+.application.npc-builder .auth-uses-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.3em;
+  margin-left: 0.5em;
+  padding: 0.15em 0.55em;
+  border-radius: 999px;
+  background: rgba(56, 168, 90, 0.15);
+  border: 1px solid rgba(29, 107, 53, 0.35);
+  font-size: 0.85em;
+  font-weight: 600;
+  color: #1d6b35;
+  white-space: nowrap;
+}
+.application.npc-builder .auth-uses-pill i { font-size: 0.85em; }
+.application.npc-builder .auth-uses-pill--low {
+  background: rgba(214, 129, 24, 0.15);
+  border-color: rgba(163, 92, 8, 0.45);
+  color: #a35c08;
+}
+.application.npc-builder .auth-uses-pill--low i { color: #d68118; }
+
 .application.npc-builder .auth-signed   { display: none; }
 .application.npc-builder .auth-unsigned { display: flex; }
 .application.npc-builder.is-authenticated .auth-unsigned { display: none; }
@@ -1134,6 +1156,10 @@
 .application.npc-builder .home-module-card.card--pf2esettle .home-module-icon i { color: #9b6923; }
 .application.npc-builder .home-module-card.card--pf2ecal    { border-color: rgba(120, 80, 60, 0.5); }
 .application.npc-builder .home-module-card.card--pf2ecal .home-module-icon i    { color: #785038; }
+.application.npc-builder .home-module-card.card--pf2estore  { border-color: rgba(15, 107, 98, 0.5); }
+.application.npc-builder .home-module-card.card--pf2estore .home-module-icon i  { color: #0f6b62; }
+.application.npc-builder .home-module-card.card--dnd5estore { border-color: rgba(140, 45, 60, 0.5); }
+.application.npc-builder .home-module-card.card--dnd5estore .home-module-icon i { color: #8c2d3c; }
 
 /* ── Home: art style + external links ───────────────────── */
 .application.npc-builder .home-art-style {

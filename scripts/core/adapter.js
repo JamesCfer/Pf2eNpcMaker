@@ -253,9 +253,13 @@ export class SystemAdapter {
 
 /* ── Shared network helper ───────────────────────────────── */
 
+import { updateUsageFromResponse } from './usage.js';
+
 /**
  * POSTs to an n8n webhook with Patreon auth headers.
  * Maps 401/403 → AuthError and 429 → RateLimitError.
+ * Feeds usage numbers (uses remaining) from the response into the shared
+ * usage tracker so builders can display them.
  *
  * @param {string} endpoint
  * @param {object} payload
@@ -274,6 +278,10 @@ export async function postToN8n(endpoint, payload, key) {
   });
 
   const responseText = await response.text();
+
+  let parsedBody = null;
+  try { parsedBody = JSON.parse(responseText); } catch (_) {}
+  updateUsageFromResponse(response, parsedBody);
 
   if (response.status === 401 || response.status === 403) {
     let data; try { data = JSON.parse(responseText); } catch { data = {}; }

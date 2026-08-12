@@ -8,6 +8,7 @@
  */
 
 import { N8N_ENDPOINTS, PATREON_URL, devUrl } from './n8n.js';
+import { updateUsageFromResponse }            from './usage.js';
 
 /**
  * Silently probes the validate endpoint with the stored key.
@@ -28,6 +29,12 @@ export async function validateSessionKey(key, devMode = false) {
       body:    JSON.stringify({ validate: true }),
     });
     if (resp.status === 401 || resp.status === 403) return false;
+    // The validate response may carry usage numbers — feed them to the tracker
+    // so the builder can show remaining uses as soon as it opens.
+    try {
+      const data = await resp.json();
+      updateUsageFromResponse(resp, data);
+    } catch (_) {}
     return true;
   } catch (_) {
     return true;

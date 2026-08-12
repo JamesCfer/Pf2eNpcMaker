@@ -5,6 +5,7 @@
  */
 
 import { N8N_ENDPOINTS, PATREON_URL, devUrl } from './n8n.js';
+import { updateUsageFromResponse }            from './usage.js';
 
 /** Number of monthly NPC uses charged per image generation. */
 export const IMAGE_COST = 4;
@@ -54,6 +55,7 @@ export async function generateImage({
 
   if (response.status === 429) {
     const data = await response.json().catch(() => ({}));
+    updateUsageFromResponse(response, data);
     onRateLimited?.(data);
     throw new Error(data?.message || 'Monthly limit reached.');
   }
@@ -64,6 +66,7 @@ export async function generateImage({
   }
 
   const data = await response.json();
+  updateUsageFromResponse(response, data);
   if (!data?.imageUrl) return { savedPath: null, message: 'Image generation request sent.' };
 
   // Download and re-upload into Foundry's data directory

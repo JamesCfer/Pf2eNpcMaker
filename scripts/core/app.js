@@ -32,6 +32,9 @@ import { initConsoleCapture,
 import { generateImage,
          IMAGE_COST }             from './image-gen.js';
 import { isDevMode }              from './n8n.js';
+import { getUsage,
+         clearUsage,
+         onUsageChange }          from './usage.js';
 import { ALL_MODULES,
          getModuleMeta }          from './home-data.js';
 import { escapeHtml,
@@ -172,6 +175,12 @@ export class BuilderApp extends HandlebarsApplicationMixin(ApplicationV2) {
     }
 
     this._initOfflineDetection();
+
+    // Keep the "uses left" pill in the auth banner up to date.
+    this._unsubscribeUsage?.();
+    this._unsubscribeUsage = onUsageChange(() => this._updateUsesDisplay());
+    this._updateUsesDisplay();
+
     this._validateSessionOnOpen();
 
     const mountForm = this.element.querySelector('.npc-form');
@@ -238,8 +247,30 @@ export class BuilderApp extends HandlebarsApplicationMixin(ApplicationV2) {
       }
     }
 
+    this._updateUsesDisplay();
+
     const undoBtn = root.querySelector('button[data-action="undolast"]');
     if (undoBtn) undoBtn.disabled = !this.lastDocument;
+  }
+
+  /* ── Uses-remaining display ─────────────────────────────── */
+
+  _updateUsesDisplay() {
+    const pill = this.element?.querySelector('.auth-uses-pill');
+    if (!pill) return;
+    const { remaining, limit } = getUsage();
+    if (!this.authenticated || remaining === null) {
+      pill.style.display = 'none';
+      return;
+    }
+    const countEl = pill.querySelector('.auth-uses-count');
+    if (countEl) {
+      countEl.textContent = limit !== null
+        ? `${remaining} / ${limit} uses left`
+        : `${remaining} uses left`;
+    }
+    pill.classList.toggle('auth-uses-pill--low', remaining <= 5);
+    pill.style.display = '';
   }
 
   /* ── Action wiring ──────────────────────────────────────── */
@@ -305,6 +336,7 @@ export class BuilderApp extends HandlebarsApplicationMixin(ApplicationV2) {
     this.storage.setKey('');
     this.accessKey = '';
     this.authenticated = false;
+    clearUsage();
     this._applyAuthStateUI();
     ui.notifications?.info?.(game.i18n.localize('NpcBuilder.SignOut.Success'));
   }
