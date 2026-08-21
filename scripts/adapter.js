@@ -9,6 +9,7 @@
  */
 
 import { SystemAdapter, postToN8n, ActorCreationError } from './core/adapter.js';
+import { injectSheetImageButton }     from './core/sheet-image-button.js';
 import { N8N_BASE, devUrl,
          isDevMode }                 from './core/n8n.js';
 import { detectModuleFolder,
@@ -328,25 +329,12 @@ export class Pf2eNpcAdapter extends SystemAdapter {
         eliteWeakArea.parentNode.insertBefore(levelUpBtn, eliteWeakArea);
       }
 
-      const acSection =
-        root.querySelector('.armor-class') ||
-        root.querySelector('.ac') ||
-        root.querySelector('[data-slug="ac"]') ||
-        root.querySelector('.side-bar-section');
-
-      if (acSection) {
-        const imageBtn = document.createElement('button');
-        imageBtn.type = 'button';
-        imageBtn.className = 'npc-builder-sheet-image-btn';
-        imageBtn.innerHTML = '<i class="fa-solid fa-image"></i> Generate Image <span class="btn-cost-badge">4 uses</span>';
-        imageBtn.title = 'Generate an AI image for this NPC (costs 4 NPC uses)';
-        imageBtn.addEventListener('click', (ev) => {
-          ev.preventDefault();
-          ev.stopPropagation();
-          getApp()._generateImage(null, actor.toObject(), 'pf2e');
-        });
-        acSection.parentNode.insertBefore(imageBtn, acSection);
-      }
+      injectSheetImageButton({
+        root,
+        doc:     actor,
+        title:   'Generate an AI image for this NPC (costs 4 NPC uses)',
+        onClick: () => getApp()._generateImage(null, actor.toObject(), 'pf2e'),
+      });
     };
 
     Hooks.on('renderNPCSheetPF2e',   inject);
